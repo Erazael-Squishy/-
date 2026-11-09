@@ -14,7 +14,7 @@
 (() => {
   'use strict';
   if (window.__microlabUsb) return;
-  window.__microlabUsb = { version: '1.0.0' };
+  window.__microlabUsb = { version: '1.1.0' };
 
   // ───────────────────────────── teksty ─────────────────────────────
   const TEXT = {
@@ -665,7 +665,7 @@
   // ───────────────────────────── sterowanie płytką ─────────────────────────────
   const state = {
     link: null, mp: null, port: null, desc: null, info: null,
-    busy: false, running: false, files: null, fs: null, error: null, ignored: new WeakSet(),
+    busy: false, running: false, files: null, fs: null, error: null, ignored: new WeakSet(), chosen: new WeakSet(),
   };
   const listeners = new Set();
   const changed = () => { for (const fn of listeners) fn(); };
@@ -745,6 +745,7 @@
       return;
     }
     state.ignored.delete(port);
+    state.chosen.add(port);
     await connectPort(port);
   }
 
@@ -752,7 +753,9 @@
     if (!('serial' in navigator) || state.link || state.busy) return;
     let ports = [];
     try { ports = await navigator.serial.getPorts(); } catch { return; }
-    ports = ports.filter((p) => !state.ignored.has(p));
+    // sama łączy się tylko z płytkami, które zna (nie z Bluetooth COM ani Arduino, które restartuje się przy otwarciu portu),
+    // albo z portem, który ktoś wybrał ręcznie
+    ports = ports.filter((p) => !state.ignored.has(p) && (state.chosen.has(p) || autoOk(p)));
     if (!ports.length) return;
     // najpierw znane płytki z MicroPythonem
     ports.sort((a, b) => rank(a) - rank(b));
@@ -760,6 +763,7 @@
     if (trigger === 'plug') toast(t('detected', { name: describe(port.getInfo?.()).name }), 'info');
     await connectPort(port, { auto: true });
   }
+  const autoOk = (p) => { const d = describe(p.getInfo?.()); return d.known && d.kind !== 'arduino'; };
   const rank = (p) => { const d = describe(p.getInfo?.()); return d.kind === 'native' ? 0 : d.kind === 'bridge' ? (d.known ? 1 : 2) : 3; };
 
   /** Wspólne opakowanie operacji na płytce. */
@@ -1121,8 +1125,8 @@
     // podpowiedź
     let note = '';
     if (!supported) note = t('notSupported');
-    else if (/Electron/i.test(navigator.userAgent) && !state.link) note = t('electronNote');
-    else if (!state.link && !state.busy) note = state.granted ? t('hintAuto') : t('hintFirst');
+    else if (/Electron/i.test(navigator.userAgent) && !window.microlabUsbHost?.serialChooser && !state.link) note = t('electronNote');
+    else if (!state.link && !state.busy) note = state.granted || window.microlabUsbHost?.serialChooser ? t('hintAuto') : t('hintFirst');
     refs.note.textContent = note;
     refs.note.hidden = !note;
     if (currentTab === 'files') renderFiles();

@@ -1,0 +1,176 @@
+===============================================================================
+RP2350Sharp — Third-Party Notices
+===============================================================================
+
+RP2350Sharp incorporates third-party source code and redistributes a
+third-party binary component. This file reproduces the copyright notices and
+license texts those components require.
+
+This file must accompany every redistribution of RP2350Sharp, in source or
+binary form. Any product that ships RP2350Sharp (for example, an application
+that integrates the emulator) must reproduce the notices below in its own
+third-party-attribution screen or documentation.
+
+RP2350Sharp itself is licensed under the Business Source License 1.1; see
+LICENSE and LICENSE-BUSL.txt. The notices below do not change that license —
+they apply to the third-party components identified in each section.
+
+There are no third-party NuGet/package dependencies to attribute.
+
+-------------------------------------------------------------------------------
+1. rp2040js — Uri Shaked (MIT)
+-------------------------------------------------------------------------------
+
+Upstream: https://github.com/wokwi/rp2040js
+
+rp2040js is a TypeScript emulator for the Raspberry Pi RP2040. Parts of
+RP2350Sharp are derived from it. The scope is as follows.
+
+Ported (a 1:1 C# port of the corresponding rp2040js source file):
+
+    src/RP2350Sharp/Gdb/GdbConnection.cs   <- src/gdb/gdb-connection.ts
+    src/RP2350Sharp/Gdb/GdbServer.cs       <- src/gdb/gdb-server.ts
+    src/RP2350Sharp/Gdb/GdbTcpServer.cs    <- src/gdb/gdb-tcp-server.ts
+    src/RP2350Sharp/Gdb/GdbUtils.cs        <- src/gdb/gdb-utils.ts
+    src/RP2350Sharp/Gdb/IGdbTarget.cs      <- src/gdb/gdb-target.ts
+
+Derived (reimplemented in C#, reproducing behaviour of the rp2040js original,
+including emulator-specific artifacts that are not described by the RP2040
+technical reference manual):
+
+    src/RP2350Sharp/Peripherals/Usb/UsbPeripheral.cs
+        (equivalent to rp2040js src/peripherals/usb.ts, device mode subset)
+    src/RP2350Sharp/Peripherals/Usb/UsbCdcHost.cs
+
+Developed with reference to rp2040js (written independently against the RP2040
+technical reference manual, using rp2040js as a reference and for
+corroboration; not a port):
+
+    src/RP2350Sharp/Peripherals/Pio/**
+
+Original work, NOT derived from rp2040js: everything else. In particular the
+emulator core (the Arm Cortex-M33 CPU, the Hazard3 RISC-V cores, the DCP and
+RCP coprocessors, and TrustZone), the CYW43 wireless emulation, and the
+Bluetooth Low Energy stack are original to this project. rp2040js emulates a
+different CPU architecture and contains no CYW43 or BLE emulation.
+
+The MIT copyright and permission notice below is retained as the MIT License
+requires, and continues to apply to the rp2040js-derived portions listed above.
+
+    The MIT License (MIT)
+
+    Copyright (c) 2021 Uri Shaked
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+2. RP2350 boot ROM — Raspberry Pi Ltd (BSD-3-Clause)
+-------------------------------------------------------------------------------
+
+Upstream: https://github.com/raspberrypi/pico-bootrom-rp2350
+
+RP2350Sharp redistributes the real RP2350 boot ROM image, dumped from A2
+silicon, so that the emulator can execute the actual on-chip ROM code that
+firmware calls by fixed address. This is the mask ROM of the chip — it is not
+authored by this project.
+
+Redistributed file:  src/RP2350Sharp/bootrom_rp2350.bin (32 KiB)
+
+It is compiled into the published RP2350Sharp assembly as an <EmbeddedResource>,
+and is therefore redistributed in binary form inside the RP2350Sharp NuGet
+package and inside any application that ships that assembly.
+
+Copyright notice contained in the binary:  (C) 2024 Raspberry Pi Ltd
+
+License: BSD-3-Clause. The full license text, reproduced verbatim from
+LICENSE.TXT of the pico-bootrom-rp2350 repository, follows.
+
+    NOTE: this license applies to the contents of this repository, EXCLUDING the contents of the files bootrom/mufplib.S
+    and bootrom/mufplib-double.S, which are licensed separately:
+
+    Copyright 2020 (c) 2020 Raspberry Pi (Trading) Ltd.
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+       disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+       disclaimer in the documentation and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
+       derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The exclusion named in the first paragraph above is inherited from the RP2040
+boot ROM repository and does not apply here: the files bootrom/mufplib.S and
+bootrom/mufplib-double.S do not exist in the RP2350 boot ROM, and the RP2350
+ROM exposes no single- or double-precision floating-point tables.
+
+-------------------------------------------------------------------------------
+3. sweet-b — Western Digital Corporation (BSD-3-Clause)
+-------------------------------------------------------------------------------
+
+Upstream: https://github.com/westerndigitalcorporation/sweet-b
+
+sweet-b is an elliptic-curve cryptography library. It is compiled into the
+RP2350 boot ROM redistributed by this project (section 2 above), where the boot
+ROM uses it to verify secure-boot signatures (src/main/arm/arm8_sig.c of
+pico-bootrom-rp2350). It is therefore redistributed in binary form as part of
+src/RP2350Sharp/bootrom_rp2350.bin.
+
+License: BSD-3-Clause. The full license text, reproduced verbatim from
+lib/sweet-b/LICENSE of the pico-bootrom-rp2350 repository, follows.
+
+    Copyright (c) 2020 Western Digital Corporation or its affiliates.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+===============================================================================

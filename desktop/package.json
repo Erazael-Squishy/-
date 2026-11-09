@@ -1,0 +1,78 @@
+{
+  "name": "microlab-usb-desktop",
+  "productName": "MicroLab USB",
+  "version": "0.8.1",
+  "description": "MicroLab z obsługą prawdziwych płytek przez USB (wykrywanie i wgrywanie kodu jak w Thonny)",
+  "author": "MicroLab",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "prepare-app": "node scripts/prepare.mjs",
+    "start": "electron .",
+    "dist:win": "node scripts/prepare.mjs && electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "pl.microlab.usb",
+    "productName": "MicroLab USB",
+    "copyright": "MicroLab",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "licenses",
+        "to": "licenses"
+      }
+    ],
+    "fileAssociations": [
+      {
+        "ext": "mlab",
+        "name": "Projekt MicroLab",
+        "description": "Projekt MicroLab",
+        "icon": "build/icon.ico",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "MicroLab-USB-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MicroLab USB",
+      "language": "1045",
+      "installerLanguages": [
+        "pl_PL",
+        "en_US"
+      ],
+      "multiLanguageInstaller": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": null
+  }
+}
