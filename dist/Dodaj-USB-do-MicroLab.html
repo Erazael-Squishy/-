@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dodaj USB do MicroLab</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2128; --muted:#59636e; --accent:#0969da; --ok:#1a7f37; --err:#cf222e; --border:#d0d7de; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --ok:#3fb950; --err:#f85149; --border:#30363d; color-scheme: dark; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, "Segoe UI", sans-serif; }
+  main { max-width:640px; margin:40px auto; padding:0 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 22px; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  p { margin:8px 0; }
+  .muted { color:var(--muted); }
+  label.drop { display:block; margin:16px 0 8px; padding:26px 16px; border:2px dashed var(--border); border-radius:10px; text-align:center; cursor:pointer; }
+  label.drop:hover, label.drop.over { border-color:var(--accent); }
+  input[type=file] { display:none; }
+  #status { min-height:24px; margin-top:10px; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+  ol { padding-left:20px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>Dodaj „Płytka USB” do MicroLab</h1>
+    <p class="muted">Dopisuje do pliku MicroLab.html (albo MicroLab-B.html) obsługę prawdziwych płytek przez USB: wykrywanie Pico i ESP32 po podłączeniu, uruchamianie i wgrywanie kodu jak w Thonny. Wszystko dzieje się w tej karcie, nic nie jest wysyłane do internetu.</p>
+    <ol>
+      <li>Wybierz plik MicroLab.html poniżej (albo przeciągnij go tutaj).</li>
+      <li>Przeglądarka pobierze nowy plik o tej samej nazwie – zastąp nim stary.</li>
+      <li>Otwórz go w Chrome albo Edge.</li>
+    </ol>
+    <label class="drop" id="drop">Kliknij, aby wybrać MicroLab.html<br><span class="muted">albo upuść go tutaj</span>
+      <input type="file" id="file" accept=".html,text/html">
+    </label>
+    <div id="status" role="status"></div>
+  </div>
+</main>
+<script type="text/plain" id="addon">/*
+ * MicroLab USB: prawdziwa płytka przez port szeregowy (Web Serial), jak w Thonny.
+ *
+ * - wykrywa podłączenie i odłączenie płytek z MicroPythonem (Raspberry Pi Pico / Pico 2,
+ *   płytki RP2040, ESP32 przez CP210x / CH340 / CH9102 / FTDI, ESP32-S2/S3/C3/C6 z własnym USB),
+ * - łączy się sama z płytką, na którą przeglądarka dała już zgodę,
+ * - uruchamia kod z edytora MicroLab na płytce (raw REPL / raw-paste, jak Thonny i mpremote),
+ * - zapisuje pliki projektu na płytce (main.py uruchamia się po każdym włączeniu),
+ * - konsola REPL, lista plików na płytce, wgrywanie MicroPythona na Pico w trybie BOOTSEL.
+ *
+ * Działa jako osobny dodatek doklejony na końcu MicroLab.html: nie zmienia kodu aplikacji,
+ * czyta tylko edytor (CodeMirror) i autozapis projektu.
+ */
+(() => {
+  'use strict';
+  if (window.__microlabUsb) return;
+  window.__microlabUsb = { version: '1.0.0' };
+
+  // ───────────────────────────── teksty ─────────────────────────────
+  const TEXT = {
+    pl: {
+      usb: 'Płytka USB',
+      usbTitle: 'Prawdziwa płytka podłączona kablem USB (Pico, ESP32…)',
+      noBoard: 'Brak płytki',
+      connect: 'Połącz…',
+      connectTitle: 'Wybierz port płytki (za pierwszym razem przeglądarka pyta o zgodę; potem płytka łączy się sama po podłączeniu)',
+      allPorts: 'Wszystkie porty…',
+      allPortsTitle: 'Pokaż też porty, których MicroLab nie rozpoznaje (inne przejściówki USB-UART)',
+      disconnect: 'Rozłącz',
+      runOnBoard: '▶ Na płytce',
+      runOnBoardTitle: 'Uruchom kod z edytora na podłączonej płytce, bez zapisywania (jak F5 w Thonny). Brakujące biblioteki z projektu zostaną skopiowane na płytkę.',
+      upload: '⤒ Wgraj',
+      uploadTitle: 'Zapisz pliki projektu na płytce (main.py uruchamia się sam po każdym włączeniu) i zrestartuj ją',
+      stop: '■ Stop',
+      stopTitle: 'Przerwij program na płytce (Ctrl+C)',
+      restart: '↻ Restart',
+      restartTitle: 'Miękki restart płytki (Ctrl+D): uruchamia main.py od nowa',
+      console: 'Konsola',
+      files: 'Pliki na płytce',
+      firmware: 'MicroPython',
+      refresh: '⟳ Odśwież',
+      clear: 'Wyczyść',
+      close: 'Zamknij',
+      download: 'Pobierz',
+      remove: 'Usuń',
+      confirmRemove: 'Usunąć plik {name} z płytki?',
+      free: 'wolne: {free} z {total}',
+      empty: '(brak plików)',
+      notSupported: 'Ta przeglądarka nie ma dostępu do portów szeregowych (Web Serial). Otwórz MicroLab.html w Google Chrome albo Microsoft Edge na komputerze.',
+      electronNote: 'W tej wersji aplikacji okno wyboru portu może nie działać. Użyj MicroLab.html w Chrome lub Edge.',
+      hintFirst: 'Podłącz płytkę kablem USB i kliknij „Połącz…”. Przeglądarka zapyta raz o zgodę – potem MicroLab sam wykryje płytkę po każdym podłączeniu.',
+      hintAuto: 'Czekam na płytkę: podłącz ją kablem USB, MicroLab połączy się sam.',
+      detected: 'Wykryto: {name}',
+      connected: 'Połączono: {name}',
+      disconnected: 'Odłączono płytkę {name}',
+      connecting: 'Łączę z {name}…',
+      busyPort: 'Nie mogę otworzyć portu {name}: jest zajęty przez inny program (np. Thonny, Arduino IDE, drugą kartę z MicroLab). Zamknij go i spróbuj ponownie.',
+      openFailed: 'Nie mogę otworzyć portu: {error}',
+      noMicroPython: 'Płytka nie odpowiada jak MicroPython. Może ma inny program (np. szkic Arduino) albo nie ma MicroPythona – zakładka „MicroPython” pomoże go wgrać na Pico.',
+      noCode: 'Zaznacz na stole płytkę z MicroPythonem (Pico, ESP32…), żeby wgrać jej kod.',
+      arduino: 'To płytka Arduino ze szkicem C++. Wgrywanie na prawdziwe płytki działa na razie dla MicroPythona (Pico, ESP32).',
+      notConnected: 'Najpierw podłącz płytkę (przycisk „Płytka USB”).',
+      busy: 'Płytka jest zajęta – poczekaj albo naciśnij Stop.',
+      running: 'Uruchamiam {file} na płytce…',
+      finished: 'Program zakończony.',
+      stopped: 'Program przerwany.',
+      copying: 'Kopiuję na płytkę: {files}',
+      uploading: 'Zapisuję na płytce: {file} ({size})',
+      uploaded: 'Zapisano na płytce: {files}. Restartuję płytkę…',
+      uploadedToast: 'Wgrano na płytkę: {files}',
+      failed: 'Błąd: {error}',
+      timeout: 'płytka nie odpowiada (przekroczony czas)',
+      boardInfo: '{machine} · MicroPython {version}',
+      fwIntro: 'Pico bez MicroPythona (albo z innym programem) trzeba raz przełączyć w tryb BOOTSEL: odłącz kabel, przytrzymaj biały przycisk BOOTSEL i podłącz kabel z powrotem. Pojawi się dysk RPI-RP2 (Pico) albo RP2350 (Pico 2).',
+      fwBoard: 'Płytka:',
+      fwWrite: 'Wybierz dysk RPI-RP2 / RP2350 i wgraj',
+      fwWriteTitle: 'W oknie wyboru wskaż dysk płytki (np. E:\\ RPI-RP2) i pozwól na zapis',
+      fwDownload: 'Pobierz plik .uf2',
+      fwDownloadNote: 'Albo pobierz plik .uf2 i przeciągnij go na dysk RPI-RP2 / RP2350 w Eksploratorze.',
+      fwWriting: 'Wgrywam {file} na dysk {drive}…',
+      fwWrongChip: 'Ten dysk to {found}, a wybrany plik jest dla {wanted}. Wybierz właściwą płytkę.',
+      fwDone: 'MicroPython wgrany. Pico uruchomi się ponownie jako port szeregowy; jeśli MicroLab nie połączy się sam w ciągu kilku sekund, kliknij „Połącz…”.',
+      fwNoPicker: 'Ta przeglądarka nie pozwala zapisać na dysku: pobierz plik .uf2 i przeciągnij go na dysk płytki.',
+      fwEsp: 'ESP32: MicroPython wgrywa się narzędziem esptool albo ze strony micropython.org/download (w Thonny: Narzędzia → Opcje → Interpreter → Zainstaluj MicroPython).',
+      size: '{n} B',
+    },
+    en: {
+      usb: 'USB board',
+      usbTitle: 'A real board connected with a USB cable (Pico, ESP32…)',
+      noBoard: 'No board',
+      connect: 'Connect…',
+      connectTitle: 'Choose the board\'s port (the browser asks once; after that the board connects by itself when plugged in)',
+      allPorts: 'All ports…',
+      allPortsTitle: 'Also show ports MicroLab doesn\'t recognise (other USB-UART adapters)',
+      disconnect: 'Disconnect',
+      runOnBoard: '▶ On board',
+      runOnBoardTitle: 'Run the editor\'s code on the connected board without saving it (like F5 in Thonny). Project libraries missing on the board are copied first.',
+      upload: '⤒ Upload',
+      uploadTitle: 'Save the project\'s files on the board (main.py runs at every power-up) and restart it',
+      stop: '■ Stop',
+      stopTitle: 'Interrupt the program on the board (Ctrl+C)',
+      restart: '↻ Restart',
+      restartTitle: 'Soft-reset the board (Ctrl+D): runs main.py again',
+      console: 'Console',
+      files: 'Files on board',
+      firmware: 'MicroPython',
+      refresh: '⟳ Refresh',
+      clear: 'Clear',
+      close: 'Close',
+      download: 'Download',
+      remove: 'Delete',
+      confirmRemove: 'Delete {name} from the board?',
+      free: 'free: {free} of {total}',
+      empty: '(no files)',
+      notSupported: 'This browser can\'t use serial ports (Web Serial). Open MicroLab.html in Google Chrome or Microsoft Edge on a computer.',
+      electronNote: 'In this version of the app the port chooser may not work. Use MicroLab.html in Chrome or Edge.',
+      hintFirst: 'Plug the board in and click “Connect…”. The browser asks once; after that MicroLab finds the board every time it is plugged in.',
+      hintAuto: 'Waiting for a board: plug it in and MicroLab connects by itself.',
+      detected: 'Detected: {name}',
+      connected: 'Connected: {name}',
+      disconnected: '{name} unplugged',
+      connecting: 'Connecting to {name}…',
+      busyPort: 'Can\'t open {name}: another program is using it (Thonny, Arduino IDE, another MicroLab tab…). Close it and try again.',
+      openFailed: 'Can\'t open the port: {error}',
+      noMicroPython: 'The board doesn\'t answer like MicroPython. It may run something else (an Arduino sketch) or have no MicroPython: the “MicroPython” tab helps to install it on a Pico.',
+      noCode: 'Select a MicroPython board on the bench (Pico, ESP32…) to upload its code.',
+      arduino: 'This is an Arduino board with a C++ sketch. Uploading to real boards works for MicroPython for now (Pico, ESP32).',
+      notConnected: 'Connect a board first (the “USB board” button).',
+      busy: 'The board is busy: wait or press Stop.',
+      running: 'Running {file} on the board…',
+      finished: 'Program finished.',
+      stopped: 'Program interrupted.',
+      copying: 'Copying to the board: {files}',
+      uploading: 'Saving on the board: {file} ({size})',
+      uploaded: 'Saved on the board: {files}. Restarting the board…',
+      uploadedToast: 'Uploaded to the board: {files}',
+      failed: 'Error: {error}',
+      timeout: 'the board doesn\'t answer (timed out)',
+      boardInfo: '{machine} · MicroPython {version}',
+      fwIntro: 'A Pico without MicroPython (or with another program) has to be put in BOOTSEL mode once: unplug it, hold the white BOOTSEL button and plug it back in. A drive called RPI-RP2 (Pico) or RP2350 (Pico 2) appears.',
+      fwBoard: 'Board:',
+      fwWrite: 'Choose the RPI-RP2 / RP2350 drive and install',
+      fwWriteTitle: 'In the chooser pick the board\'s drive (e.g. E:\\ RPI-RP2) and allow writing',
+      fwDownload: 'Download the .uf2 file',
+      fwDownloadNote: 'Or download the .uf2 file and drag it onto the RPI-RP2 / RP2350 drive.',
+      fwWriting: 'Writing {file} to {drive}…',
+      fwWrongChip: 'This drive is {found}, but the chosen file is for {wanted}. Choose the right board.',
+      fwDone: 'MicroPython installed. The Pico restarts as a serial port; if MicroLab doesn\'t connect by itself within a few seconds, click “Connect…”.',
+      fwNoPicker: 'This browser can\'t write to the drive: download the .uf2 file and drag it onto the board\'s drive.',
+      fwEsp: 'ESP32: MicroPython is installed with esptool or from micropython.org/download (in Thonny: Tools → Options → Interpreter → Install MicroPython).',
+      size: '{n} B',
+    },
+  };
+  const lang = () => ((document.documentElement.lang || navigator.language || 'en').toLowerCase().startsWith('pl') ? 'pl' : 'en');
+  const t = (key, vars = {}) => {
+    const s = TEXT[lang()][key] ?? TEXT.en[key] ?? key;
+    return s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+  };
+
+  // ───────────────────────────── płytki USB ─────────────────────────────
+  const KNOWN = [
+    { vid: 0x2e8a, name: 'Raspberry Pi Pico (RP2040 / RP2350)', kind: 'native' },
+    { vid: 0x303a, name: 'ESP32 (USB Espressif)', kind: 'native' },
+    { vid: 0x239a, name: 'Adafruit (RP2040 / ESP32)', kind: 'native' },
+    { vid: 0x2886, name: 'Seeed XIAO', kind: 'native' },
+    { vid: 0x1209, name: 'MicroPython (pid.codes)', kind: 'native' },
+    { vid: 0xf055, name: 'MicroPython (pyboard)', kind: 'native' },
+    { vid: 0x10c4, pid: 0xea60, name: 'ESP32 (CP210x)', kind: 'bridge' },
+    { vid: 0x10c4, name: 'ESP32 (Silicon Labs)', kind: 'bridge' },
+    { vid: 0x1a86, pid: 0x7523, name: 'ESP32 / klon (CH340)', kind: 'bridge' },
+    { vid: 0x1a86, pid: 0x55d4, name: 'ESP32 (CH9102)', kind: 'bridge' },
+    { vid: 0x1a86, name: 'ESP32 (WCH)', kind: 'bridge' },
+    { vid: 0x0403, name: 'FTDI USB-UART', kind: 'bridge' },
+    { vid: 0x2341, name: 'Arduino', kind: 'arduino' },
+    { vid: 0x2a03, name: 'Arduino', kind: 'arduino' },
+  ];
+  const PICO_PIDS = { 0x0005: 'Raspberry Pi Pico (MicroPython)', 0x000a: 'Raspberry Pi Pico (Pico SDK)', 0x0009: 'Raspberry Pi Pico (stdio USB)' };
+  const ESP_PIDS = { 0x1001: 'ESP32-C3 / S3 / C6 (USB-JTAG)', 0x0002: 'ESP32-S2', 0x4001: 'ESP32-S2/S3 (MicroPython)', 0x0012: 'ESP32-S3' };
+  const describe = (info = {}) => {
+    const vid = info.usbVendorId, pid = info.usbProductId;
+    if (vid === undefined) return { name: 'Port szeregowy', kind: 'bridge', known: false };
+    const k = KNOWN.find((k) => k.vid === vid && (k.pid === undefined || k.pid === pid));
+    let name = k ? k.name : `USB ${hex4(vid)}:${hex4(pid)}`;
+    if (vid === 0x2e8a && PICO_PIDS[pid]) name = PICO_PIDS[pid];
+    if (vid === 0x303a && ESP_PIDS[pid]) name = ESP_PIDS[pid];
+    return { name, kind: k ? k.kind : 'bridge', known: !!k };
+  };
+  const hex4 = (n) => (n ?? 0).toString(16).padStart(4, '0').toUpperCase();
+  const FILTERS = [...new Set(KNOWN.map((k) => k.vid))].map((usbVendorId) => ({ usbVendorId }));
+
+  // ───────────────────────────── narzędzia ─────────────────────────────
+  const enc = new TextEncoder();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const concat = (a, b) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c; };
+  const indexOf = (buf, pat, from = 0) => {
+    outer: for (let i = from; i <= buf.length - pat.length; i++) {
+      for (let j = 0; j < pat.length; j++) if (buf[i + j] !== pat[j]) continue outer;
+      return i;
+    }
+    return -1;
+  };
+  const bytesToB64 = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
+  const b64ToBytes = (b64) => { const s = atob(b64.replace(/\s+/g, '')); const out = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i); return out; };
+  const norm = (s) => String(s ?? '').replace(/\r\n?/g, '\n');
+  const pyStr = (s) => JSON.stringify(String(s)); // JSON string literal is a valid Python string literal
+  const fmtSize = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(2)} MB` : n >= 1024 ? `${(n / 1024).toFixed(1)} kB` : `${n} B`);
+  const saveBlob = (bytes, name, type = 'application/octet-stream') => {
+    const url = URL.createObjectURL(new Blob([bytes], { type }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+  const el = (tag, attrs = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') e.className = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else if (k === 'text') e.textContent = v;
+      else if (v !== undefined && v !== null && v !== false) e.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()) if (kid !== null && kid !== undefined) e.append(kid);
+    return e;
+  };
+  class TimeoutError extends Error { constructor() { super(t('timeout')); this.name = 'TimeoutError'; } }
+
+  // ───────────────────────────── połączenie szeregowe ─────────────────────────────
+  /** Port szeregowy z buforem bajtów do protokołu i strumieniem tekstu do konsoli. */
+  class Link {
+    constructor(port, onText, onClose) {
+      this.port = port;
+      this.onText = onText; // tekst dla konsoli, gdy protokół nie przechwytuje danych
+      this.onClose = onClose;
+      this.buf = new Uint8Array(0);
+      this.capturing = false; // true: dane idą do bufora protokołu
+      this.waiters = [];
+      this.decoder = new TextDecoder();
+      this.closed = false;
+    }
+    async open() {
+      await this.port.open({ baudRate: 115200, bufferSize: 65536 });
+      // DTR i RTS w tym samym stanie: na ESP32 z automatycznym resetem (CP210x, CH340, USB-JTAG) to ani reset,
+      // ani tryb programowania; Pico (TinyUSB) wysyła dane tylko przy ustawionym DTR.
+      try { await this.port.setSignals({ dataTerminalReady: true, requestToSend: true }); } catch { /* nie każdy port to umie */ }
+      this.writer = this.port.writable.getWriter();
+      this.reading = this.readLoop();
+    }
+    async readLoop() {
+      try {
+        while (this.port.readable && !this.closed) {
+          this.reader = this.port.readable.getReader();
+          try {
+            for (;;) {
+              const { value, done } = await this.reader.read();
+              if (done) break;
+              if (value && value.length) this.push(value);
+            }
+          } finally {
+            try { this.reader.releaseLock(); } catch { /* już zwolniony */ }
+          }
+        }
+      } catch (err) {
+        if (!this.closed) console.warn('[MicroLab USB] read', err);
+      }
+      if (!this.closed) { this.closed = true; this.onClose?.(); }
+    }
+    push(chunk) {
+      if (this.capturing) {
+        this.buf = concat(this.buf, chunk);
+        const w = this.waiters; this.waiters = [];
+        for (const fn of w) fn();
+      } else {
+        this.onText(this.decoder.decode(chunk, { stream: true }));
+      }
+    }
+    async write(data) {
+      if (this.closed) throw new Error('port zamknięty');
+      await this.writer.write(typeof data === 'string' ? enc.encode(data) : data);
+    }
+    /** Czeka na nowe dane w buforze protokołu. */
+    wait(ms) {
+      return new Promise((resolve, reject) => {
+        if (this.closed) { reject(new Error('port zamknięty')); return; }
+        const timer = setTimeout(() => { this.waiters = this.waiters.filter((f) => f !== done); reject(new TimeoutError()); }, ms);
+        const done = () => { clearTimeout(timer); resolve(); };
+        this.waiters.push(done);
+      });
+    }
+    /** Zwraca bajty przed wzorcem i zjada wzorzec. */
+    async until(pattern, ms = 3000) {
+      const pat = typeof pattern === 'string' ? enc.encode(pattern) : pattern;
+      const end = Date.now() + ms;
+      for (;;) {
+        const i = indexOf(this.buf, pat);
+        if (i >= 0) { const before = this.buf.slice(0, i); this.buf = this.buf.slice(i + pat.length); return before; }
+        const left = end - Date.now();
+        if (left <= 0) throw new TimeoutError();
+        await this.wait(left);
+      }
+    }
+    async take(n, ms = 3000) {
+      const end = Date.now() + ms;
+      while (this.buf.length < n) {
+        const left = end - Date.now();
+        if (left <= 0) throw new TimeoutError();
+        await this.wait(left);
+      }
+      const out = this.buf.slice(0, n); this.buf = this.buf.slice(n); return out;
+    }
+    startCapture() { this.capturing = true; this.buf = new Uint8Array(0); }
+    stopCapture() {
+      this.capturing = false;
+      const rest = this.buf; this.buf = new Uint8Array(0);
+      if (rest.length) this.onText(this.decoder.decode(rest, { stream: true }));
+    }
+    async close() {
+      this.closed = true;
+      for (const fn of this.waiters) fn();
+      this.waiters = [];
+      try { await this.reader?.cancel(); } catch { /* ignore */ }
+      try { this.writer?.releaseLock(); } catch { /* ignore */ }
+      try { await this.reading; } catch { /* ignore */ }
+      try { await this.port.close(); } catch { /* ignore */ }
+    }
+  }
+
+  /** Protokół MicroPythona: raw REPL i raw-paste (jak pyboard.py / mpremote / Thonny). */
+  class MicroPython {
+    constructor(link) { this.link = link; this.inRaw = false; this.rawPaste = true; }
+
+    async interrupt() {
+      const l = this.link;
+      await l.write('\r\x03');
+      await sleep(80);
+      await l.write('\x03');
+      await sleep(120);
+    }
+    async enterRaw() {
+      const l = this.link;
+      l.startCapture();
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await this.interrupt();
+        l.buf = new Uint8Array(0);
+        await l.write('\r\x01');
+        try {
+          await l.until('raw REPL; CTRL-B to exit\r\n>', 1500 + attempt * 1000);
+          this.inRaw = true;
+          return;
+        } catch (err) {
+          if (!(err instanceof TimeoutError)) throw err;
+        }
+      }
+      throw new Error(t('noMicroPython'));
+    }
+    async exitRaw() {
+      this.inRaw = false;
+      await this.link.write('\x02');
+      await sleep(30);
+      this.link.stopCapture();
+    }
+    /** Wysyła kod w trybie raw (raw-paste z kontrolą przepływu, a jak płytka go nie zna: kawałkami). */
+    async send(code) {
+      const l = this.link;
+      const data = enc.encode(code);
+      if (this.rawPaste) {
+        await l.write('\x05A\x01');
+        const head = await l.take(2, 2000);
+        if (head[0] === 0x52 && head[1] === 0x01) {
+          const ws = await l.take(2, 2000);
+          const window = ws[0] | (ws[1] << 8);
+          let remain = window;
+          for (let i = 0; i < data.length;) {
+            while (remain === 0 || l.buf.length) {
+              if (!l.buf.length) await l.wait(5000);
+              const b = l.buf[0]; l.buf = l.buf.slice(1);
+              if (b === 0x01) remain += window;
+              else if (b === 0x04) { await l.write('\x04'); throw new Error('płytka przerwała odbiór kodu'); }
+            }
+            const n = Math.min(remain, data.length - i);
+            await l.write(data.subarray(i, i + n));
+            i += n; remain -= n;
+          }
+          await l.write('\x04');
+          await l.until('\x04', 5000); // płytka potwierdza koniec danych
+          return;
+        }
+        this.rawPaste = false;
+        if (!(head[0] === 0x52 && head[1] === 0x00)) {
+          // stara wersja MicroPythona: wypisała znak zachęty raw REPL jeszcze raz
+          await l.until('w REPL; CTRL-B to exit\r\n>', 2000).catch(() => {});
+        }
+      }
+      for (let i = 0; i < data.length; i += 256) {
+        await l.write(data.subarray(i, i + 256));
+        await sleep(10);
+      }
+      await l.write('\x04');
+      const ok = await l.take(2, 5000);
+      if (ok[0] !== 0x4f || ok[1] !== 0x4b) throw new Error(`raw REPL: ${new TextDecoder().decode(ok)}`);
+    }
+    /**
+     * Wykonuje kod; wyjście płynie do onOut / onErr na bieżąco.
+     * timeout: ms bez żadnych danych z płytki (0 = bez limitu, dla programów użytkownika).
+     */
+    async exec(code, { onOut, onErr, timeout = 10000 } = {}) {
+      const l = this.link;
+      await this.send(code);
+      const out = [], err = [];
+      const dOut = new TextDecoder(), dErr = new TextDecoder();
+      for (const [sink, acc, dec] of [[onOut, out, dOut], [onErr, err, dErr]]) {
+        for (;;) {
+          const i = l.buf.indexOf(0x04);
+          const part = i >= 0 ? l.buf.slice(0, i) : l.buf;
+          l.buf = i >= 0 ? l.buf.slice(i + 1) : new Uint8Array(0);
+          if (part.length) { const s = dec.decode(part, { stream: true }); acc.push(s); sink?.(s); }
+          if (i >= 0) break;
+          if (timeout) await l.wait(timeout); else await l.wait(1e9);
+        }
+      }
+      await l.until('>', 3000);
+      return { out: out.join(''), err: err.join('') };
+    }
+    /** exec, który zgłasza błąd z płytki jako wyjątek. */
+    async run(code, timeout = 10000) {
+      const r = await this.exec(code, { timeout });
+      if (r.err) throw new Error(r.err.trim().split('\n').pop());
+      return r.out;
+    }
+    async json(code, timeout) {
+      const out = await this.run(code, timeout);
+      const line = out.trim().split('\n').pop();
+      return JSON.parse(line);
+    }
+    async info() {
+      return this.json('import sys, os, json\ntry:\n m=sys.implementation._machine\nexcept Exception:\n m=sys.platform\nprint(json.dumps([m, os.uname().release, sys.platform]))');
+    }
+    async listFiles() {
+      return this.json([
+        'import os, json',
+        'def _ml_ls(p):',
+        ' r=[]',
+        ' for e in os.ilistdir(p):',
+        '  f=(p.rstrip("/")+"/"+e[0])',
+        '  if e[1]&0x4000:',
+        '   r.append([f,-1]); r.extend(_ml_ls(f))',
+        '  else:',
+        '   r.append([f, e[3] if len(e)>3 else os.stat(f)[6]])',
+        ' return r',
+        'try:',
+        ' s=os.statvfs("/"); fs=[s[0]*s[2], s[0]*s[3]]',
+        'except Exception:',
+        ' fs=[0,0]',
+        'print(json.dumps([_ml_ls("/"), fs]))',
+        'del _ml_ls',
+      ].join('\n'), 20000);
+    }
+    async writeFile(path, bytes, onProgress) {
+      const dirs = path.split('/').slice(0, -1).filter(Boolean);
+      const head = ['import os', 'try:', ' import binascii as _B', 'except ImportError:', ' import ubinascii as _B'];
+      let acc = '';
+      for (const d of dirs) {
+        acc += '/' + d;
+        head.push(`try:\n os.mkdir(${pyStr(acc)})\nexcept OSError:\n pass`);
+      }
+      head.push(`_f=open(${pyStr(path)},"wb")`, '_w=_f.write');
+      await this.run(head.join('\n'));
+      const CHUNK = 2048;
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        await this.run(`_w(_B.a2b_base64(${pyStr(bytesToB64(bytes.subarray(i, i + CHUNK)))}))`);
+        onProgress?.(Math.min(bytes.length, i + CHUNK), bytes.length);
+      }
+      await this.run('_f.close()\ndel _f, _w, _B');
+    }
+    async readFile(path) {
+      const out = await this.run([
+        'try:',
+        ' import binascii as _B',
+        'except ImportError:',
+        ' import ubinascii as _B',
+        `with open(${pyStr(path)},"rb") as _f:`,
+        ' while True:',
+        '  _d=_f.read(1536)',
+        '  if not _d: break',
+        '  print(_B.b2a_base64(_d).decode().strip())',
+        'del _B',
+      ].join('\n'), 20000);
+      const parts = out.split(/\r?\n/).filter(Boolean).map(b64ToBytes);
+      const total = parts.reduce((n, p) => n + p.length, 0);
+      const bytes = new Uint8Array(total);
+      let o = 0; for (const p of parts) { bytes.set(p, o); o += p.length; }
+      return bytes;
+    }
+    async remove(path, isDir) {
+      await this.run(`import os\nos.${isDir ? 'rmdir' : 'remove'}(${pyStr(path)})`);
+    }
+  }
+
+  // ───────────────────────────── konsola (mały terminal) ─────────────────────────────
+  class MiniTerm {
+    constructor(host, onKey) {
+      this.host = host;
+      this.onKey = onKey;
+      this.lines = [[]]; // linia = tablica [znak, kolor]
+      this.row = 0; this.col = 0; this.color = '';
+      this.esc = null;
+      this.pre = el('pre', { class: 'mlu-term-out' });
+      this.input = el('textarea', { class: 'mlu-term-input', spellcheck: 'false', autocomplete: 'off', 'aria-label': 'REPL' });
+      host.append(this.pre, this.input);
+      host.addEventListener('mouseup', () => { if (!String(window.getSelection())) this.input.focus({ preventScroll: true }); });
+      this.input.addEventListener('keydown', (e) => this.key(e));
+      this.input.addEventListener('paste', (e) => { e.preventDefault(); e.stopPropagation(); const s = e.clipboardData.getData('text'); if (s) this.onKey(s.replace(/\r?\n/g, '\r')); });
+      this.input.addEventListener('input', () => { this.input.value = ''; });
+      for (const ev of ['keyup', 'keypress']) this.input.addEventListener(ev, (e) => e.stopPropagation());
+      this.input.addEventListener('focus', () => host.classList.add('focused'));
+      this.input.addEventListener('blur', () => host.classList.remove('focused'));
+    }
+    key(e) {
+      e.stopPropagation();
+      const k = e.key;
+      let s = null;
+      if (e.ctrlKey && !e.altKey && k.length === 1) {
+        const c = k.toLowerCase();
+        if (c === 'c' && String(window.getSelection())) return; // kopiowanie zaznaczenia
+        if (c === 'v') return; // wklejanie przez zdarzenie paste
+        if (c >= 'a' && c <= 'z') s = String.fromCharCode(c.charCodeAt(0) - 96);
+      } else if (k === 'Enter') s = '\r';
+      else if (k === 'Backspace') s = '\b';
+      else if (k === 'Tab') s = '\t';
+      else if (k === 'Escape') s = '\x1b';
+      else if (k === 'ArrowUp') s = '\x1b[A';
+      else if (k === 'ArrowDown') s = '\x1b[B';
+      else if (k === 'ArrowRight') s = '\x1b[C';
+      else if (k === 'ArrowLeft') s = '\x1b[D';
+      else if (k === 'Home') s = '\x1b[H';
+      else if (k === 'End') s = '\x1b[F';
+      else if (k === 'Delete') s = '\x1b[3~';
+      else if (k.length === 1 && !e.ctrlKey && !e.metaKey) s = k;
+      if (s !== null) { e.preventDefault(); this.onKey(s); }
+    }
+    write(text) {
+      for (const ch of text) this.put(ch);
+      this.schedule();
+    }
+    put(ch) {
+      if (this.esc !== null) {
+        this.esc += ch;
+        if (this.esc === '[' || (this.esc.startsWith('[') && /[\d;?]$/.test(this.esc))) return;
+        if (this.esc.startsWith('[')) this.csi(this.esc.slice(1, -1), this.esc.slice(-1));
+        this.esc = null;
+        return;
+      }
+      const line = () => this.lines[this.row];
+      switch (ch) {
+        case '\x1b': this.esc = ''; return;
+        case '\r': this.col = 0; return;
+        case '\n':
+          this.row++; this.col = 0;
+          if (this.row >= this.lines.length) this.lines.push([]);
+          if (this.lines.length > 1000) { const cut = this.lines.length - 800; this.lines.splice(0, cut); this.row -= cut; }
+          return;
+        case '\b': if (this.col > 0) this.col--; return;
+        case '\x07': case '\x00': return;
+        case '\t': { const n = 8 - (this.col % 8); for (let i = 0; i < n; i++) this.put(' '); return; }
+        default: {
+          if (ch < ' ' && ch !== '\t') return;
+          const l = line();
+          while (l.length < this.col) l.push([' ', '']);
+          l[this.col] = [ch, this.color];
+          this.col++;
+        }
+      }
+    }
+    csi(params, final) {
+      const n = parseInt(params, 10) || 1;
+      const l = this.lines[this.row];
+      switch (final) {
+        case 'K': if (!params || params === '0') l.length = Math.min(l.length, this.col); else if (params === '2') l.length = 0; break;
+        case 'D': this.col = Math.max(0, this.col - n); break;
+        case 'C': this.col += n; break;
+        case 'm': {
+          const codes = params.split(';').map(Number);
+          for (const c of codes) {
+            if (c === 0 || params === '') this.color = '';
+            else if (c >= 30 && c <= 37) this.color = 'c' + (c - 30);
+            else if (c >= 90 && c <= 97) this.color = 'c' + (c - 90);
+          }
+          break;
+        }
+        case 'J': if (params === '2') { this.lines = [[]]; this.row = 0; this.col = 0; } break;
+        default: break;
+      }
+    }
+    say(text, color = '') {
+      // komunikat MicroLab w osobnej linii
+      if (this.lines[this.row].length) this.write('\r\n');
+      const code = { red: '31', green: '32', yellow: '33', blue: '34', cyan: '36' }[color];
+      this.write((code ? `\x1b[${code}m` : '') + text + (code ? '\x1b[0m' : '') + '\r\n');
+    }
+    clear() { this.lines = [[]]; this.row = 0; this.col = 0; this.schedule(); }
+    schedule() {
+      if (this.pending) return;
+      this.pending = requestAnimationFrame(() => { this.pending = 0; this.render(); });
+    }
+    render() {
+      const atBottom = this.host.scrollTop + this.host.clientHeight >= this.host.scrollHeight - 30;
+      const frag = document.createDocumentFragment();
+      this.lines.forEach((l, r) => {
+        let run = '', runColor = null;
+        const flush = () => { if (run) frag.append(runColor ? el('span', { class: 'mlu-' + runColor, text: run }) : document.createTextNode(run)); run = ''; };
+        l.forEach(([c, color], i) => {
+          if (r === this.row && i === this.col) { flush(); frag.append(el('span', { class: 'mlu-cursor', text: c })); runColor = null; return; }
+          if (color !== runColor) { flush(); runColor = color; }
+          run += c;
+        });
+        flush();
+        if (r === this.row && this.col >= l.length) {
+          if (this.col > l.length) frag.append(' '.repeat(this.col - l.length));
+          frag.append(el('span', { class: 'mlu-cursor', text: ' ' }));
+        }
+        if (r < this.lines.length - 1) frag.append('\n');
+      });
+      this.pre.replaceChildren(frag);
+      if (atBottom) this.host.scrollTop = this.host.scrollHeight;
+    }
+  }
+
+  // ───────────────────────────── stan MicroLab (edytor i projekt) ─────────────────────────────
+  const app = {
+    codePanel() { return document.querySelector('section.code-panel'); },
+    boardId() { return this.codePanel()?.querySelector('.code-toolbar > strong')?.textContent?.trim() || null; },
+    activeFile() {
+      const tab = this.codePanel()?.querySelector('.file-tabs [role=tab][aria-selected=true], .file-tabs button.active');
+      if (!tab) return null;
+      const clone = tab.cloneNode(true);
+      clone.querySelectorAll('.tab-badge, .tab-close').forEach((n) => n.remove());
+      return clone.textContent.trim() || null;
+    },
+    editorView() {
+      const cm = this.codePanel()?.querySelector('.cm-content');
+      if (!cm) return null;
+      return cm.cmTile?.root?.view || cm.cmView?.view || cm.cmView?.rootView?.view || null;
+    },
+    editorText() { return this.editorView()?.state?.doc?.toString() ?? null; },
+    project() {
+      try { return JSON.parse(localStorage.getItem('microlab.autosave.v1') || 'null'); } catch { return null; }
+    },
+    /** Kod zaznaczonej płytki: pliki z autozapisu, aktywny plik prosto z edytora. */
+    boardCode() {
+      const id = this.boardId();
+      if (!id) return null;
+      const proj = this.project();
+      const code = proj?.code?.[id] ? JSON.parse(JSON.stringify(proj.code[id])) : { language: 'micropython', files: {}, main: 'main.py' };
+      const active = this.activeFile();
+      const text = this.editorText();
+      if (active && text !== null) code.files = { ...(code.files || {}), [active]: text };
+      code.active = active || code.active || code.main || 'main.py';
+      code.main = code.main || 'main.py';
+      code.files = code.files || {};
+      const part = proj?.parts?.find((p) => p.id === id);
+      code.partType = part?.type || '';
+      code.id = id;
+      return code;
+    },
+  };
+
+  // ───────────────────────────── sterowanie płytką ─────────────────────────────
+  const state = {
+    link: null, mp: null, port: null, desc: null, info: null,
+    busy: false, running: false, files: null, fs: null, error: null, ignored: new WeakSet(),
+  };
+  const listeners = new Set();
+  const changed = () => { for (const fn of listeners) fn(); };
+
+  let term; // MiniTerm, tworzony z panelem
+  const termSay = (text, color) => term?.say(text, color);
+
+  async function connectPort(port, { auto = false } = {}) {
+    if (state.link) {
+      if (state.port === port) return;
+      await disconnect();
+    }
+    const desc = describe(port.getInfo?.());
+    state.port = port; state.desc = desc; state.error = null; state.info = null; state.files = null;
+    state.busy = true; changed();
+    termSay(t('connecting', { name: desc.name }), 'cyan');
+    const link = new Link(port, (s) => term?.write(s), () => onLost(link));
+    try {
+      await link.open();
+    } catch (err) {
+      state.port = null; state.desc = null; state.busy = false;
+      const msg = /in use|already open|Failed to open/i.test(err?.message || '') ? t('busyPort', { name: desc.name }) : t('openFailed', { error: err?.message || err });
+      state.error = msg; changed();
+      termSay(msg, 'red');
+      if (!auto) toast(msg, 'error');
+      return;
+    }
+    state.link = link; state.mp = new MicroPython(link);
+    toast(t('connected', { name: desc.name }), 'ok');
+    termSay(t('connected', { name: desc.name }), 'green');
+    showPanel(undefined, { auto: true });
+    if (desc.kind === 'arduino') { state.busy = false; changed(); return; }
+    try {
+      await state.mp.enterRaw();
+      const [machine, version] = await state.mp.info();
+      state.info = { machine, version };
+      await refreshFilesInner();
+      await state.mp.exitRaw();
+      termSay(t('boardInfo', { machine, version }), 'green');
+    } catch (err) {
+      try { await state.mp.exitRaw(); } catch { /* ignore */ }
+      state.error = err?.message || String(err);
+      termSay(state.error, 'yellow');
+    }
+    state.busy = false; changed();
+  }
+
+  function onLost(link) {
+    if (state.link !== link) return;
+    const name = state.desc?.name || '';
+    state.link = null; state.mp = null; state.port = null; state.desc = null; state.info = null;
+    state.files = null; state.busy = false; state.running = false;
+    changed();
+    termSay(t('disconnected', { name }), 'yellow');
+    toast(t('disconnected', { name }), 'info');
+  }
+
+  async function disconnect() {
+    const link = state.link;
+    if (!link) return;
+    const name = state.desc?.name || '';
+    if (state.port) state.ignored.add(state.port); // nie łącz od razu z powrotem
+    state.link = null; state.mp = null; state.port = null; state.desc = null; state.info = null;
+    state.files = null; state.busy = false; state.running = false;
+    changed();
+    await link.close();
+    termSay(t('disconnected', { name }), 'yellow');
+  }
+
+  async function choosePort(all = false) {
+    if (!('serial' in navigator)) { toast(t('notSupported'), 'error'); return; }
+    let port;
+    try {
+      port = await navigator.serial.requestPort(all ? {} : { filters: FILTERS });
+    } catch (err) {
+      if (err?.name !== 'NotFoundError') { toast(t('openFailed', { error: err?.message || err }), 'error'); termSay(t('openFailed', { error: err?.message || err }), 'red'); }
+      return;
+    }
+    state.ignored.delete(port);
+    await connectPort(port);
+  }
+
+  async function autoConnect(trigger) {
+    if (!('serial' in navigator) || state.link || state.busy) return;
+    let ports = [];
+    try { ports = await navigator.serial.getPorts(); } catch { return; }
+    ports = ports.filter((p) => !state.ignored.has(p));
+    if (!ports.length) return;
+    // najpierw znane płytki z MicroPythonem
+    ports.sort((a, b) => rank(a) - rank(b));
+    const port = ports[0];
+    if (trigger === 'plug') toast(t('detected', { name: describe(port.getInfo?.()).name }), 'info');
+    await connectPort(port, { auto: true });
+  }
+  const rank = (p) => { const d = describe(p.getInfo?.()); return d.kind === 'native' ? 0 : d.kind === 'bridge' ? (d.known ? 1 : 2) : 3; };
+
+  /** Wspólne opakowanie operacji na płytce. */
+  async function withBoard(fn) {
+    if (!state.link) { toast(t('notConnected'), 'error'); showPanel(); return; }
+    if (state.busy) { toast(t('busy'), 'error'); return; }
+    state.busy = true; state.error = null; changed();
+    try {
+      await state.mp.enterRaw();
+      await fn(state.mp);
+    } catch (err) {
+      const msg = err?.message || String(err);
+      state.error = msg;
+      termSay(t('failed', { error: msg }), 'red');
+    } finally {
+      try { if (state.mp?.inRaw) await state.mp.exitRaw(); } catch { /* ignore */ }
+      state.busy = false; state.running = false; changed();
+    }
+  }
+
+  async function refreshFilesInner() {
+    const [files, fs] = await state.mp.listFiles();
+    state.files = files.sort((a, b) => a[0].localeCompare(b[0]));
+    state.fs = fs;
+  }
+  const refreshFiles = () => withBoard(refreshFilesInner);
+
+  function codeForUpload() {
+    const code = app.boardCode();
+    if (!code) { toast(t('noCode'), 'error'); termSay(t('noCode'), 'yellow'); return null; }
+    if (code.language && code.language !== 'micropython') { toast(t('arduino'), 'error'); termSay(t('arduino'), 'yellow'); return null; }
+    return code;
+  }
+
+  /** Jak F5 w Thonny: kod z edytora wykonuje się na płytce, wyjście na żywo w konsoli. */
+  async function runOnBoard() {
+    const code = codeForUpload();
+    if (!code) return;
+    const file = code.active;
+    const src = code.files[file] ?? '';
+    showPanel('console');
+    await withBoard(async (mp) => {
+      // biblioteki projektu (np. ssd1306.py), których nie ma na płytce albo mają inny rozmiar
+      if (!state.files) await refreshFilesInner();
+      const onBoard = new Map((state.files || []).map(([p, s]) => [p.replace(/^\//, ''), s]));
+      const libs = Object.entries(code.files).filter(([name]) => name !== file && name !== code.main && /\.py$/i.test(name))
+        .filter(([name, text]) => onBoard.get(name) !== enc.encode(norm(text)).length);
+      if (libs.length) {
+        termSay(t('copying', { files: libs.map(([n]) => n).join(', ') }), 'cyan');
+        for (const [name, text] of libs) await mp.writeFile(name, enc.encode(norm(text)));
+        await refreshFilesInner();
+      }
+      termSay(t('running', { file }), 'cyan');
+      state.running = true; changed();
+      const r = await mp.exec(norm(src), {
+        timeout: 0,
+        onOut: (s) => term.write(s.replace(/\r?\n/g, '\r\n')),
+        onErr: (s) => term.write('\x1b[31m' + s.replace(/\r?\n/g, '\r\n') + '\x1b[0m'),
+      });
+      state.running = false;
+      if (/KeyboardInterrupt/.test(r.err)) termSay(t('stopped'), 'yellow');
+      else if (!r.err) termSay(t('finished'), 'green');
+    });
+  }
+
+  /** Zapis wszystkich plików projektu i miękki restart, więc main.py rusza od razu i po każdym włączeniu. */
+  async function uploadToBoard() {
+    const code = codeForUpload();
+    if (!code) return;
+    showPanel('console');
+    const names = Object.keys(code.files);
+    if (!names.length) return;
+    let ok = false;
+    await withBoard(async (mp) => {
+      for (const name of names) {
+        const bytes = enc.encode(norm(code.files[name]));
+        termSay(t('uploading', { file: name, size: fmtSize(bytes.length) }), 'cyan');
+        await mp.writeFile(name, bytes);
+      }
+      await refreshFilesInner();
+      ok = true;
+    });
+    if (ok) {
+      termSay(t('uploaded', { files: names.join(', ') }), 'green');
+      toast(t('uploadedToast', { files: names.join(', ') }), 'ok');
+      await softReset();
+    }
+  }
+
+  async function stopProgram() {
+    if (!state.link) return;
+    await state.link.write('\x03');
+  }
+
+  async function softReset() {
+    if (!state.link) return;
+    if (state.busy && !state.running) { toast(t('busy'), 'error'); return; }
+    if (state.running) {
+      await state.link.write('\x03');
+      for (let i = 0; i < 60 && state.busy; i++) await sleep(50); // exec kończy się i wychodzi z raw REPL
+      if (!state.link) return;
+    }
+    // przerwij to, co działa, i Ctrl+D w zwykłym REPL: soft reboot uruchamia main.py
+    await state.link.write('\r\x03');
+    await sleep(100);
+    await state.link.write('\x03');
+    await sleep(100);
+    await state.link.write('\x04');
+  }
+
+  async function downloadFile(path) {
+    await withBoard(async (mp) => {
+      const bytes = await mp.readFile(path);
+      saveBlob(bytes, path.split('/').pop());
+    });
+  }
+  async function removeFile(path, isDir) {
+    if (!confirm(t('confirmRemove', { name: path }))) return;
+    await withBoard(async (mp) => { await mp.remove(path, isDir); await refreshFilesInner(); });
+  }
+
+  // ───────────────────────────── MicroPython na Pico (BOOTSEL) ─────────────────────────────
+  const FIRMWARE = [
+    { key: 'firmware/mp-1.29.0-pico.uf2', label: 'Raspberry Pi Pico / Pico H', chip: 'RP2040', parts: ['pico', 'rp2040'] },
+    { key: 'firmware/mp-1.29.0-pico-w.uf2', label: 'Raspberry Pi Pico W / WH', chip: 'RP2040', parts: ['picow', 'pico-w', 'pico_w'] },
+    { key: 'firmware/mp-1.29.0-pico2.uf2', label: 'Raspberry Pi Pico 2 / Pico 2 H', chip: 'RP2350', parts: ['pico2'] },
+    { key: 'firmware/mp-1.29.0-pico2-w.uf2', label: 'Raspberry Pi Pico 2 W / WH', chip: 'RP2350', parts: ['pico2w', 'pico2-w', 'pico2_w'] },
+  ];
+  const firmwareAvailable = () => FIRMWARE.filter((f) => window.__MICROLAB_FILES__?.[f.key]);
+  const firmwareBytes = (fw) => b64ToBytes(window.__MICROLAB_FILES__[fw.key]);
+  const fwFileName = (fw) => fw.key.split('/').pop();
+  function guessFirmware() {
+    const list = firmwareAvailable();
+    const type = (app.boardCode()?.partType || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return list.find((f) => f.parts.some((p) => p.replace(/[^a-z0-9]/g, '') === type)) || list[0];
+  }
+
+  async function writeFirmware(fw) {
+    if (!window.showDirectoryPicker) { toast(t('fwNoPicker'), 'error'); termSay(t('fwNoPicker'), 'yellow'); return; }
+    let dir;
+    try { dir = await window.showDirectoryPicker({ id: 'microlab-bootsel', mode: 'readwrite' }); } catch (err) { if (err?.name !== 'AbortError') toast(err?.message || String(err), 'error'); return; }
+    // INFO_UF2.TXT mówi, który to układ
+    let found = null;
+    try {
+      const info = await (await (await dir.getFileHandle('INFO_UF2.TXT')).getFile()).text();
+      found = /RP2350/i.test(info) ? 'RP2350' : /RPI-RP2|RP2040/i.test(info) ? 'RP2040' : null;
+    } catch { /* to może nie być dysk Pico: spróbujemy i tak */ }
+    if (found && found !== fw.chip) { const m = t('fwWrongChip', { found, wanted: `${fw.label} (${fw.chip})` }); toast(m, 'error'); termSay(m, 'red'); return; }
+    termSay(t('fwWriting', { file: fwFileName(fw), drive: dir.name }), 'cyan');
+    try {
+      const fh = await dir.getFileHandle(fwFileName(fw), { create: true });
+      const w = await fh.createWritable();
+      await w.write(firmwareBytes(fw));
+      await w.close();
+    } catch (err) {
+      // Pico restartuje się zaraz po ostatnim bloku UF2, więc zamknięcie pliku często się nie udaje,
+      // choć wszystko się zapisało: o wyniku powie dopiero nowy port szeregowy.
+      console.info('[MicroLab USB] UF2 write ended with', err);
+    }
+    termSay(t('fwDone'), 'green');
+    toast(t('fwDone'), 'ok');
+  }
+
+  // ───────────────────────────── powiadomienia ─────────────────────────────
+  let toastBox;
+  function toast(text, tone = 'info') {
+    if (!toastBox) { toastBox = el('div', { class: 'mlu-toasts', role: 'status', 'aria-live': 'polite' }); document.body.append(toastBox); }
+    const item = el('div', { class: `mlu-toast mlu-${tone}`, text });
+    item.addEventListener('click', () => item.remove());
+    toastBox.append(item);
+    setTimeout(() => item.remove(), tone === 'error' ? 9000 : 4500);
+  }
+
+  // ───────────────────────────── interfejs ─────────────────────────────
+  const CSS = `
+  .mlu-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted,#888);margin-right:6px;vertical-align:middle;flex-shrink:0}
+  .mlu-dot.on{background:var(--ok,#2ea043);box-shadow:0 0 0 2px color-mix(in srgb,var(--ok,#2ea043) 30%,transparent)}
+  .mlu-dot.busy{background:var(--warning,#d29922)}
+  .mlu-dot.err{background:var(--danger,#da3633)}
+  .mlu-top{display:inline-flex;align-items:center;white-space:nowrap}
+  .mlu-group{display:inline-flex;gap:6px;align-items:center}
+  .mlu-group [hidden],.mlu-panel [hidden]{display:none!important}
+  .mlu-panel{position:fixed;z-index:9000;right:16px;top:60px;width:min(560px,calc(100vw - 32px));height:min(420px,calc(100vh - 140px));min-width:300px;min-height:220px;display:flex;flex-direction:column;
+    background:var(--panel-bg,var(--bg-raised,#161b22));color:var(--text,#e6edf3);border:var(--panel-bw,1px) solid var(--panel-border,var(--border,#30363d));border-radius:var(--panel-radius,10px);
+    box-shadow:0 12px 40px rgba(0,0,0,.35);resize:both;overflow:hidden;font-family:var(--font-ui,system-ui,sans-serif);font-size:13px}
+  .mlu-panel[hidden]{display:none}
+  .mlu-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--panel-border,var(--border,#30363d));cursor:move;user-select:none}
+  .mlu-head strong{font-family:var(--font-head,inherit)}
+  .mlu-head .mlu-status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted,#8b949e)}
+  .mlu-panel button{font:inherit;cursor:pointer;color:var(--btn-text,var(--text,#e6edf3));background:var(--btn-bg,var(--bg-inset,#21262d));border:var(--btn-bw,1px) solid var(--btn-border,var(--border,#30363d));border-radius:var(--btn-radius,6px);padding:3px 9px;white-space:nowrap}
+  .mlu-panel button:hover:not(:disabled){background:var(--btn-hover-bg,var(--hover-bg,#30363d));color:var(--btn-hover-text,var(--text,#e6edf3));border-color:var(--btn-hover-border,var(--btn-border,#30363d))}
+  .mlu-panel button:disabled{opacity:.45;cursor:default}
+  .mlu-panel button.primary{background:var(--primary-bg,var(--accent,#2f81f7));color:var(--primary-text,#fff);border-color:var(--primary-border,var(--accent,#2f81f7))}
+  .mlu-panel .mlu-x{border:none;background:none;font-size:16px;padding:0 4px;line-height:1}
+  .mlu-bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-bottom:1px solid var(--panel-border,var(--border,#30363d));align-items:center}
+  .mlu-bar .mlu-sp{flex:1}
+  .mlu-tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--panel-border,var(--border,#30363d))}
+  .mlu-tabs button{border:none!important;background:none!important;border-bottom:2px solid transparent!important;border-radius:0!important;color:var(--muted,#8b949e)!important;padding:6px 10px}
+  .mlu-tabs button.active{color:var(--text,#e6edf3)!important;border-bottom-color:var(--accent,#2f81f7)!important}
+  .mlu-body{flex:1;min-height:0;position:relative}
+  .mlu-page{position:absolute;inset:0;overflow:auto}
+  .mlu-page[hidden]{display:none}
+  .mlu-term{background:var(--editor-bg,#0d1117);color:var(--editor-text,#e6edf3);cursor:text;padding:8px 10px}
+  .mlu-term-out{margin:0;font:12.5px/1.35 ui-monospace,"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace;white-space:pre-wrap;word-break:break-all}
+  .mlu-term-input{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+  .mlu-term .mlu-cursor{outline:1px solid currentColor;outline-offset:-1px}
+  .mlu-term.focused .mlu-cursor{background:var(--caret,currentColor);color:var(--editor-bg,#0d1117);outline:none}
+  .mlu-c1{color:#ff7b72}.mlu-c2{color:#3fb950}.mlu-c3{color:#d29922}.mlu-c4{color:#79c0ff}.mlu-c5{color:#d2a8ff}.mlu-c6{color:#56d4dd}
+  .mlu-files{padding:8px 10px}
+  .mlu-files table{width:100%;border-collapse:collapse}
+  .mlu-files td{padding:3px 4px;border-bottom:1px solid color-mix(in srgb,var(--border,#30363d) 60%,transparent)}
+  .mlu-files td.n{font-family:ui-monospace,Consolas,monospace}
+  .mlu-files td.s{text-align:right;color:var(--muted,#8b949e);white-space:nowrap}
+  .mlu-files td.a{text-align:right;white-space:nowrap}
+  .mlu-files td.a button{padding:1px 7px;font-size:12px}
+  .mlu-muted{color:var(--muted,#8b949e)}
+  .mlu-fw{padding:10px 12px;display:flex;flex-direction:column;gap:10px;line-height:1.45}
+  .mlu-fw select{font:inherit;background:var(--input-bg,var(--bg-inset,#0d1117));color:var(--text,#e6edf3);border:1px solid var(--border,#30363d);border-radius:6px;padding:3px 6px}
+  .mlu-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .mlu-note{padding:8px 10px;color:var(--warning,#d29922);border-bottom:1px solid var(--panel-border,var(--border,#30363d))}
+  .mlu-note[hidden]{display:none}
+  .mlu-toasts{position:fixed;z-index:9100;left:50%;bottom:48px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;max-width:calc(100vw - 32px)}
+  .mlu-toast{pointer-events:auto;cursor:pointer;padding:8px 14px;border-radius:8px;font:13px var(--font-ui,system-ui,sans-serif);color:var(--text,#e6edf3);background:var(--overlay-bg,var(--panel-bg,#161b22));border:1px solid var(--panel-border,var(--border,#30363d));box-shadow:0 6px 24px rgba(0,0,0,.3);border-left:4px solid var(--accent,#2f81f7)}
+  .mlu-toast.mlu-ok{border-left-color:var(--ok,#2ea043)}
+  .mlu-toast.mlu-error{border-left-color:var(--danger,#da3633)}
+  @media (max-width:640px){.mlu-panel{left:8px;right:8px;width:auto;bottom:8px}}
+  `;
+
+  let panel, refs = {}, closedByUser = false;
+  const POS_KEY = 'microlab.usb.panel';
+  function buildPanel() {
+    if (panel) return;
+    document.head.append(el('style', { id: 'microlab-usb-style', text: CSS }));
+    const tabBtn = (id) => el('button', { 'data-tab': id, 'data-t': { console: 'console', files: 'files', firmware: 'firmware' }[id], onclick: () => showTab(id) });
+    refs.dot = el('span', { class: 'mlu-dot' });
+    refs.status = el('span', { class: 'mlu-status' });
+    refs.connect = el('button', { class: 'primary', 'data-t': 'connect', 'data-title': 'connectTitle', onclick: () => choosePort(false) });
+    refs.allPorts = el('button', { 'data-t': 'allPorts', 'data-title': 'allPortsTitle', onclick: () => choosePort(true) });
+    refs.disconnect = el('button', { 'data-t': 'disconnect', onclick: () => disconnect() });
+    refs.run = el('button', { class: 'primary', 'data-t': 'runOnBoard', 'data-title': 'runOnBoardTitle', onclick: () => runOnBoard() });
+    refs.upload = el('button', { 'data-t': 'upload', 'data-title': 'uploadTitle', onclick: () => uploadToBoard() });
+    refs.stop = el('button', { 'data-t': 'stop', 'data-title': 'stopTitle', onclick: () => stopProgram() });
+    refs.restart = el('button', { 'data-t': 'restart', 'data-title': 'restartTitle', onclick: () => softReset() });
+    refs.note = el('div', { class: 'mlu-note', hidden: true });
+    refs.termHost = el('div', { class: 'mlu-page mlu-term', 'data-page': 'console' });
+    refs.filesPage = el('div', { class: 'mlu-page mlu-files', 'data-page': 'files', hidden: true });
+    refs.fwPage = el('div', { class: 'mlu-page mlu-fw', 'data-page': 'firmware', hidden: true });
+    refs.tabs = el('div', { class: 'mlu-tabs', role: 'tablist' }, tabBtn('console'), tabBtn('files'), tabBtn('firmware'),
+      el('span', { class: 'mlu-sp', style: 'flex:1' }),
+      el('button', { 'data-t': 'clear', style: 'font-size:12px', onclick: () => term.clear() }));
+    panel = el('section', { class: 'mlu-panel', hidden: true, 'aria-label': 'MicroLab USB' },
+      el('div', { class: 'mlu-head' }, refs.dot, el('strong', { 'data-t': 'usb' }), refs.status,
+        el('button', { class: 'mlu-x', 'data-title': 'close', text: '×', onclick: () => { panel.hidden = true; closedByUser = true; } })),
+      el('div', { class: 'mlu-bar' }, refs.connect, refs.allPorts, refs.disconnect, el('span', { class: 'mlu-sp' }), refs.run, refs.upload, refs.stop, refs.restart),
+      refs.note, refs.tabs,
+      el('div', { class: 'mlu-body' }, refs.termHost, refs.filesPage, refs.fwPage));
+    document.body.append(panel);
+    term = new MiniTerm(refs.termHost, (s) => {
+      // podczas operacji na plikach klawisze zepsułyby protokół; program uruchomiony z MicroLab dostaje je jako input()
+      if (state.link && (!state.busy || state.running)) state.link.write(s).catch(() => {});
+    });
+    dragBy(panel.querySelector('.mlu-head'), panel);
+    try {
+      const pos = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+      if (pos && pos.x < window.innerWidth - 80 && pos.y < window.innerHeight - 40) Object.assign(panel.style, { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto' });
+    } catch { /* bez zapamiętanej pozycji */ }
+    showTab('console');
+    translate(panel);
+    render();
+  }
+
+  function dragBy(handle, box) {
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      const r = box.getBoundingClientRect();
+      const dx = e.clientX - r.left, dy = e.clientY - r.top;
+      handle.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const x = Math.max(0, Math.min(window.innerWidth - 80, ev.clientX - dx));
+        const y = Math.max(0, Math.min(window.innerHeight - 40, ev.clientY - dy));
+        Object.assign(box.style, { left: `${x}px`, top: `${y}px`, right: 'auto', bottom: 'auto' });
+      };
+      const up = () => {
+        handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', up);
+        try { localStorage.setItem(POS_KEY, JSON.stringify({ x: parseFloat(box.style.left) || 0, y: parseFloat(box.style.top) || 0 })); } catch { /* nie szkodzi */ }
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    });
+  }
+
+  let currentTab = 'console';
+  function showTab(id) {
+    currentTab = id;
+    panel.querySelectorAll('[data-tab]').forEach((b) => { b.classList.toggle('active', b.dataset.tab === id); b.setAttribute('aria-selected', String(b.dataset.tab === id)); });
+    panel.querySelectorAll('[data-page]').forEach((p) => { p.hidden = p.dataset.page !== id; });
+    if (id === 'files' && state.link && !state.files && !state.busy) refreshFiles();
+    if (id === 'firmware') renderFirmware();
+    if (id === 'console') term.input.focus({ preventScroll: true });
+    render();
+  }
+  function showPanel(tab, { auto = false } = {}) {
+    buildPanel();
+    if (auto && closedByUser) return;
+    panel.hidden = false;
+    if (tab) showTab(tab);
+  }
+  function togglePanel() { buildPanel(); panel.hidden = !panel.hidden; closedByUser = panel.hidden; if (!panel.hidden) showTab(currentTab); }
+
+  function translate(root) {
+    root.querySelectorAll('[data-t]').forEach((n) => { n.textContent = t(n.dataset.t); });
+    root.querySelectorAll('[data-title]').forEach((n) => { n.title = t(n.dataset.title); });
+  }
+
+  function statusText() {
+    if (!('serial' in navigator)) return t('notSupported');
+    if (state.link) {
+      const name = state.desc?.name || '';
+      return state.info ? `${name} — ${t('boardInfo', state.info)}` : name;
+    }
+    if (state.busy && state.desc) return t('connecting', { name: state.desc.name });
+    return t('noBoard');
+  }
+  function dotClass() {
+    if (state.busy || state.running) return 'mlu-dot busy';
+    if (state.link) return state.error && !state.info ? 'mlu-dot err' : 'mlu-dot on';
+    return 'mlu-dot';
+  }
+
+  async function hasGrantedPorts() {
+    try { return (await navigator.serial.getPorts()).length > 0; } catch { return false; }
+  }
+
+  function render() {
+    // pasek górny i pasek kodu
+    document.querySelectorAll('.mlu-top .mlu-dot, .mlu-group .mlu-dot').forEach((d) => { d.className = dotClass(); });
+    document.querySelectorAll('.mlu-top').forEach((b) => { b.title = `${t('usbTitle')}\n${statusText()}`; });
+    document.querySelectorAll('.mlu-group').forEach((g) => {
+      const connected = !!state.link;
+      g.querySelector('.mlu-g-run').hidden = !connected;
+      g.querySelector('.mlu-g-upload').hidden = !connected;
+      g.querySelector('.mlu-g-stop').hidden = !(connected && state.running);
+      g.querySelectorAll('button').forEach((b) => { if (!b.classList.contains('mlu-g-stop') && !b.classList.contains('mlu-g-usb')) b.disabled = state.busy; });
+    });
+    if (!panel) return;
+    const supported = 'serial' in navigator;
+    refs.dot.className = dotClass();
+    refs.status.textContent = statusText();
+    refs.status.title = statusText();
+    refs.connect.hidden = !!state.link || !supported;
+    refs.allPorts.hidden = !!state.link || !supported;
+    refs.disconnect.hidden = !state.link;
+    refs.connect.disabled = state.busy;
+    refs.allPorts.disabled = state.busy;
+    refs.run.disabled = !state.link || state.busy;
+    refs.upload.disabled = !state.link || state.busy;
+    refs.restart.disabled = !state.link || (state.busy && !state.running);
+    refs.stop.disabled = !state.link;
+    // podpowiedź
+    let note = '';
+    if (!supported) note = t('notSupported');
+    else if (/Electron/i.test(navigator.userAgent) && !state.link) note = t('electronNote');
+    else if (!state.link && !state.busy) note = state.granted ? t('hintAuto') : t('hintFirst');
+    refs.note.textContent = note;
+    refs.note.hidden = !note;
+    if (currentTab === 'files') renderFiles();
+  }
+
+  function renderFiles() {
+    const page = refs.filesPage;
+    const bar = el('div', { class: 'mlu-row', style: 'margin-bottom:8px' },
+      el('button', { text: t('refresh'), disabled: !state.link || state.busy, onclick: () => refreshFiles() }),
+      el('span', { class: 'mlu-muted', text: state.fs && state.fs[0] ? t('free', { free: fmtSize(state.fs[1]), total: fmtSize(state.fs[0]) }) : '' }));
+    if (!state.link) { page.replaceChildren(bar, el('div', { class: 'mlu-muted', text: t('notConnected') })); return; }
+    const files = state.files || [];
+    const rows = files.map(([path, size]) => el('tr', {},
+      el('td', { class: 'n', text: (size < 0 ? '📁 ' : '') + path.replace(/^\//, '') }),
+      el('td', { class: 's', text: size < 0 ? '' : fmtSize(size) }),
+      el('td', { class: 'a' },
+        size < 0 ? null : el('button', { text: t('download'), disabled: state.busy, onclick: () => downloadFile(path) }), ' ',
+        el('button', { text: t('remove'), disabled: state.busy, onclick: () => removeFile(path, size < 0) }))));
+    page.replaceChildren(bar, files.length ? el('table', {}, el('tbody', {}, rows)) : el('div', { class: 'mlu-muted', text: state.files ? t('empty') : '…' }));
+  }
+
+  function renderFirmware() {
+    const page = refs.fwPage;
+    const list = firmwareAvailable();
+    const guess = guessFirmware();
+    const select = el('select', {}, list.map((f) => el('option', { value: f.key, selected: f === guess }, `${f.label} (${f.chip})`)));
+    const chosen = () => list.find((f) => f.key === select.value) || list[0];
+    page.replaceChildren(
+      el('div', { text: t('fwIntro') }),
+      list.length ? el('div', { class: 'mlu-row' }, el('span', { text: t('fwBoard') }), select) : null,
+      list.length ? el('div', { class: 'mlu-row' },
+        el('button', { class: 'primary', text: t('fwWrite'), title: t('fwWriteTitle'), disabled: !window.showDirectoryPicker, onclick: () => writeFirmware(chosen()) }),
+        el('button', { text: t('fwDownload'), onclick: () => { const f = chosen(); saveBlob(firmwareBytes(f), fwFileName(f)); } })) : null,
+      el('div', { class: 'mlu-muted', text: t('fwDownloadNote') }),
+      el('div', { class: 'mlu-muted', text: t('fwEsp') }));
+  }
+
+  // przyciski wstawiane do interfejsu MicroLab (React może je usunąć przy przerysowaniu, więc pilnuje ich obserwator)
+  function ensureButtons() {
+    const topbar = document.querySelector('.topbar');
+    if (topbar && !topbar.querySelector('.mlu-top')) {
+      const btn = el('button', { class: 'mlu-top', onclick: () => togglePanel() }, el('span', { class: 'mlu-dot' }), el('span', { 'data-t': 'usb' }));
+      const anchor = topbar.querySelector('.settings-button');
+      if (anchor) anchor.before(btn); else topbar.append(btn);
+      translate(btn);
+      render();
+    }
+    const toolbar = document.querySelector('section.code-panel .code-toolbar');
+    if (toolbar && !toolbar.querySelector('.mlu-group')) {
+      const group = el('span', { class: 'mlu-group' },
+        el('button', { class: 'mlu-g-usb', 'data-title': 'usbTitle', onclick: () => togglePanel() }, el('span', { class: 'mlu-dot' }), el('span', { 'data-t': 'usb' })),
+        el('button', { class: 'mlu-g-run', 'data-t': 'runOnBoard', 'data-title': 'runOnBoardTitle', onclick: () => runOnBoard() }),
+        el('button', { class: 'mlu-g-upload', 'data-t': 'upload', 'data-title': 'uploadTitle', onclick: () => uploadToBoard() }),
+        el('button', { class: 'mlu-g-stop', 'data-t': 'stop', 'data-title': 'stopTitle', onclick: () => stopProgram() }));
+      toolbar.append(group);
+      translate(group);
+      render();
+    }
+  }
+
+  let lastLang = null, scheduled = false;
+  const observer = new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      ensureButtons();
+      const l = lang();
+      if (l !== lastLang) {
+        lastLang = l;
+        document.querySelectorAll('.mlu-top, .mlu-group').forEach(translate);
+        if (panel) { translate(panel); if (currentTab === 'firmware') renderFirmware(); }
+        render();
+      }
+    });
+  });
+
+  listeners.add(render);
+
+  async function start() {
+    lastLang = lang();
+    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    ensureButtons();
+    buildPanel(); // ukryty, ale konsola zbiera komunikaty od początku
+    if (!('serial' in navigator)) return;
+    navigator.serial.addEventListener('connect', (e) => {
+      const port = e.target instanceof EventTarget && e.target !== navigator.serial ? e.target : e.port;
+      if (port) state.ignored.delete(port);
+      state.granted = true;
+      setTimeout(() => autoConnect('plug'), 300); // chwila, aż system skończy wyliczać urządzenie
+    });
+    navigator.serial.addEventListener('disconnect', (e) => {
+      const port = e.target instanceof EventTarget && e.target !== navigator.serial ? e.target : e.port;
+      if (port && port === state.port && state.link) { const link = state.link; onLost(link); link.close(); }
+    });
+    state.granted = await hasGrantedPorts();
+    render();
+    await autoConnect('start');
+  }
+
+  window.__microlabUsb.api = { state, connectPort, choosePort, disconnect, runOnBoard, uploadToBoard, stopProgram, softReset, refreshFiles, showPanel, app, MicroPython, Link, describe };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<script>
+  const START = "<!-- microlab-usb:start -->", END = "<!-- microlab-usb:end -->";
+  const status = document.getElementById('status');
+  const say = (text, cls = '') => { status.textContent = text; status.className = cls; };
+  function inject(html, code) {
+    const blockText = START + '<script type="module" id="microlab-usb">\n' + code + '\n</scr' + 'ipt>' + END;
+    const s = html.indexOf(START);
+    if (s >= 0) {
+      const e = html.indexOf(END, s);
+      if (e < 0) throw new Error('uszkodzony blok dodatku w pliku');
+      return { html: html.slice(0, s) + blockText + html.slice(e + END.length), updated: true };
+    }
+    const at = html.lastIndexOf('</body>');
+    if (at < 0) throw new Error('to nie wygląda na MicroLab.html');
+    return { html: html.slice(0, at) + blockText + '\n  ' + html.slice(at), updated: false };
+  }
+  async function handle(file) {
+    if (!file) return;
+    say('Wczytuję ' + file.name + '…');
+    try {
+      const html = await file.text();
+      if (!html.includes('__MICROLAB_FILES__') || !html.includes('<div id="root">')) throw new Error('to nie wygląda na MicroLab.html');
+      const result = inject(html, document.getElementById('addon').textContent);
+      const url = URL.createObjectURL(new Blob([result.html], { type: 'text/html' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: file.name });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      say((result.updated ? 'Zaktualizowano dodatek. ' : 'Gotowe. ') + 'Pobrany plik ' + file.name + ' zastąp nim stary i otwórz w Chrome lub Edge.', 'ok');
+    } catch (err) {
+      say('Nie udało się: ' + (err && err.message || err), 'err');
+    }
+  }
+  const input = document.getElementById('file');
+  const drop = document.getElementById('drop');
+  input.addEventListener('change', () => handle(input.files[0]));
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); });
+</script>
+</body>
+</html>

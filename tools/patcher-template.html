@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dodaj USB do MicroLab</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2128; --muted:#59636e; --accent:#0969da; --ok:#1a7f37; --err:#cf222e; --border:#d0d7de; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --ok:#3fb950; --err:#f85149; --border:#30363d; color-scheme: dark; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, "Segoe UI", sans-serif; }
+  main { max-width:640px; margin:40px auto; padding:0 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 22px; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  p { margin:8px 0; }
+  .muted { color:var(--muted); }
+  label.drop { display:block; margin:16px 0 8px; padding:26px 16px; border:2px dashed var(--border); border-radius:10px; text-align:center; cursor:pointer; }
+  label.drop:hover, label.drop.over { border-color:var(--accent); }
+  input[type=file] { display:none; }
+  #status { min-height:24px; margin-top:10px; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+  ol { padding-left:20px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>Dodaj „Płytka USB” do MicroLab</h1>
+    <p class="muted">Dopisuje do pliku MicroLab.html (albo MicroLab-B.html) obsługę prawdziwych płytek przez USB: wykrywanie Pico i ESP32 po podłączeniu, uruchamianie i wgrywanie kodu jak w Thonny. Wszystko dzieje się w tej karcie, nic nie jest wysyłane do internetu.</p>
+    <ol>
+      <li>Wybierz plik MicroLab.html poniżej (albo przeciągnij go tutaj).</li>
+      <li>Przeglądarka pobierze nowy plik o tej samej nazwie – zastąp nim stary.</li>
+      <li>Otwórz go w Chrome albo Edge.</li>
+    </ol>
+    <label class="drop" id="drop">Kliknij, aby wybrać MicroLab.html<br><span class="muted">albo upuść go tutaj</span>
+      <input type="file" id="file" accept=".html,text/html">
+    </label>
+    <div id="status" role="status"></div>
+  </div>
+</main>
+<script type="text/plain" id="addon">/*ADDON*/</script>
+<script>
+  const START = /*START*/, END = /*END*/;
+  const status = document.getElementById('status');
+  const say = (text, cls = '') => { status.textContent = text; status.className = cls; };
+  function inject(html, code) {
+    const blockText = START + '<script type="module" id="microlab-usb">\n' + code + '\n</scr' + 'ipt>' + END;
+    const s = html.indexOf(START);
+    if (s >= 0) {
+      const e = html.indexOf(END, s);
+      if (e < 0) throw new Error('uszkodzony blok dodatku w pliku');
+      return { html: html.slice(0, s) + blockText + html.slice(e + END.length), updated: true };
+    }
+    const at = html.lastIndexOf('</body>');
+    if (at < 0) throw new Error('to nie wygląda na MicroLab.html');
+    return { html: html.slice(0, at) + blockText + '\n  ' + html.slice(at), updated: false };
+  }
+  async function handle(file) {
+    if (!file) return;
+    say('Wczytuję ' + file.name + '…');
+    try {
+      const html = await file.text();
+      if (!html.includes('__MICROLAB_FILES__') || !html.includes('<div id="root">')) throw new Error('to nie wygląda na MicroLab.html');
+      const result = inject(html, document.getElementById('addon').textContent);
+      const url = URL.createObjectURL(new Blob([result.html], { type: 'text/html' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: file.name });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      say((result.updated ? 'Zaktualizowano dodatek. ' : 'Gotowe. ') + 'Pobrany plik ' + file.name + ' zastąp nim stary i otwórz w Chrome lub Edge.', 'ok');
+    } catch (err) {
+      say('Nie udało się: ' + (err && err.message || err), 'err');
+    }
+  }
+  const input = document.getElementById('file');
+  const drop = document.getElementById('drop');
+  input.addEventListener('change', () => handle(input.files[0]));
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); });
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "microlab-usb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dodatek do MicroLab: wykrywanie i wgrywanie kodu na prawdziwe płytki z MicroPythonem (jak Thonny)",
+  "type": "module",
+  "scripts": {
+    "patcher": "node tools/build.mjs patcher dist/Dodaj-USB-do-MicroLab.html",
+    "inject": "node tools/build.mjs inject",
+    "test": "node test/e2e.mjs"
+  }
+}
