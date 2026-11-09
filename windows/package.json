@@ -1,0 +1,8 @@
+{
+  "name": "microlab",
+  "productName": "MicroLab",
+  "version": "0.8.1",
+  "description": "A sandbox for microcontrollers and electronics: real firmware on emulated chips, driving a simulated circuit.",
+  "author": "MicroLab",
+  "private": true
+}

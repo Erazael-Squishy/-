@@ -53,7 +53,7 @@
 (() => {
   'use strict';
   if (window.__microlabUsb) return;
-  window.__microlabUsb = { version: '1.0.0' };
+  window.__microlabUsb = { version: '1.2.0' };
 
   // ───────────────────────────── teksty ─────────────────────────────
   const TEXT = {
@@ -704,7 +704,7 @@
   // ───────────────────────────── sterowanie płytką ─────────────────────────────
   const state = {
     link: null, mp: null, port: null, desc: null, info: null,
-    busy: false, running: false, files: null, fs: null, error: null, ignored: new WeakSet(),
+    busy: false, running: false, files: null, fs: null, error: null, ignored: new WeakSet(), chosen: new WeakSet(),
   };
   const listeners = new Set();
   const changed = () => { for (const fn of listeners) fn(); };
@@ -784,6 +784,7 @@
       return;
     }
     state.ignored.delete(port);
+    state.chosen.add(port);
     await connectPort(port);
   }
 
@@ -791,7 +792,9 @@
     if (!('serial' in navigator) || state.link || state.busy) return;
     let ports = [];
     try { ports = await navigator.serial.getPorts(); } catch { return; }
-    ports = ports.filter((p) => !state.ignored.has(p));
+    // sama łączy się tylko z płytkami, które zna (nie z Bluetooth COM ani Arduino, które restartuje się przy otwarciu portu),
+    // albo z portem, który ktoś wybrał ręcznie
+    ports = ports.filter((p) => !state.ignored.has(p) && (state.chosen.has(p) || autoOk(p)));
     if (!ports.length) return;
     // najpierw znane płytki z MicroPythonem
     ports.sort((a, b) => rank(a) - rank(b));
@@ -799,6 +802,7 @@
     if (trigger === 'plug') toast(t('detected', { name: describe(port.getInfo?.()).name }), 'info');
     await connectPort(port, { auto: true });
   }
+  const autoOk = (p) => { const d = describe(p.getInfo?.()); return d.known && d.kind !== 'arduino'; };
   const rank = (p) => { const d = describe(p.getInfo?.()); return d.kind === 'native' ? 0 : d.kind === 'bridge' ? (d.known ? 1 : 2) : 3; };
 
   /** Wspólne opakowanie operacji na płytce. */
@@ -927,8 +931,15 @@
     { key: 'firmware/mp-1.29.0-pico2.uf2', label: 'Raspberry Pi Pico 2 / Pico 2 H', chip: 'RP2350', parts: ['pico2'] },
     { key: 'firmware/mp-1.29.0-pico2-w.uf2', label: 'Raspberry Pi Pico 2 W / WH', chip: 'RP2350', parts: ['pico2w', 'pico2-w', 'pico2_w'] },
   ];
-  const firmwareAvailable = () => FIRMWARE.filter((f) => window.__MICROLAB_FILES__?.[f.key]);
-  const firmwareBytes = (fw) => b64ToBytes(window.__MICROLAB_FILES__[fw.key]);
+  // MicroLab.html ma pliki .uf2 w sobie (__MICROLAB_FILES__), aplikacja na Windows w folderze firmware/
+  const bundled = () => window.__MICROLAB_FILES__;
+  const firmwareAvailable = () => (bundled() ? FIRMWARE.filter((f) => bundled()[f.key]) : FIRMWARE);
+  async function firmwareBytes(fw) {
+    if (bundled()?.[fw.key]) return b64ToBytes(bundled()[fw.key]);
+    const r = await fetch(fw.key);
+    if (!r.ok) throw new Error(`${fwFileName(fw)}: HTTP ${r.status}`);
+    return new Uint8Array(await r.arrayBuffer());
+  }
   const fwFileName = (fw) => fw.key.split('/').pop();
   function guessFirmware() {
     const list = firmwareAvailable();
@@ -948,10 +959,12 @@
     } catch { /* to może nie być dysk Pico: spróbujemy i tak */ }
     if (found && found !== fw.chip) { const m = t('fwWrongChip', { found, wanted: `${fw.label} (${fw.chip})` }); toast(m, 'error'); termSay(m, 'red'); return; }
     termSay(t('fwWriting', { file: fwFileName(fw), drive: dir.name }), 'cyan');
+    let bytes;
+    try { bytes = await firmwareBytes(fw); } catch (err) { toast(err?.message || String(err), 'error'); termSay(err?.message || String(err), 'red'); return; }
     try {
       const fh = await dir.getFileHandle(fwFileName(fw), { create: true });
       const w = await fh.createWritable();
-      await w.write(firmwareBytes(fw));
+      await w.write(bytes);
       await w.close();
     } catch (err) {
       // Pico restartuje się zaraz po ostatnim bloku UF2, więc zamknięcie pliku często się nie udaje,
@@ -1160,8 +1173,8 @@
     // podpowiedź
     let note = '';
     if (!supported) note = t('notSupported');
-    else if (/Electron/i.test(navigator.userAgent) && !state.link) note = t('electronNote');
-    else if (!state.link && !state.busy) note = state.granted ? t('hintAuto') : t('hintFirst');
+    else if (/Electron/i.test(navigator.userAgent) && !window.microlabUsbHost?.serialChooser && !state.link) note = t('electronNote');
+    else if (!state.link && !state.busy) note = state.granted || window.microlabUsbHost?.serialChooser ? t('hintAuto') : t('hintFirst');
     refs.note.textContent = note;
     refs.note.hidden = !note;
     if (currentTab === 'files') renderFiles();
@@ -1194,7 +1207,10 @@
       list.length ? el('div', { class: 'mlu-row' }, el('span', { text: t('fwBoard') }), select) : null,
       list.length ? el('div', { class: 'mlu-row' },
         el('button', { class: 'primary', text: t('fwWrite'), title: t('fwWriteTitle'), disabled: !window.showDirectoryPicker, onclick: () => writeFirmware(chosen()) }),
-        el('button', { text: t('fwDownload'), onclick: () => { const f = chosen(); saveBlob(firmwareBytes(f), fwFileName(f)); } })) : null,
+        el('button', { text: t('fwDownload'), onclick: async () => {
+          const f = chosen();
+          try { saveBlob(await firmwareBytes(f), fwFileName(f)); } catch (err) { toast(err?.message || String(err), 'error'); }
+        } })) : null,
       el('div', { class: 'mlu-muted', text: t('fwDownloadNote') }),
       el('div', { class: 'mlu-muted', text: t('fwEsp') }));
   }

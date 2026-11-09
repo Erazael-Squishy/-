@@ -14,7 +14,7 @@
 (() => {
   'use strict';
   if (window.__microlabUsb) return;
-  window.__microlabUsb = { version: '1.1.0' };
+  window.__microlabUsb = { version: '1.2.0' };
 
   // ───────────────────────────── teksty ─────────────────────────────
   const TEXT = {
@@ -892,8 +892,15 @@
     { key: 'firmware/mp-1.29.0-pico2.uf2', label: 'Raspberry Pi Pico 2 / Pico 2 H', chip: 'RP2350', parts: ['pico2'] },
     { key: 'firmware/mp-1.29.0-pico2-w.uf2', label: 'Raspberry Pi Pico 2 W / WH', chip: 'RP2350', parts: ['pico2w', 'pico2-w', 'pico2_w'] },
   ];
-  const firmwareAvailable = () => FIRMWARE.filter((f) => window.__MICROLAB_FILES__?.[f.key]);
-  const firmwareBytes = (fw) => b64ToBytes(window.__MICROLAB_FILES__[fw.key]);
+  // MicroLab.html ma pliki .uf2 w sobie (__MICROLAB_FILES__), aplikacja na Windows w folderze firmware/
+  const bundled = () => window.__MICROLAB_FILES__;
+  const firmwareAvailable = () => (bundled() ? FIRMWARE.filter((f) => bundled()[f.key]) : FIRMWARE);
+  async function firmwareBytes(fw) {
+    if (bundled()?.[fw.key]) return b64ToBytes(bundled()[fw.key]);
+    const r = await fetch(fw.key);
+    if (!r.ok) throw new Error(`${fwFileName(fw)}: HTTP ${r.status}`);
+    return new Uint8Array(await r.arrayBuffer());
+  }
   const fwFileName = (fw) => fw.key.split('/').pop();
   function guessFirmware() {
     const list = firmwareAvailable();
@@ -913,10 +920,12 @@
     } catch { /* to może nie być dysk Pico: spróbujemy i tak */ }
     if (found && found !== fw.chip) { const m = t('fwWrongChip', { found, wanted: `${fw.label} (${fw.chip})` }); toast(m, 'error'); termSay(m, 'red'); return; }
     termSay(t('fwWriting', { file: fwFileName(fw), drive: dir.name }), 'cyan');
+    let bytes;
+    try { bytes = await firmwareBytes(fw); } catch (err) { toast(err?.message || String(err), 'error'); termSay(err?.message || String(err), 'red'); return; }
     try {
       const fh = await dir.getFileHandle(fwFileName(fw), { create: true });
       const w = await fh.createWritable();
-      await w.write(firmwareBytes(fw));
+      await w.write(bytes);
       await w.close();
     } catch (err) {
       // Pico restartuje się zaraz po ostatnim bloku UF2, więc zamknięcie pliku często się nie udaje,
@@ -1159,7 +1168,10 @@
       list.length ? el('div', { class: 'mlu-row' }, el('span', { text: t('fwBoard') }), select) : null,
       list.length ? el('div', { class: 'mlu-row' },
         el('button', { class: 'primary', text: t('fwWrite'), title: t('fwWriteTitle'), disabled: !window.showDirectoryPicker, onclick: () => writeFirmware(chosen()) }),
-        el('button', { text: t('fwDownload'), onclick: () => { const f = chosen(); saveBlob(firmwareBytes(f), fwFileName(f)); } })) : null,
+        el('button', { text: t('fwDownload'), onclick: async () => {
+          const f = chosen();
+          try { saveBlob(await firmwareBytes(f), fwFileName(f)); } catch (err) { toast(err?.message || String(err), 'error'); }
+        } })) : null,
       el('div', { class: 'mlu-muted', text: t('fwDownloadNote') }),
       el('div', { class: 'mlu-muted', text: t('fwEsp') }));
   }

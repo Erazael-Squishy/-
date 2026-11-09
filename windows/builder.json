@@ -1,0 +1,30 @@
+{
+  "appId": "pl.microlab.app",
+  "productName": "MicroLab",
+  "copyright": "MicroLab, for private use",
+  "electronVersion": "45.0.0",
+  "directories": { "output": "release", "buildResources": "build" },
+  "publish": null,
+  "fileAssociations": [
+    { "ext": "mlab", "name": "MicroLab project", "description": "MicroLab project", "icon": "build/icon.ico", "role": "Editor" }
+  ],
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "build/icon.ico",
+    "artifactName": "MicroLab-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "MicroLab",
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "multiLanguageInstaller": true,
+    "installerLanguages": ["pl_PL", "en_US"],
+    "deleteAppDataOnUninstall": false
+  }
+}
