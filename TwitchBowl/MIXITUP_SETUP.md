@@ -1,5 +1,7 @@
 # Twitch Bowl: setting it up in Mix It Up and OBS
 
+*Version 2: names on balls, colours by event, shaking, sounds, confetti and a counter. See "Version 2 extras" at the end.*
+
 The bowl is one file, `bowl.html`. Mix It Up shows it on stream and tells it when to add balls. Nothing logs into Twitch, and nothing needs installing.
 
 There are two ways to connect it. Pick **one**:
@@ -62,9 +64,10 @@ Skip this to use the starter bowl.
 2. In OBS: **Sources** → **+** → **Browser**. Name it "Twitch Bowl".
 3. Paste the link into **URL**. Set **Width** `800` and **Height** `800`.
 4. **Untick** "Shutdown source when not visible" and "Refresh browser when scene becomes active".
-5. Press **OK**, then drag and resize the source where you want it.
+5. To hear the bowl's sounds on stream, tick **Control audio via OBS**. (Turn the sound off or down with *Sound volume* in the editor.)
+6. Press **OK**, then drag and resize the source where you want it.
 
-Done. Follows, subs, resubs, gifted subs, bits and first-time chatters now drop balls.
+Done. Follows, subs, resubs, gifted subs, bits and first-time chatters now drop balls, each in its own colour and with the viewer's name.
 
 > **Only one copy, please.** Add the bowl to OBS once. To show it in several scenes, add the *same* source to each scene (**+** → **Browser** → **Add Existing**), not a second browser source. Two copies running at once both count every event, so you'd get double balls. The same goes for importing the widget twice: delete the old widget first.
 
@@ -83,15 +86,17 @@ Then make these **Event Commands**. In Mix It Up, open **Events** (left menu). T
 5. For each parameter in the table, press **Add Parameter** and fill in **Name** and **Value**.
 6. **Save**.
 
-| Event (exact name in Mix It Up) | Function Name | Parameter Name | Parameter Value |
-| --- | --- | --- | --- |
-| Twitch Channel Followed | `addFollower` | `username` | `$username` |
-| Twitch Channel Subscribed | `addBalls` | `count` | `1` |
-| Twitch Channel Resubscribed | `addBalls` | `count` | `1` |
-| Twitch Channel Subscription Gifted | `addBalls` | `count` | `1` |
-| Twitch Channel Mass Subscriptions Gifted | `addBalls` | `count` | `$subsgiftedamount` |
-| Twitch Channel Bits Cheered | `addBits` | `amount` | `$bitsamount` |
-| Chat User First Message | `addBalls` | `count` | `1` |
+| Event (exact name in Mix It Up) | Function Name | Parameters (Name = Value) |
+| --- | --- | --- |
+| Twitch Channel Followed | `addFollower` | `username` = `$username` |
+| Twitch Channel Subscribed | `addBalls` | `count` = `1`, `kind` = `sub`, `user` = `$username` |
+| Twitch Channel Resubscribed | `addBalls` | `count` = `1`, `kind` = `sub`, `user` = `$username` |
+| Twitch Channel Subscription Gifted | `addBalls` | `count` = `1`, `kind` = `sub`, `user` = `$username` |
+| Twitch Channel Mass Subscriptions Gifted | `addBalls` | `count` = `$subsgiftedamount`, `kind` = `sub`, `user` = `$username` |
+| Twitch Channel Bits Cheered | `addBits` | `amount` = `$bitsamount`, `user` = `$username` |
+| Chat User First Message | `addBalls` | `count` = `1`, `kind` = `chat`, `user` = `$username` |
+
+`kind` and `user` are optional. `kind` picks the ball's colour (`follow`, `sub`, `bits` or `chat`), and `user` is the name shown above the ball. For gifts, `$username` is the person who gave them.
 
 Notes on these events:
 
@@ -113,10 +118,18 @@ These work with either setup. In Mix It Up, open **Commands** (left menu) → **
 | `!emptybowl` | `emptyBowl` | none | Mod |
 | `!breakbowl` | `breakBowl` | none | Mod |
 | `!addballs` | `addBalls` | `count` = `$arg1text` | Mod |
+| `!shake` | `shakeBowl` | none, or `strength` = `1` to `3` | Anyone (give it a cooldown!) |
 
 Make each one with **Add Action** → **Overlay** → **Run Widget Function** → **Widget** `Twitch Bowl`, as above. Set the permission to **Mod** so viewers can't use them. `!addballs 10` adds 10 balls, which is handy for testing.
 
 ---
+
+### A "Shake the bowl" channel point reward
+
+1. On Twitch, make a channel point reward called *Shake the bowl* (Creator Dashboard → Viewer Rewards → Channel Points).
+2. In Mix It Up: **Commands** (left menu) → **Twitch Channel Points** → **New Command**, and pick your *Shake the bowl* reward.
+3. **Add Action** → **Overlay** → **Run Widget Function** → **Widget** `Twitch Bowl`, **Function Name** `shakeBowl`. Optionally **Add Parameter**: `strength` = `2.5` for a big shake.
+4. **Save**. Viewers can now spend points to bounce the pile. A strong shake can throw balls out of the bowl, which is half the fun.
 
 ## Step 4. Do something when the bowl breaks (optional)
 
@@ -164,11 +177,26 @@ Send them `Twitch Bowl.miuoverlay` (made with **Download Mix It Up widget**) and
 
 - **Quickest:** make the `!addballs` chat command (Step 3) and type `!addballs 5` in your chat.
 - **In the editor:** **Test the physics** shows exactly how it behaves, without touching the real bowl.
-- **Without Mix It Up:** open `bowl.html#overlay` in Chrome, press **F12** → **Console**, and type `addBalls(5)`, `addBits(250)`, `addFollower("someone")`, `breakBowl()` or `emptyBowl()`. This uses Chrome's own storage, not OBS's.
+- **Without Mix It Up:** open `bowl.html#overlay` in Chrome, press **F12** → **Console**, and type `addBalls(5)`, `addBalls({ count: 1, kind: "sub", user: "Sam" })`, `addBits(250)`, `addFollower("someone")`, `shakeBowl(2)`, `breakBowl()` or `emptyBowl()`. This uses Chrome's own storage, not OBS's.
 
 More fixes are in `bowl-guide.html`, Part 5.
 
 ---
+
+## Version 2 extras
+
+All of these are under **Fun** in the Bowl Editor, and work with both setups:
+
+| Extra | What it does | Setting |
+| --- | --- | --- |
+| Names | Each new ball shows who sent it for 4 seconds | *Show who sent each ball* |
+| Colours | Follow, sub, bits and first-chat balls each have a colour, and keep it after a reload | *Colour balls by event*, plus a colour picker for each |
+| Shake | `shakeBowl` throws the pile into the air (Step 3) | — |
+| Sounds | A "plip" for each ball, a crash when the bowl breaks, a "bwomp" for a shake | *Sound volume* (0 = off). Tick *Control audio via OBS* on the source |
+| Confetti | A burst of confetti when the bowl breaks | *Confetti when it breaks* |
+| Counter | "47 / 176" above the bowl | *Show the count above the bowl* (off at first) |
+
+Coming from version 1? Your ball count and followers carry over. Just paste or import the new copy as in "Changing the bowl later".
 
 ## What I checked, and what I couldn't
 

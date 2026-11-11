@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Twitch Bowl</title>
 <!--
-  TWITCH BOWL: the whole overlay and its editor in one file.
+  TWITCH BOWL, version 2: the whole overlay and its editor in one file.
 
   - Inside Mix It Up or OBS, it shows only the overlay: a bowl that fills with balls.
   - Opened straight from your computer in Chrome (double-click), it shows the editor.
@@ -114,6 +114,8 @@
   .setting input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
   .check { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
   .check input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .colors label { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; color: var(--muted); }
+  .colors input { width: 100%; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; }
   input[type="number"], input[type="text"], select, textarea {
     padding: 5px 7px;
     border: 1px solid var(--line);
@@ -241,6 +243,21 @@
     </section>
 
     <section>
+      <h2>Fun</h2>
+      <label class="check"><input type="checkbox" data-check="showNames"> Show who sent each ball</label>
+      <label class="check"><input type="checkbox" data-check="colorByEvent"> Colour balls by event</label>
+      <div class="row colors">
+        <label>Follow<input type="color" data-color="followColor"></label>
+        <label>Sub<input type="color" data-color="subColor"></label>
+        <label>Bits<input type="color" data-color="bitsColor"></label>
+        <label>1st chat<input type="color" data-color="chatColor"></label>
+      </div>
+      <label class="check" style="margin-top: 10px"><input type="checkbox" data-check="confetti"> Confetti when it breaks</label>
+      <label class="check"><input type="checkbox" data-check="showCounter"> Show the count above the bowl</label>
+      <div id="fun-sliders"></div>
+    </section>
+
+    <section>
       <h2>Try it</h2>
       <button id="test-toggle" class="wide" style="margin-top: 0">Test the physics</button>
       <div id="test-buttons" hidden="">
@@ -250,6 +267,13 @@
           <button data-add="50">+50</button>
         </div>
         <div class="row">
+          <button data-kind="f">Follow</button>
+          <button data-kind="s">Sub</button>
+          <button data-kind="b">Bits</button>
+          <button data-kind="c">1st chat</button>
+        </div>
+        <div class="row">
+          <button id="test-shake">Shake</button>
           <button id="test-empty">Empty</button>
           <button id="test-break">Break now</button>
         </div>
@@ -320,6 +344,15 @@
  "emptyToken": "",
  "emptyArmed": false,
  "liveBowlId": "bowl1",
+ "showNames": true,
+ "colorByEvent": true,
+ "followColor": "#4fc3f7",
+ "subColor": "#b388ff",
+ "bitsColor": "#ffd54f",
+ "chatColor": "#69f0ae",
+ "confetti": true,
+ "showCounter": false,
+ "volume": 0.3,
  "widgetEvents": true,
  "bowls": [
   {
@@ -673,10 +706,18 @@ const SAVE_DELAY = 300; // The editor saves this long after the last change
 const DEBRIS = { category: 2, mask: 2 }; // Falling balls only hit each other, never a bowl
 const STORAGE = { settings: 'twitchBowl.settings', state: 'twitchBowl.state' };
 const MIX_IT_UP_API = 'http://localhost:8911/api/v2/commands';
+const NAME_TIME = 240; // Steps a sender's name shows above their ball (4 seconds)
+const SHAKE_TIME = 30; // Steps the bowl picture wobbles when shaken
+const CONFETTI_PIECES = 150;
+
+// Each kind of event has a letter, and a colour setting for its balls. 'x' is any other ball.
+const KIND_COLORS = { f: 'followColor', s: 'subColor', b: 'bitsColor', c: 'chatColor' };
+// Words Mix It Up can send as the "kind" parameter, and the letter each one means.
+const KIND_LETTERS = { follow: 'f', follower: 'f', sub: 's', subscription: 's', gift: 's', bits: 'b', cheer: 'b', chat: 'c', chatter: 'c' };
 
 // The starting values for anything missing from the settings block.
 const SHARED_DEFAULTS = {
-  version: 1,
+  version: 2,
   savedAt: 0,
   ballSize: 30,
   gravity: 1,
@@ -690,6 +731,16 @@ const SHARED_DEFAULTS = {
   emptyToken: '',
   emptyArmed: false,
   liveBowlId: '',
+  // Fun
+  showNames: true,
+  colorByEvent: true,
+  followColor: '#4fc3f7',
+  subColor: '#b388ff',
+  bitsColor: '#ffd54f',
+  chatColor: '#69f0ae',
+  confetti: true,
+  showCounter: false,
+  volume: 0.3, // 0 is silent, 1 is loudest
 };
 const STARTER_OUTLINE = [
   [104, 420], [110, 486], [127, 549], [154, 607], [191, 658], [236, 699], [287, 730], [342, 750],
@@ -1002,6 +1053,23 @@ function makeBallSprite(image, size) {
   return sprite;
 }
 
+// One ball per kind of event, recoloured with that event's colour. "color" keeps the
+// picture's light and dark, and swaps in the new colour, like a coloured lens.
+function makeBallSprites(image, settings) {
+  const sprites = { x: makeBallSprite(image, settings.ballSize) };
+  for (const [kind, key] of Object.entries(KIND_COLORS)) {
+    const sprite = makeBallSprite(image, settings.ballSize);
+    if (settings.colorByEvent) {
+      const painter = sprite.getContext('2d'); // Still clipped to the circle from makeBallSprite
+      painter.globalCompositeOperation = 'color';
+      painter.fillStyle = settings[key];
+      painter.fillRect(0, 0, sprite.width, sprite.height);
+    }
+    sprites[kind] = sprite;
+  }
+  return sprites;
+}
+
 // The bowl picture with crack lines drawn on it. "source-atop" only paints where the picture
 // is already visible, so the cracks never show up on its see-through parts.
 function makeCrackedPicture(image, width, height, cracks) {
@@ -1026,11 +1094,72 @@ function makeCrackedPicture(image, width, height, cracks) {
 }
 
 // =====================================================================================
+// 5b. SOUNDS
+// Made by the browser itself, so there are no sound files. In OBS, tick "Control audio via
+// OBS" on the source to hear them on stream.
+// =====================================================================================
+let audio = null;
+
+function playSound(kind, volume) {
+  if (!(volume > 0)) return;
+  try {
+    audio = audio || new AudioContext();
+    if (audio.state === 'suspended') audio.resume();
+    const now = audio.currentTime;
+    const loudness = audio.createGain();
+    loudness.connect(audio.destination);
+    if (kind === 'crash') {
+      // Random crackle that dies away: the sound of something breaking.
+      const length = Math.round(audio.sampleRate * 0.8);
+      const buffer = audio.createBuffer(1, length, audio.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < length; i++) samples[i] = random(-1, 1) * Math.pow(1 - i / length, 3);
+      const noise = audio.createBufferSource();
+      noise.buffer = buffer;
+      noise.connect(loudness);
+      loudness.gain.value = volume;
+      noise.start(now);
+    } else {
+      // A short tone that slides: up for a new ball ("plip"), down for a shake ("bwomp").
+      const tone = audio.createOscillator();
+      const start = kind === 'shake' ? 220 : random(500, 900);
+      const end = kind === 'shake' ? 70 : start * 2;
+      const length = kind === 'shake' ? 0.4 : 0.12;
+      tone.frequency.setValueAtTime(start, now);
+      tone.frequency.exponentialRampToValueAtTime(end, now + length);
+      loudness.gain.setValueAtTime(volume * 0.4, now);
+      loudness.gain.exponentialRampToValueAtTime(0.001, now + length);
+      tone.connect(loudness);
+      tone.start(now);
+      tone.stop(now + length);
+    }
+  } catch {
+    // No sound available here. Carry on silently.
+  }
+}
+
+// =====================================================================================
 // 6. THE GAME: physics, dropping, breaking and drawing
 // The overlay runs one game with the real ball count. The editor's test view runs another.
 //   state: the numbers this game keeps (balls, bowlId, breaks). The game changes them.
 //   save: called whenever state changes. onBreak: called when a bowl breaks.
 // =====================================================================================
+// Adds balls to a game's count, remembering each ball's kind (one letter per ball in
+// state.kinds) and who sent it (state.names). Both lists line up with the balls still owed.
+function owe(state, count, kind, name) {
+  count = Math.min(count, MAX_PER_CALL);
+  state.balls += count;
+  state.kinds += kind.repeat(count);
+  for (let i = 0; i < count; i++) state.names.push(name || null);
+}
+
+// Makes the kinds and names lists exactly as long as the count, for example after an update.
+function lineUp(state) {
+  state.kinds = String(state.kinds || '').slice(0, state.balls).padEnd(state.balls, 'x');
+  state.names = (Array.isArray(state.names) ? state.names : []).slice(0, state.balls);
+  while (state.names.length < state.balls) state.names.push(null);
+}
+
 async function createGame({ canvas, settings, state, save, onBreak }) {
   const context = canvas.getContext('2d');
   const engine = Engine.create({ enableSleeping: true });
@@ -1038,7 +1167,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
 
   const radius = settings.ballSize / 2;
   const maxSpeed = 0.75 * (radius + WALL / 2);
-  const ballSprite = makeBallSprite(await loadPicture(settings, 'ball'), settings.ballSize);
+  const sprites = makeBallSprites(await loadPicture(settings, 'ball'), settings);
 
   const balls = new Set(); // Balls in the bowl
   const debris = new Set(); // Balls falling away from a broken bowl
@@ -1052,6 +1181,8 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   let lastDrop = 0; // The step the last ball was dropped on
   let restingAtTop = 0; // Steps in a row a ball has rested at the rim
   let stillFor = 0; // Steps in a row every ball in the bowl has been (almost) still
+  let shakeUntil = 0; // The bowl picture wobbles until this step
+  let confetti = [];
   let stopped = false;
 
   function findBowl(id) {
@@ -1091,7 +1222,8 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     return Math.min(state.balls, current.limit);
   }
 
-  function dropBall() {
+  // live is false while rebuilding the pile after a reload: no sound, no name.
+  function dropBall(live) {
     const { bowl } = current;
     // Always a little scatter, so balls don't land balanced on top of each other.
     const scatter = bowl.dropWidth + radius;
@@ -1101,6 +1233,14 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       friction: settings.friction,
       frictionStatic: 0,
     });
+    // The kinds and names lists line up with the balls owed to this bowl, so this ball's
+    // place in them is the number of balls dropped so far.
+    ball.kind = state.kinds[dropped] || 'x';
+    if (live && settings.showNames && state.names[dropped]) {
+      ball.sender = state.names[dropped]; // Not "label": Matter.js already uses that name
+      ball.senderUntil = steps + NAME_TIME;
+    }
+    if (live) playSound('drop', settings.volume);
     balls.add(ball);
     Composite.add(engine.world, ball);
     dropped++;
@@ -1131,6 +1271,14 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       shard.angle += shard.spin;
     }
     shards = shards.filter((shard) => shard.y - shard.reach < SIZE);
+    for (const piece of confetti) {
+      piece.vy += 0.3 * settings.gravity;
+      piece.vx *= 0.98; // Air slows them down sideways
+      piece.x += piece.vx;
+      piece.y += piece.vy;
+      piece.angle += piece.spin;
+    }
+    confetti = confetti.filter((piece) => piece.y < SIZE + 20);
   }
 
   // Does this bowl count as full yet?
@@ -1175,6 +1323,8 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     const used = dropped;
     // Balls above the limit, and balls still waiting to drop, carry over to the next bowl.
     state.balls = Math.max(0, state.balls - used);
+    state.kinds = state.kinds.slice(used);
+    state.names = state.names.slice(used);
     state.breaks = (state.breaks || 0) + 1;
     const nextBowl = pickNextBowl(settings, current.bowl.id);
     state.bowlId = nextBowl.id; // Saved now, so a reload during the break shows the next bowl
@@ -1224,7 +1374,34 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
         spin: random(-0.05, 0.05),
       };
     }) : [];
+
+    playSound('crash', settings.volume);
+    if (settings.confetti) {
+      for (let i = 0; i < CONFETTI_PIECES; i++) {
+        confetti.push({
+          x: bowl.x + bowl.width / 2,
+          y: bowl.y + current.height / 3,
+          vx: random(-9, 9),
+          vy: random(-16, -5),
+          size: random(6, 12),
+          color: 'hsl(' + Math.round(random(0, 360)) + ', 90%, 60%)',
+          angle: random(0, Math.PI),
+          spin: random(-0.3, 0.3),
+        });
+      }
+    }
     setPhase('broken');
+  }
+
+  // Throws every ball in the bowl up into the air. Some may fly out!
+  function shake(strength) {
+    if (phase !== 'filling' && phase !== 'returning') return;
+    shakeUntil = steps + SHAKE_TIME;
+    for (const ball of balls) {
+      Sleeping.set(ball, false);
+      Body.setVelocity(ball, { x: random(-2, 2) * strength, y: -random(3, 7) * strength });
+    }
+    playSound('shake', settings.volume);
   }
 
   // Step 3: the next bowl fades in and the waiting balls start dropping again.
@@ -1241,6 +1418,8 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     dropped = 0;
     restingAtTop = 0;
     state.balls = 0;
+    state.kinds = '';
+    state.names = [];
     save();
   }
 
@@ -1249,7 +1428,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     const target = wanted();
     dropped = Math.max(0, target - current.capacity); // These would have spilled long ago
     while (dropped < target) {
-      dropBall();
+      dropBall(false);
       for (let i = 0; i < 6; i++) physicsStep();
     }
     for (let i = 0; i < 180; i++) physicsStep();
@@ -1260,8 +1439,26 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     context.save();
     context.translate(ball.position.x, ball.position.y);
     context.rotate(ball.angle);
-    context.drawImage(ballSprite, -radius, -radius, settings.ballSize, settings.ballSize);
+    context.drawImage(sprites[ball.kind] || sprites.x, -radius, -radius, settings.ballSize, settings.ballSize);
     context.restore();
+  }
+
+  // White text with a dark edge, readable over anything.
+  function drawText(text, x, y, size) {
+    context.font = 'bold ' + size + 'px system-ui, "Segoe UI", sans-serif';
+    context.textAlign = 'center';
+    context.lineWidth = size / 5;
+    context.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+    context.strokeText(text, x, y);
+    context.fillStyle = '#fff';
+    context.fillText(text, x, y);
+  }
+
+  function drawSender(ball) {
+    if (!ball.sender || steps > ball.senderUntil) return;
+    context.globalAlpha = Math.min(1, (ball.senderUntil - steps) / 30); // Fades out at the end
+    drawText(ball.sender, ball.position.x, ball.position.y - radius - 6, 16);
+    context.globalAlpha = 1;
   }
 
   function draw() {
@@ -1277,6 +1474,9 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
         const shake = 4 * (steps - phaseStart) / CRACK_TIME; // The shaking grows
         shakeX = random(-shake, shake);
         shakeY = random(-shake, shake);
+      } else if (steps < shakeUntil) {
+        shakeX = random(-6, 6);
+        shakeY = random(-6, 6);
       }
       context.globalAlpha = phase === 'returning' ? Math.min(1, (steps - phaseStart) / FADE_TIME) : 1;
       context.drawImage(picture, bowl.x + shakeX, bowl.y + shakeY, bowl.width, current.height);
@@ -1295,6 +1495,19 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     }
     balls.forEach(drawBall);
     debris.forEach(drawBall);
+    balls.forEach(drawSender);
+    for (const piece of confetti) {
+      context.save();
+      context.translate(piece.x, piece.y);
+      context.rotate(piece.angle);
+      context.fillStyle = piece.color;
+      context.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2);
+      context.restore();
+    }
+    if (settings.showCounter && current && phase !== 'broken') {
+      const count = Number.isFinite(current.limit) ? dropped + ' / ' + current.limit : String(dropped);
+      drawText(count, current.bowl.x + current.bowl.width / 2, current.rimY - 24, 36);
+    }
     requestAnimationFrame(draw);
   }
 
@@ -1304,7 +1517,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
 
   const dropTimer = setInterval(() => {
     const open = phase === 'filling' || phase === 'returning';
-    if (open && dropped < wanted()) dropBall();
+    if (open && dropped < wanted()) dropBall(true);
   }, DROP_EVERY);
   const stepTimer = setInterval(update, TICK);
   draw();
@@ -1312,6 +1525,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   return {
     breakNow,
     empty,
+    shake,
     stop() {
       stopped = true;
       clearInterval(dropTimer);
@@ -1342,10 +1556,11 @@ let realGame = null;
 let breakWaiting = false; // breakBowl() was called before the game had loaded
 
 const realState = Object.assign(
-  { balls: 0, followers: [], bowlId: '', liveSeen: '', emptyToken: '', breaks: 0 },
+  { balls: 0, kinds: '', names: [], followers: [], bowlId: '', liveSeen: '', emptyToken: '', breaks: 0 },
   readStorage(STORAGE.state),
 );
 realState.balls = Math.max(0, Math.floor(Number(realState.balls)) || 0);
+lineUp(realState);
 const followers = new Set(Array.isArray(realState.followers) ? realState.followers : []);
 
 function saveState() {
@@ -1355,15 +1570,21 @@ function saveState() {
 
 // Mix It Up sends one object of named texts, such as { count: "5" }.
 // Typed in the console it might be a plain 5. This accepts both and picks out the value.
-function pickValue(input, names) {
+// With firstIfMissing false, a missing name gives '' instead of the first value.
+function pickValue(input, names, firstIfMissing = true) {
   if (input === null || input === undefined) return '';
-  if (typeof input !== 'object') return input;
+  if (typeof input !== 'object') return firstIfMissing ? input : '';
   const keys = Object.keys(input);
   for (const name of names) {
     const key = keys.find((k) => k.trim().toLowerCase() === name);
     if (key !== undefined) return input[key];
   }
-  return keys.length ? input[keys[0]] : '';
+  return keys.length && firstIfMissing ? input[keys[0]] : '';
+}
+
+// The optional "user" a ball came from, tidied up, or '' if none was sent.
+function pickUser(input) {
+  return String(pickValue(input, ['user', 'username', 'name'], false) || '').trim().replace(/^@/, '').slice(0, 25);
 }
 
 // "25", " 1,000 ", 25 and 25.7 all work. Anything else, like an identifier Mix It Up
@@ -1374,20 +1595,29 @@ function toWholeNumber(value) {
   return Math.floor(Number(text));
 }
 
+// The one place balls are added to the real bowl.
+function addKind(count, kind, name) {
+  owe(realState, count, kind, name);
+  saveState();
+  note('+' + count + (name ? ' from ' + name : '') + ' (total ' + realState.balls + ')');
+  return realState.balls;
+}
+
+// Parameters: count (required), and optionally user (who sent it) and kind
+// (follow, sub, bits or chat, for the ball's colour).
 function addBalls(input) {
   const count = toWholeNumber(pickValue(input, ['count', 'balls', 'amount', 'number']));
   if (!(count > 0)) {
     note('addBalls ignored, because this is not a number of balls: ' + JSON.stringify(input));
     return realState.balls;
   }
-  realState.balls += Math.min(count, MAX_PER_CALL);
-  saveState();
-  note('+' + count + ' (total ' + realState.balls + ')');
-  return realState.balls;
+  const kindWord = String(pickValue(input, ['kind', 'type', 'event'], false)).trim().toLowerCase();
+  return addKind(count, KIND_LETTERS[kindWord] || 'x', pickUser(input));
 }
 
 function addFollower(input) {
-  const name = String(pickValue(input, ['username', 'user', 'name', 'follower'])).trim().replace(/^@/, '').toLowerCase();
+  const shown = String(pickValue(input, ['username', 'user', 'name', 'follower'])).trim().replace(/^@/, '');
+  const name = shown.toLowerCase(); // Compared in small letters, so "Sam" and "sam" are the same person
   if (!name) {
     note('addFollower ignored, because no username came with it: ' + JSON.stringify(input));
     return realState.balls;
@@ -1398,8 +1628,7 @@ function addFollower(input) {
     return realState.balls;
   }
   followers.add(name);
-  note('New follower: ' + name);
-  return addBalls(1);
+  return addKind(1, 'f', shown);
 }
 
 function addBits(input) {
@@ -1409,12 +1638,12 @@ function addBits(input) {
     return realState.balls;
   }
   const bitsPerBall = activeSettings ? activeSettings.bitsPerBall : SHARED_DEFAULTS.bitsPerBall;
-  note(bits + ' bits');
-  return addBalls(Math.max(1, Math.floor(bits / bitsPerBall)));
+  return addKind(Math.max(1, Math.floor(bits / bitsPerBall)), 'b', pickUser(input));
 }
 
 function emptyBowl() {
   realState.balls = 0;
+  lineUp(realState);
   saveState();
   if (realGame) realGame.empty();
   note('Bowl emptied');
@@ -1425,45 +1654,53 @@ function breakBowl() {
   else breakWaiting = true;
 }
 
+// Bounces the pile. Optional parameter: strength, from 0.5 (a nudge) to 3 (chaos). 1.5 if not given.
+function shakeBowl(input) {
+  const strength = Number(String(pickValue(input, ['strength', 'power'])).trim());
+  if (realGame) realGame.shake(strength >= 0.5 && strength <= 3 ? strength : 1.5);
+}
+
 // ---- Events Mix It Up sends by itself when the widget's event boxes are ticked ----
 // The names are fixed by Mix It Up. Each one gets a "data" object about the event.
 // Untick a box in Mix It Up and that event stops adding balls.
+// The name of the person in data.User (or data.Gifter), or '' if there isn't one.
+function nameOf(user) {
+  return (user && (user.DisplayName || user.Username)) || '';
+}
+
 function Follow(data) {
   const user = (data && data.User) || {};
   addFollower(user.Username || user.DisplayName || '');
 }
 
-function Subscription() {
-  addBalls(1); // New subs and resubs shared in chat
+function Subscription(data) {
+  addKind(1, 's', nameOf(data && data.User)); // New subs and resubs shared in chat
 }
 
-function SubscriptionGifted() {
-  addBalls(1); // One gifted sub
+function SubscriptionGifted(data) {
+  addKind(1, 's', nameOf(data && (data.Gifter || data.User))); // One gifted sub, labelled with the gifter
 }
 
 function MassSubscriptionGifted(data) {
   const amount = toWholeNumber((data && data.Amount) || (data && data.Users && data.Users.length) || 0);
-  addBalls(amount > 0 ? amount : 1);
+  addKind(amount > 0 ? amount : 1, 's', nameOf(data && data.Gifter));
 }
 
 function TwitchBits(data) {
-  addBits((data && data.Amount) || 0);
+  addBits({ amount: (data && data.Amount) || 0, user: nameOf(data && data.User) });
 }
 
 // Mix It Up counts every chatter's messages. A count of exactly 1 means this is their first one.
 function ChatMessageReceived(data) {
   const user = (data && data.User) || {};
-  if (Number(user.TotalChatMessageSent) === 1) {
-    note('First-time chatter: ' + (user.Username || 'someone'));
-    addBalls(1);
-  }
+  if (Number(user.TotalChatMessageSent) === 1) addKind(1, 'c', nameOf(user));
 }
 
 // A new Custom widget comes with example code in its Javascript tab that has functions with
 // the same names (Follow, Subscription...). That code runs after this file, so once the page
 // has loaded, these names are pointed back at the bowl's own functions.
 const MIX_IT_UP_FUNCTIONS = {
-  addBalls, addFollower, addBits, emptyBowl, breakBowl,
+  addBalls, addFollower, addBits, emptyBowl, breakBowl, shakeBowl,
   Follow, Subscription, SubscriptionGifted, MassSubscriptionGifted, TwitchBits, ChatMessageReceived,
 };
 document.addEventListener('DOMContentLoaded', () => Object.assign(window, MIX_IT_UP_FUNCTIONS));
@@ -1543,6 +1780,9 @@ const SHARED_SLIDERS = [
 const BREAK_SLIDERS = [
   ['shards', 'Shards', 2, 16, 1],
   ['returnSeconds', 'Comes back after (seconds)', 1, 15, 0.5],
+];
+const FUN_SLIDERS = [
+  ['volume', 'Sound volume (0 = off)', 0, 1, 0.05],
 ];
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -1653,6 +1893,8 @@ function refreshControls() {
   byId('break-at').value = bowl.breakAt || '';
   byId('bits').value = activeSettings.bitsPerBall;
   byId('cycle').checked = activeSettings.cycleBowls;
+  for (const box of document.querySelectorAll('[data-check]')) box.checked = activeSettings[box.dataset.check];
+  for (const picker of document.querySelectorAll('[data-color]')) picker.value = activeSettings[picker.dataset.color];
   byId('break-command').value = activeSettings.breakCommandId;
   renderBowlList();
   updateResetHint();
@@ -1820,7 +2062,8 @@ async function startTest() {
   const balls = testState ? testState.balls : 0;
   if (testGame) testGame.stop();
   testGame = null;
-  testState = { balls, bowlId: editingId, breaks: 0 };
+  testState = { balls, kinds: testState ? testState.kinds : '', names: [], bowlId: editingId, breaks: 0 };
+  lineUp(testState);
   const game = await createGame({
     canvas: byId('stage'),
     settings: tidySettings(activeSettings),
@@ -2070,6 +2313,7 @@ async function startEditor() {
   buildSliders('bowl-sliders', BOWL_SLIDERS, 'bowl');
   buildSliders('shared-sliders', SHARED_SLIDERS, 'shared');
   buildSliders('break-sliders', BREAK_SLIDERS, 'shared');
+  buildSliders('fun-sliders', FUN_SLIDERS, 'shared');
   setMode('draw');
   refreshControls();
   setStatus(storedIsNewer ? 'Loaded your edits from this browser' : 'Ready');
@@ -2142,6 +2386,18 @@ async function startEditor() {
     activeSettings.cycleBowls = byId('cycle').checked;
     saveSoon();
   });
+  for (const box of document.querySelectorAll('[data-check]')) {
+    box.addEventListener('change', () => {
+      activeSettings[box.dataset.check] = box.checked;
+      saveSoon();
+    });
+  }
+  for (const picker of document.querySelectorAll('[data-color]')) {
+    picker.addEventListener('change', () => {
+      activeSettings[picker.dataset.color] = picker.value;
+      saveSoon();
+    });
+  }
   byId('break-command').addEventListener('change', () => {
     activeSettings.breakCommandId = byId('break-command').value.trim();
     saveSoon();
@@ -2151,9 +2407,15 @@ async function startEditor() {
   byId('test-toggle').addEventListener('click', toggleTest);
   byId('test-empty').addEventListener('click', () => testGame && testGame.empty());
   byId('test-break').addEventListener('click', () => testGame && testGame.breakNow());
+  byId('test-shake').addEventListener('click', () => testGame && testGame.shake(1.5));
   for (const button of document.querySelectorAll('[data-add]')) {
     button.addEventListener('click', () => {
-      if (testState) testState.balls += Number(button.dataset.add);
+      if (testState) owe(testState, Number(button.dataset.add), 'x', null);
+    });
+  }
+  for (const button of document.querySelectorAll('[data-kind]')) {
+    button.addEventListener('click', () => {
+      if (testState) owe(testState, 1, button.dataset.kind, 'TestViewer');
     });
   }
 
