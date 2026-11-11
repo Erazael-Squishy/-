@@ -1,0 +1,179 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Twitch Bowl</title>
+<style>
+  body { margin: 0; overflow: hidden; background: transparent; }
+  canvas { display: block; width: 100vmin; height: 100vmin; }
+</style>
+<canvas id="stage" width="800" height="800"></canvas>
+<script src="matter.min.js"></script>
+<script>
+const { Body, Engine, Bodies, Composite } = Matter;
+
+const SIZE = 800;
+const TICK = 1000 / 60;
+const DROP_EVERY = 150; // Milliseconds between balls when several arrive at once
+const WALL = 40; // Thickness of the hidden wall behind the drawn outline
+
+const context = document.getElementById('stage').getContext('2d');
+const engine = Engine.create({ enableSleeping: true });
+const balls = new Set();
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+// The space inside the outline, treated as a closed shape. Its sign shows which way it was drawn.
+function signedArea(outline) {
+  let area = 0;
+  outline.forEach(([x1, y1], i) => {
+    const [x2, y2] = outline[(i + 1) % outline.length];
+    area += x1 * y2 - x2 * y1;
+  });
+  return area / 2;
+}
+
+// Puts a thick wall on the outer side of each stretch of the outline. Balls stop exactly on
+// the drawn line, and thick walls stop fast balls and heavy piles from pushing through.
+function addWalls(outline) {
+  const outward = signedArea(outline) < 0 ? 1 : -1;
+  for (let i = 1; i < outline.length; i++) {
+    const [x1, y1] = outline[i - 1];
+    const [x2, y2] = outline[i];
+    const length = Math.hypot(x2 - x1, y2 - y1);
+    if (!length) continue;
+    const alongX = (x2 - x1) / length;
+    const alongY = (y2 - y1) / length;
+    // Walls overlap at the joints to close the gaps. The two ends stay flush with the line.
+    const before = i > 1 ? WALL / 2 : 0;
+    const after = i < outline.length - 1 ? WALL / 2 : 0;
+    const shift = (after - before) / 2;
+    const x = (x1 + x2) / 2 + alongX * shift - outward * alongY * WALL / 2;
+    const y = (y1 + y2) / 2 + alongY * shift + outward * alongX * WALL / 2;
+    Composite.add(engine.world, Bodies.rectangle(x, y, length + before + after, WALL, {
+      isStatic: true,
+      angle: Math.atan2(y2 - y1, x2 - x1),
+      friction: 1, // Balls touching a wall use the lower friction, so the setting decides.
+    }));
+  }
+}
+
+// Crops the ball picture to a circle once, so any picture makes a round ball.
+function makeBallSprite(image, size) {
+  const sprite = document.createElement('canvas');
+  sprite.width = sprite.height = size * 2;
+  const painter = sprite.getContext('2d');
+  painter.arc(size, size, size, 0, Math.PI * 2);
+  painter.clip();
+  const scale = size * 2 / Math.min(image.width, image.height);
+  const width = image.width * scale;
+  const height = image.height * scale;
+  painter.drawImage(image, size - width / 2, size - height / 2, width, height);
+  return sprite;
+}
+
+async function start() {
+  const config = await fetch('config.json').then((response) => response.json());
+  const [bowlImage, ballImage] = await Promise.all([loadImage('bowl.png'), loadImage('ball.png')]);
+
+  engine.gravity.y = config.gravity;
+  addWalls(config.outline);
+
+  const bowlHeight = config.bowlWidth * bowlImage.height / bowlImage.width;
+  const ballSprite = makeBallSprite(ballImage, config.ballSize);
+  const ballRadius = config.ballSize / 2;
+  const maxSpeed = 0.75 * (ballRadius + WALL / 2);
+  // Roughly how many balls fit, so a reload doesn't rebuild ones that spilled long ago.
+  const area = Math.abs(signedArea(config.outline));
+  const capacity = Math.ceil(1.5 * area / (Math.PI * ballRadius * ballRadius));
+
+  let dropped = 0;
+  let total = null;
+
+  function dropBall() {
+    // Always a little scatter, so balls don't land balanced on top of each other.
+    const scatter = config.dropWidth + ballRadius;
+    const x = config.dropX + (Math.random() - 0.5) * scatter;
+    const ball = Bodies.circle(x, config.dropY, ballRadius, {
+      restitution: config.bounciness,
+      friction: config.friction,
+      frictionStatic: 0,
+    });
+    balls.add(ball);
+    Composite.add(engine.world, ball);
+    dropped++;
+  }
+
+  function step() {
+    Engine.update(engine, TICK);
+    for (const ball of balls) {
+      // Capped so a fast ball can't jump straight through a wall.
+      if (ball.speed > maxSpeed) Body.setSpeed(ball, maxSpeed);
+      if (ball.position.y > SIZE + config.ballSize) {
+        balls.delete(ball);
+        Composite.remove(engine.world, ball);
+      }
+    }
+  }
+
+  // Rebuilds the pile out of sight after the page loads.
+  function refill() {
+    dropped = Math.max(0, total - capacity);
+    while (dropped < total) {
+      dropBall();
+      for (let i = 0; i < 6; i++) step();
+    }
+    for (let i = 0; i < 180; i++) step();
+  }
+
+  function emptyBowl() {
+    Composite.remove(engine.world, [...balls]);
+    balls.clear();
+    dropped = 0;
+  }
+
+  function setTotal(next) {
+    const previous = total;
+    total = next;
+    if (previous === null) refill();
+    else if (total < previous) emptyBowl();
+  }
+
+  // The editor's test view drops balls here without touching the real count.
+  if (location.search === '?preview') {
+    setTotal(0);
+    window.setTotal = setTotal;
+  } else {
+    const events = new EventSource('events');
+    events.onmessage = (message) => setTotal(Number(message.data));
+    events.addEventListener('reload', () => location.reload());
+  }
+
+  setInterval(() => {
+    if (dropped < total) dropBall();
+  }, DROP_EVERY);
+
+  setInterval(step, TICK);
+
+  function draw() {
+    context.clearRect(0, 0, SIZE, SIZE);
+    context.drawImage(bowlImage, config.bowlX, config.bowlY, config.bowlWidth, bowlHeight);
+    for (const ball of balls) {
+      context.save();
+      context.translate(ball.position.x, ball.position.y);
+      context.rotate(ball.angle);
+      context.drawImage(ballSprite, -ballRadius, -ballRadius, config.ballSize, config.ballSize);
+      context.restore();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+start();
+</script>

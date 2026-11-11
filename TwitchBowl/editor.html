@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bowl Editor</title>
+<style>
+  :root {
+    --page: #141418;
+    --panel: #1e1e24;
+    --line: #33333c;
+    --text: #ececf1;
+    --muted: #a0a0ad;
+    --accent: #a970ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text);
+    font: 14px/1.45 system-ui, "Segoe UI", sans-serif;
+  }
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    padding: 16px;
+    min-height: 100vh;
+  }
+  #stage-box {
+    position: relative;
+    justify-self: center;
+    align-self: start;
+    width: min(100%, calc(100vh - 32px));
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: repeating-conic-gradient(#2a2a31 0 25%, #222228 0 50%) 0 0 / 32px 32px;
+  }
+  #stage, #test-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  #stage { touch-action: none; cursor: crosshair; }
+  #stage.moving { cursor: move; }
+  #stage.moving #handles, #stage.moving #outline { pointer-events: none; opacity: 0.5; }
+  #outline { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; cursor: copy; }
+  #handles circle { fill: #fff; stroke: var(--accent); stroke-width: 3; cursor: grab; }
+  #drop { cursor: move; }
+  #drop-band { fill: var(--accent); opacity: 0.35; }
+  #drop-arrow { fill: var(--accent); }
+  #drop-ball { clip-path: circle(50%); }
+  aside { display: flex; flex-direction: column; gap: 16px; }
+  h1 { margin: 0; font-size: 18px; }
+  h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; }
+  #status { color: var(--muted); font-size: 13px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  button {
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #2a2a32;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  button.active { background: var(--accent); border-color: var(--accent); color: #17121f; font-weight: 600; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .picture {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+  }
+  .picture:hover { border-color: var(--muted); color: var(--text); }
+  .picture img { width: 100%; height: 64px; object-fit: contain; }
+  .picture input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .hint { margin: 8px 0; color: var(--muted); font-size: 13px; }
+  .setting { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-bottom: 10px; }
+  .setting output { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .setting input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  #bits { width: 80px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: #2a2a32; color: var(--text); font: inherit; }
+  a { color: var(--accent); }
+  [hidden] { display: none !important; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+    #stage-box { width: 100%; }
+  }
+</style>
+
+<main>
+  <div id="stage-box">
+    <svg id="stage" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <image id="bowl" href="bowl.png"></image>
+      <polyline id="outline"></polyline>
+      <g id="handles"></g>
+      <g id="drop">
+        <rect id="drop-band" height="10" rx="5"></rect>
+        <image id="drop-ball" href="ball.png"></image>
+        <path id="drop-arrow"></path>
+      </g>
+    </svg>
+    <iframe id="test-frame" title="Test view" hidden></iframe>
+  </div>
+
+  <aside>
+    <header>
+      <h1>Bowl Editor</h1>
+      <span id="status" role="status">Saved</span>
+    </header>
+
+    <section>
+      <h2>Pictures</h2>
+      <div class="row">
+        <label class="picture">
+          <img id="bowl-preview" src="bowl.png" alt="Current bowl">
+          <span>Change bowl</span>
+          <input id="bowl-file" type="file" accept="image/*">
+        </label>
+        <label class="picture">
+          <img id="ball-preview" src="ball.png" alt="Current ball">
+          <span>Change ball</span>
+          <input id="ball-file" type="file" accept="image/*">
+        </label>
+      </div>
+    </section>
+
+    <section id="tools">
+      <h2>Bowl shape</h2>
+      <div class="row">
+        <button id="draw-mode" class="active">Draw outline</button>
+        <button id="move-mode">Move picture</button>
+      </div>
+      <p class="hint" id="hint"></p>
+      <div class="row">
+        <button id="undo">Undo</button>
+        <button id="clear">Clear outline</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Settings</h2>
+      <div id="sliders"></div>
+      <label class="setting">
+        <span>Bits for one ball</span>
+        <input id="bits" type="number" min="1" step="1">
+      </label>
+    </section>
+
+    <section>
+      <h2>Try it</h2>
+      <button id="test-toggle" style="width: 100%">Test the physics</button>
+      <div id="test-buttons" class="row" style="margin-top: 8px" hidden>
+        <button data-add="1">+1</button>
+        <button data-add="10">+10</button>
+        <button data-add="50">+50</button>
+        <button id="test-empty">Empty</button>
+      </div>
+      <p class="hint">Test balls stay in this page. Your real bowl and OBS aren't affected.</p>
+    </section>
+
+    <section>
+      <h2>Real bowl</h2>
+      <button id="reset" style="width: 100%">Empty the real bowl</button>
+      <p class="hint"><a href="log" target="_blank">See what it's doing</a></p>
+    </section>
+  </aside>
+</main>
+
+<script>
+const SIZE = 800;
+const MIN_STEP = 16; // Pixels between points when drawing freehand
+const MAX_PICTURE = 1600; // Longest side kept when a picture is uploaded
+const SAVE_DELAY = 300;
+const HINTS = {
+  draw: 'Click to add points, or hold and draw. Drag a point to move it, click the line to add one, right-click a point to remove it. Drag the ball to set the drop point.',
+  move: 'Drag to place the picture. Use Bowl size to resize it.',
+};
+const SLIDERS = [
+  ['bowlWidth', 'Bowl size', 100, 800, 1],
+  ['dropWidth', 'Drop width', 0, 800, 1],
+  ['ballSize', 'Ball size', 10, 100, 1],
+  ['gravity', 'Gravity', 0.1, 3, 0.1],
+  ['bounciness', 'Bounciness', 0, 0.9, 0.05],
+  ['friction', 'Friction', 0, 1, 0.01],
+];
+const EDITED_SETTINGS = ['bowlX', 'bowlY', 'outline', 'dropX', 'dropY', 'bitsPerBall', ...SLIDERS.map(([key]) => key)];
+
+const $ = (id) => document.getElementById(id);
+const distance = ([x1, y1], [x2, y2]) => Math.hypot(x2 - x1, y2 - y1);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+let config;
+let bowlAspect = 1;
+let mode = 'draw';
+let drag = null;
+let saveTimer = null;
+let testBalls = 0;
+const history = [];
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function setStatus(text) {
+  $('status').textContent = text;
+}
+
+function toStage(event) {
+  const point = new DOMPoint(event.clientX, event.clientY).matrixTransform($('stage').getScreenCTM().inverse());
+  const clamp = (value) => Math.round(Math.min(SIZE, Math.max(0, value)));
+  return [clamp(point.x), clamp(point.y)];
+}
+
+function render() {
+  const bowl = $('bowl');
+  bowl.setAttribute('x', config.bowlX);
+  bowl.setAttribute('y', config.bowlY);
+  bowl.setAttribute('width', config.bowlWidth);
+  bowl.setAttribute('height', config.bowlWidth * bowlAspect);
+
+  $('outline').setAttribute('points', config.outline.join(' '));
+  $('handles').replaceChildren(...config.outline.map(([x, y], index) => {
+    const handle = document.createElementNS(SVG_NS, 'circle');
+    handle.setAttribute('cx', x);
+    handle.setAttribute('cy', y);
+    handle.setAttribute('r', 7);
+    handle.dataset.index = index;
+    return handle;
+  }));
+
+  const { dropX: x, dropY: y, dropWidth, ballSize } = config;
+  const band = $('drop-band');
+  band.setAttribute('x', x - dropWidth / 2);
+  band.setAttribute('y', y - 5);
+  band.setAttribute('width', dropWidth);
+  const ball = $('drop-ball');
+  ball.setAttribute('x', x - ballSize / 2);
+  ball.setAttribute('y', y - ballSize / 2);
+  ball.setAttribute('width', ballSize);
+  ball.setAttribute('height', ballSize);
+  const tip = y + ballSize / 2 + 26;
+  $('drop-arrow').setAttribute('d', `M${x - 3} ${tip - 26}h6v14h7l-10 12l-10 -12h7z`);
+}
+
+function saveSoon() {
+  setStatus('Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, SAVE_DELAY);
+}
+
+async function saveNow() {
+  clearTimeout(saveTimer);
+  const edited = Object.fromEntries(EDITED_SETTINGS.map((key) => [key, config[key]]));
+  const response = await fetch('config', { method: 'POST', body: JSON.stringify(edited) });
+  setStatus(response.ok ? 'Saved' : 'Could not save');
+  if (!$('test-frame').hidden) restartTest();
+}
+
+function remember() {
+  history.push(JSON.stringify(config.outline));
+}
+
+// Where a new point belongs: the stretch of line it adds the least length to.
+function nearestStretch(point) {
+  const { outline } = config;
+  const detour = (i) => distance(outline[i], point) + distance(point, outline[i + 1]) - distance(outline[i], outline[i + 1]);
+  let best = 0;
+  for (let i = 1; i < outline.length - 1; i++) if (detour(i) < detour(best)) best = i;
+  return best;
+}
+
+function startDrag(event) {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  const point = toStage(event);
+  const { outline } = config;
+  const { target } = event;
+
+  if (target.closest('#drop')) {
+    drag = ([x, y]) => {
+      config.dropX = x;
+      config.dropY = y;
+    };
+  } else if (mode === 'move') {
+    const offsetX = point[0] - config.bowlX;
+    const offsetY = point[1] - config.bowlY;
+    drag = ([x, y]) => {
+      config.bowlX = x - offsetX;
+      config.bowlY = y - offsetY;
+    };
+  } else if (target.dataset.index !== undefined) {
+    remember();
+    const index = Number(target.dataset.index);
+    drag = (position) => {
+      outline[index] = position;
+    };
+  } else if (target === $('outline')) {
+    remember();
+    const index = nearestStretch(point) + 1;
+    outline.splice(index, 0, point);
+    drag = (position) => {
+      outline[index] = position;
+    };
+  } else {
+    remember();
+    outline.push(point);
+    drag = (position) => {
+      if (distance(outline.at(-1), position) >= MIN_STEP) outline.push(position);
+    };
+  }
+  render();
+}
+
+function removePoint(event) {
+  event.preventDefault();
+  if (event.target.dataset.index === undefined || mode !== 'draw') return;
+  remember();
+  config.outline.splice(Number(event.target.dataset.index), 1);
+  render();
+  saveSoon();
+}
+
+function setMode(next) {
+  mode = next;
+  $('stage').classList.toggle('moving', mode === 'move');
+  $('draw-mode').classList.toggle('active', mode === 'draw');
+  $('move-mode').classList.toggle('active', mode === 'move');
+  $('hint').textContent = HINTS[mode];
+}
+
+async function uploadPicture(kind, file) {
+  setStatus('Saving…');
+  try {
+    const picture = await loadImage(URL.createObjectURL(file));
+    const scale = Math.min(1, MAX_PICTURE / Math.max(picture.width, picture.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(picture.width * scale);
+    canvas.height = Math.round(picture.height * scale);
+    canvas.getContext('2d').drawImage(picture, 0, 0, canvas.width, canvas.height);
+    const png = await new Promise((done) => canvas.toBlob(done, 'image/png'));
+    await fetch(`image/${kind}`, { method: 'POST', body: png });
+  } catch {
+    setStatus("That file isn't a picture");
+    return;
+  }
+  await showPictures();
+  setStatus('Saved');
+  if (!$('test-frame').hidden) restartTest();
+}
+
+async function showPictures() {
+  const stamp = Date.now();
+  const bowl = await loadImage(`bowl.png?${stamp}`);
+  bowlAspect = bowl.height / bowl.width;
+  $('bowl').setAttribute('href', `bowl.png?${stamp}`);
+  $('bowl-preview').src = `bowl.png?${stamp}`;
+  $('drop-ball').setAttribute('href', `ball.png?${stamp}`);
+  $('ball-preview').src = `ball.png?${stamp}`;
+  render();
+}
+
+function restartTest() {
+  testBalls = 0;
+  $('test-frame').src = '/?preview';
+}
+
+async function toggleTest() {
+  const testing = $('test-frame').hidden;
+  $('test-frame').hidden = !testing;
+  $('stage').toggleAttribute('hidden', testing);
+  $('test-buttons').hidden = !testing;
+  $('tools').hidden = testing;
+  $('test-toggle').textContent = testing ? 'Back to editing' : 'Test the physics';
+  $('test-toggle').classList.toggle('active', testing);
+  if (testing) await saveNow();
+  else $('test-frame').src = 'about:blank';
+}
+
+function setTestBalls(count) {
+  testBalls = count;
+  $('test-frame').contentWindow.setTotal?.(testBalls);
+}
+
+function buildSliders() {
+  for (const [key, label, min, max, step] of SLIDERS) {
+    const row = document.createElement('label');
+    row.className = 'setting';
+    row.innerHTML = '<span></span><output></output><input type="range">';
+    row.querySelector('span').textContent = label;
+    const output = row.querySelector('output');
+    const slider = row.querySelector('input');
+    Object.assign(slider, { min, max, step, value: config[key] });
+    output.textContent = config[key];
+    slider.addEventListener('input', () => {
+      config[key] = Number(slider.value);
+      output.textContent = slider.value;
+      render();
+      saveSoon();
+    });
+    $('sliders').append(row);
+  }
+}
+
+async function start() {
+  config = await fetch('config.json').then((response) => response.json());
+  buildSliders();
+  setMode('draw');
+  $('bits').value = config.bitsPerBall;
+  await showPictures();
+
+  $('stage').addEventListener('pointerdown', startDrag);
+  $('stage').addEventListener('contextmenu', removePoint);
+  window.addEventListener('pointermove', (event) => {
+    if (!drag) return;
+    drag(toStage(event));
+    render();
+  });
+  window.addEventListener('pointerup', () => {
+    if (!drag) return;
+    drag = null;
+    saveSoon();
+  });
+
+  $('draw-mode').addEventListener('click', () => setMode('draw'));
+  $('move-mode').addEventListener('click', () => setMode('move'));
+  $('undo').addEventListener('click', () => {
+    if (!history.length) return;
+    config.outline = JSON.parse(history.pop());
+    render();
+    saveSoon();
+  });
+  $('clear').addEventListener('click', () => {
+    remember();
+    config.outline = [];
+    render();
+    saveSoon();
+  });
+  $('bits').addEventListener('change', () => {
+    config.bitsPerBall = Math.max(1, Math.round(Number($('bits').value)) || 1);
+    $('bits').value = config.bitsPerBall;
+    saveSoon();
+  });
+  for (const kind of ['bowl', 'ball']) {
+    $(`${kind}-file`).addEventListener('change', (event) => {
+      uploadPicture(kind, event.target.files[0]);
+      event.target.value = ''; // So the same file can be chosen again after editing it.
+    });
+  }
+
+  $('test-toggle').addEventListener('click', toggleTest);
+  $('test-empty').addEventListener('click', () => setTestBalls(0));
+  for (const button of document.querySelectorAll('[data-add]')) {
+    button.addEventListener('click', () => setTestBalls(testBalls + Number(button.dataset.add)));
+  }
+  $('reset').addEventListener('click', async () => {
+    if (!confirm('Empty the real bowl? This removes every ball from your stream overlay.')) return;
+    await fetch('reset');
+    setStatus('Bowl emptied');
+  });
+}
+
+start();
+</script>
+</html>
