@@ -58,14 +58,14 @@
   <ol>
     <li><a href="#part1">The big picture</a></li>
     <li><a href="#part2">Build it yourself</a><ol><li><a href="#step-canvas">Step 1. A page with a canvas</a></li><li><a href="#step-falling">Step 2. A falling ball</a></li><li><a href="#step-walls">Step 3. Walls from an outline</a></li><li><a href="#step-pictures">Step 4. Pictures</a></li><li><a href="#step-editor">Step 5. Editor tools</a></li><li><a href="#step-saving">Step 6. Saving, and counting balls</a></li><li><a href="#step-bowls">Step 7. Several bowls</a></li><li><a href="#step-breaking">Step 8. Breaking</a></li><li><a href="#step-mixitup">Step 9. Mix It Up</a></li></ol></li>
-    <li><a href="#part3">The finished code explained</a><ol><li><a href="#code-1">The top of the file</a></li><li><a href="#code-2">Colours</a></li><li><a href="#code-3">The overlay's look</a></li><li><a href="#code-4">The editor's look</a></li><li><a href="#code-5">The stage</a></li><li><a href="#code-6">The editor panel</a></li><li><a href="#code-7">The pop-up box</a></li><li><a href="#code-8">The settings block</a></li><li><a href="#code-9">Matter.js</a></li><li><a href="#code-10">0. A snapshot of this file</a></li><li><a href="#code-11">1. Settings that never change</a></li><li><a href="#code-12">2. Small helpers</a></li><li><a href="#code-13">Reading and writing browser storage</a></li><li><a href="#code-14">3. Settings: filling in the gaps</a></li><li><a href="#code-15">Leaving out unused pictures</a></li><li><a href="#code-16">Making text safe for Mix It Up</a></li><li><a href="#code-17">Settings as text, and new copies of the file</a></li><li><a href="#code-18">4. Shapes: area, capacity and when to break</a></li><li><a href="#code-19">Walls from the outline</a></li><li><a href="#code-20">Cutting shapes into shards</a></li><li><a href="#code-21">5. Pictures</a></li><li><a href="#code-22">5b. Sounds</a></li><li><a href="#code-23">6. The game: remembering what each ball is</a></li><li><a href="#code-24">Setting up a game</a></li><li><a href="#code-25">Getting a bowl ready</a></li><li><a href="#code-26">Dropping a ball</a></li><li><a href="#code-27">One step of physics</a></li><li><a href="#code-28">Is the bowl full?</a></li><li><a href="#code-29">The heartbeat</a></li><li><a href="#code-30">Breaking, part 1: the count and the cracks</a></li><li><a href="#code-31">Breaking, part 2: everything falls</a></li><li><a href="#code-32">Shaking the bowl</a></li><li><a href="#code-33">Breaking, part 3, and emptying</a></li><li><a href="#code-34">Drawing</a></li><li><a href="#code-35">Starting the game</a></li><li><a href="#code-36">Which bowl comes back</a></li><li><a href="#code-37">7. The real bowl</a></li><li><a href="#code-38">Understanding what Mix It Up sends</a></li><li><a href="#code-39">The functions Mix It Up calls</a></li><li><a href="#code-40">Mix It Up's own widget events</a></li><li><a href="#code-41">Telling Mix It Up the bowl broke</a></li><li><a href="#code-42">8. The overlay</a></li><li><a href="#code-43">9. The editor: settings and memory</a></li><li><a href="#code-44">Small editor helpers</a></li><li><a href="#code-45">Drawing the editing layer</a></li><li><a href="#code-46">Keeping the panel in step</a></li><li><a href="#code-47">Saving by itself</a></li><li><a href="#code-48">Drawing the outline</a></li><li><a href="#code-49">Uploading pictures</a></li><li><a href="#code-50">The test view</a></li><li><a href="#code-51">Managing bowls</a></li><li><a href="#code-52">Getting it onto the stream</a></li><li><a href="#code-53">The Mix It Up widget file</a></li><li><a href="#code-54">Export and Import</a></li><li><a href="#code-55">Building the panel</a></li><li><a href="#code-56">Starting the editor</a></li><li><a href="#code-57">10. Editor or overlay?</a></li></ol></li>
+    <li><a href="#part3">The finished code explained</a><ol><li><a href="#code-1">The top of the file</a></li><li><a href="#code-2">Colours</a></li><li><a href="#code-3">The overlay's look</a></li><li><a href="#code-4">The editor's look</a></li><li><a href="#code-5">The stage</a></li><li><a href="#code-6">The editor panel</a></li><li><a href="#code-7">The pop-up box</a></li><li><a href="#code-8">The settings block</a></li><li><a href="#code-9">Matter.js</a></li><li><a href="#code-10">0. A snapshot of this file</a></li><li><a href="#code-11">1. Settings that never change</a></li><li><a href="#code-12">2. Small helpers</a></li><li><a href="#code-13">Reading and writing browser storage</a></li><li><a href="#code-14">3. Settings: filling in the gaps</a></li><li><a href="#code-15">Leaving out unused pictures</a></li><li><a href="#code-16">Making text safe for Mix It Up</a></li><li><a href="#code-17">Settings as text, and new copies of the file</a></li><li><a href="#code-18">4. Shapes: area, capacity and when to break</a></li><li><a href="#code-19">Walls from the outline</a></li><li><a href="#code-20">Cutting shapes into shards</a></li><li><a href="#code-21">5. Pictures</a></li><li><a href="#code-22">Flattening layers, and picking a ball's look</a></li><li><a href="#code-23">5b. Sounds</a></li><li><a href="#code-24">6. The game: remembering what each ball is</a></li><li><a href="#code-25">Setting up a game</a></li><li><a href="#code-26">Getting a bowl ready</a></li><li><a href="#code-27">Gambling mode pegs</a></li><li><a href="#code-28">Dropping a ball</a></li><li><a href="#code-29">One step of physics</a></li><li><a href="#code-30">Losing a ball</a></li><li><a href="#code-31">Shards and bubbles</a></li><li><a href="#code-32">Dragging a ball</a></li><li><a href="#code-33">Is the bowl full?</a></li><li><a href="#code-34">The heartbeat</a></li><li><a href="#code-35">Breaking, part 1: the count and the cracks</a></li><li><a href="#code-36">Breaking, part 2: everything falls</a></li><li><a href="#code-37">Shaking the bowl</a></li><li><a href="#code-38">Breaking, part 3, and emptying</a></li><li><a href="#code-39">Drawing balls and text</a></li><li><a href="#code-40">Drawing a frame</a></li><li><a href="#code-41">Grabbing balls with the mouse</a></li><li><a href="#code-42">Starting the game</a></li><li><a href="#code-43">Which bowl comes back</a></li><li><a href="#code-44">7. The real bowl</a></li><li><a href="#code-45">Understanding what Mix It Up sends</a></li><li><a href="#code-46">The functions Mix It Up calls</a></li><li><a href="#code-47">Mix It Up's own widget events</a></li><li><a href="#code-48">Telling Mix It Up the bowl broke</a></li><li><a href="#code-49">8. The overlay</a></li><li><a href="#code-50">9. The editor: settings and memory</a></li><li><a href="#code-51">Small editor helpers</a></li><li><a href="#code-52">Showing layers and ball pictures</a></li><li><a href="#code-53">Drawing the editing layer</a></li><li><a href="#code-54">Keeping the panel in step</a></li><li><a href="#code-55">Saving by itself</a></li><li><a href="#code-56">Drawing the outline</a></li><li><a href="#code-57">Uploading pictures</a></li><li><a href="#code-58">Bowl layers, ball pictures and peg patterns</a></li><li><a href="#code-59">The test view</a></li><li><a href="#code-60">Managing bowls</a></li><li><a href="#code-61">Getting it onto the stream</a></li><li><a href="#code-62">The Mix It Up widget file</a></li><li><a href="#code-63">Export and Import</a></li><li><a href="#code-64">Building the panel</a></li><li><a href="#code-65">Starting the editor</a></li><li><a href="#code-66">10. Editor or overlay?</a></li></ol></li>
     <li><a href="#part4">Changing things</a></li>
     <li><a href="#part5">Troubleshooting</a></li>
   </ol>
 </nav>
 <main>
 <h1>Twitch Bowl: how it works, and how to build it</h1>
-<p style="margin: 0; color: var(--muted)">Version 2</p>
+<p style="margin: 0; color: var(--muted)">Version 3</p>
 <p class="lead">A stream overlay where a bowl fills with balls, one for each follow, sub, cheer and first-time chatter, and shatters when it's full. This guide assumes you know almost nothing about code.</p>
 <p>The three files: <code>bowl.html</code> (the overlay and its editor), <code>MIXITUP_SETUP.md</code> (putting it on stream) and this guide.</p>
 
@@ -93,8 +93,10 @@
 </div>
 <p>The bowl never talks to Twitch itself, so there's no login, no keys and no server. Mix It Up does that part.</p>
 
-<h3>Version 2: the fun extras</h3>
-<p>Each new ball can show <strong>who sent it</strong>, balls are <strong>coloured by event</strong> (follows, subs, bits, first chats) and keep their colour after a reload, viewers can <strong>shake the bowl</strong> (great as a channel point reward), there are <strong>sounds</strong> made by the browser itself, <strong>confetti</strong> when it breaks, and an optional <strong>counter</strong>. All of them are under <em>Fun</em> in the editor, and Part 3 explains the code behind each one.</p>
+<h3>The extras</h3>
+<p>Each new ball can show <strong>who sent it</strong>, balls are <strong>coloured by event</strong> (follows, subs, bits, first chats) and keep their colour after a reload, viewers can <strong>shake the bowl</strong> (great as a channel point reward), there are <strong>sounds</strong> made by the browser itself, <strong>bubbles</strong> that pop when it breaks, and an optional <strong>counter</strong>.</p>
+<p>Version 3 adds <strong>gambling mode</strong> (pegs that balls bounce off, so some miss the bowl and are lost), <strong>grabbing balls</strong> with the mouse (in OBS through <em>Interact</em>), <strong>several ball pictures</strong>, and bowls made of <strong>layers</strong>: a back picture behind the balls, a front picture in front of them, and an optional depth picture.</p>
+<p>One rule ties it together: <strong>the count is always the balls you can see.</strong> A ball that leaves the stage before its bowl breaks (it missed, spilled, was shaken or dragged out) is gone and comes off the count.</p>
 
 <h3>One file, two jobs</h3>
 <p><code>bowl.html</code> holds two programs that share most of their code:</p>
@@ -3125,7 +3127,7 @@ function ChatMessageReceived(data) {
 &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
 &lt;title&gt;Twitch Bowl&lt;/title&gt;
 &lt;!--
-  TWITCH BOWL, version 2: the whole overlay and its editor in one file.
+  TWITCH BOWL, version 3: the whole overlay and its editor in one file.
 
   - Inside Mix It Up or OBS, it shows only the overlay: a bowl that fills with balls.
   - Opened straight from your computer in Chrome (double-click), it shows the editor.
@@ -3194,6 +3196,13 @@ function ChatMessageReceived(data) {
   #drop-band { fill: var(--accent); opacity: 0.35; }
   #drop-arrow { fill: var(--accent); }
   #drop-ball { clip-path: circle(50%); }
+  #pegs circle { stroke: var(--accent); stroke-width: 3; cursor: grab; }
+  #pegs.off { opacity: 0.4; }
+  #editor-stage.pegging #handles, #editor-stage.pegging #outline { pointer-events: none; opacity: 0.5; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .thumbs button { position: relative; width: 48px; height: 48px; padding: 4px; }
+  .thumbs img { width: 100%; height: 100%; object-fit: contain; }
+  .thumbs span { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); color: #17121f; font-size: 12px; line-height: 18px; }
   aside { display: flex; flex-direction: column; gap: 16px; }
   h1 { margin: 0; font-size: 18px; }
   h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
@@ -3280,6 +3289,9 @@ function ChatMessageReceived(data) {
     &lt;canvas id="stage" width="800" height="800"&gt;&lt;/canvas&gt;
     &lt;svg id="editor-stage" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" hidden=""&gt;
       &lt;image id="bowl"&gt;&lt;/image&gt;
+      &lt;image id="bowl-depth"&gt;&lt;/image&gt;
+      &lt;image id="bowl-front"&gt;&lt;/image&gt;
+      &lt;g id="pegs"&gt;&lt;/g&gt;
       &lt;polyline id="outline"&gt;&lt;/polyline&gt;
       &lt;g id="handles"&gt;&lt;/g&gt;
       &lt;g id="drop"&gt;
@@ -3315,19 +3327,38 @@ function ChatMessageReceived(data) {
     &lt;/section&gt;
 
     &lt;section&gt;
-      &lt;h2&gt;Pictures&lt;/h2&gt;
+      &lt;h2&gt;Bowl pictures&lt;/h2&gt;
       &lt;div class="row"&gt;
         &lt;label class="picture"&gt;
-          &lt;img id="bowl-preview" alt="This bowl's picture"&gt;
-          &lt;span&gt;Change bowl&lt;/span&gt;
-          &lt;input id="bowl-file" type="file" accept="image/*"&gt;
+          &lt;img id="back-preview" alt="This bowl's back picture"&gt;
+          &lt;span&gt;Back&lt;/span&gt;
+          &lt;input data-layer="picture" type="file" accept="image/*" multiple=""&gt;
         &lt;/label&gt;
         &lt;label class="picture"&gt;
-          &lt;img id="ball-preview" alt="The ball picture"&gt;
-          &lt;span&gt;Change ball&lt;/span&gt;
-          &lt;input id="ball-file" type="file" accept="image/*"&gt;
+          &lt;img id="front-preview" alt="This bowl's front picture"&gt;
+          &lt;span&gt;Front&lt;/span&gt;
+          &lt;input data-layer="front" type="file" accept="image/*"&gt;
+        &lt;/label&gt;
+        &lt;label class="picture"&gt;
+          &lt;img id="depth-preview" alt="This bowl's depth picture"&gt;
+          &lt;span&gt;Depth&lt;/span&gt;
+          &lt;input data-layer="depth" type="file" accept="image/*"&gt;
         &lt;/label&gt;
       &lt;/div&gt;
+      &lt;div class="row"&gt;
+        &lt;button id="remove-front"&gt;No front&lt;/button&gt;
+        &lt;button id="remove-depth"&gt;No depth&lt;/button&gt;
+        &lt;button id="line-up"&gt;Line up&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;label class="check" style="margin-top: 10px"&gt;&lt;input type="checkbox" data-bowl-check="depthInFront"&gt; Depth goes in front of the balls&lt;/label&gt;
+      &lt;p class="hint"&gt;Back goes behind the balls, Front in front of them, Depth is an extra layer. Choose 2 or 3 pictures at once with Back: names with "front", "back" or "depth" are sorted by themselves. Layers line up by themselves; pull them apart with Move picture.&lt;/p&gt;
+      &lt;h2 style="margin-top: 14px"&gt;Ball pictures&lt;/h2&gt;
+      &lt;label class="picture"&gt;
+        &lt;span&gt;Add ball pictures (choose several at once)&lt;/span&gt;
+        &lt;input id="ball-file" type="file" accept="image/*" multiple=""&gt;
+      &lt;/label&gt;
+      &lt;div id="ball-pictures" class="thumbs"&gt;&lt;/div&gt;
+      &lt;p class="hint"&gt;Each ball uses one of these. Click one to remove it.&lt;/p&gt;
     &lt;/section&gt;
 
     &lt;section id="tools"&gt;
@@ -3335,7 +3366,13 @@ function ChatMessageReceived(data) {
       &lt;div class="row"&gt;
         &lt;button id="draw-mode" class="active"&gt;Draw outline&lt;/button&gt;
         &lt;button id="move-mode"&gt;Move picture&lt;/button&gt;
+        &lt;button id="peg-mode"&gt;Place pegs&lt;/button&gt;
       &lt;/div&gt;
+      &lt;select id="move-what" class="wide"&gt;
+        &lt;option value="all"&gt;Move the whole bowl&lt;/option&gt;
+        &lt;option value="front"&gt;Move only the front picture&lt;/option&gt;
+        &lt;option value="depth"&gt;Move only the depth picture&lt;/option&gt;
+      &lt;/select&gt;
       &lt;p class="hint" id="hint"&gt;&lt;/p&gt;
       &lt;div class="row"&gt;
         &lt;button id="undo"&gt;Undo&lt;/button&gt;
@@ -3377,7 +3414,20 @@ function ChatMessageReceived(data) {
     &lt;/section&gt;
 
     &lt;section&gt;
+      &lt;h2&gt;Gambling mode&lt;/h2&gt;
+      &lt;label class="check"&gt;&lt;input type="checkbox" data-check="gambling"&gt; Pegs on: balls bounce off them and may miss the bowl&lt;/label&gt;
+      &lt;div id="peg-sliders"&gt;&lt;/div&gt;
+      &lt;label class="setting"&gt;&lt;span&gt;Peg colour&lt;/span&gt;&lt;input type="color" data-color="pegColor" style="width: 60px; height: 28px; padding: 0"&gt;&lt;/label&gt;
+      &lt;div class="row"&gt;
+        &lt;button id="peg-pattern"&gt;Peg pattern&lt;/button&gt;
+        &lt;button id="clear-pegs"&gt;Clear pegs&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;p class="hint"&gt;Place pegs with the "Place pegs" tool. Balls that miss the bowl are lost.&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
       &lt;h2&gt;Fun&lt;/h2&gt;
+      &lt;label class="check"&gt;&lt;input type="checkbox" data-check="grabBalls"&gt; Let me grab balls with the mouse (in OBS: Interact)&lt;/label&gt;
       &lt;label class="check"&gt;&lt;input type="checkbox" data-check="showNames"&gt; Show who sent each ball&lt;/label&gt;
       &lt;label class="check"&gt;&lt;input type="checkbox" data-check="colorByEvent"&gt; Colour balls by event&lt;/label&gt;
       &lt;div class="row colors"&gt;
@@ -3386,7 +3436,7 @@ function ChatMessageReceived(data) {
         &lt;label&gt;Bits&lt;input type="color" data-color="bitsColor"&gt;&lt;/label&gt;
         &lt;label&gt;1st chat&lt;input type="color" data-color="chatColor"&gt;&lt;/label&gt;
       &lt;/div&gt;
-      &lt;label class="check" style="margin-top: 10px"&gt;&lt;input type="checkbox" data-check="confetti"&gt; Confetti when it breaks&lt;/label&gt;
+      &lt;label class="check" style="margin-top: 10px"&gt;&lt;input type="checkbox" data-check="bubbles"&gt; Bubbles when it breaks&lt;/label&gt;
       &lt;label class="check"&gt;&lt;input type="checkbox" data-check="showCounter"&gt; Show the count above the bowl&lt;/label&gt;
       &lt;div id="fun-sliders"&gt;&lt;/div&gt;
     &lt;/section&gt;
@@ -3489,9 +3539,17 @@ function ChatMessageReceived(data) {
  "subColor": "#b388ff",
  "bitsColor": "#ffd54f",
  "chatColor": "#69f0ae",
- "confetti": true,
+ "bubbles": true,
  "showCounter": false,
  "volume": 0.3,
+ "grabBalls": true,
+ "ballPictures": [
+  "ball"
+ ],
+ "gambling": false,
+ "pegSize": 16,
+ "pegBounce": 0.6,
+ "pegColor": "#ffffff",
  "widgetEvents": true,
  "bowls": [
   {
@@ -3524,16 +3582,24 @@ function ChatMessageReceived(data) {
    "dropY": 30,
    "dropWidth": 296,
    "breakMode": "count",
-   "breakAt": null
+   "breakAt": null,
+   "front": "",
+   "depth": "",
+   "depthInFront": false,
+   "frontX": 0,
+   "frontY": 0,
+   "depthX": 0,
+   "depthY": 0,
+   "pegs": []
   }
  ],
  "pictures": {
-  "ball": [
-   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAA…",
-    … many more lines of picture …
-  ],
   "starter": [
    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAAAALQCAYAAADPfd1WAAAAA…",
+    … many more lines of picture …
+  ],
+  "ball": [
+   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAA…",
     … many more lines of picture …
   ]
  }
@@ -3594,7 +3660,7 @@ const STORAGE = { settings: 'twitchBowl.settings', state: 'twitchBowl.state' };
 const MIX_IT_UP_API = 'http://localhost:8911/api/v2/commands';
 const NAME_TIME = 240; // Steps a sender's name shows above their ball (4 seconds)
 const SHAKE_TIME = 30; // Steps the bowl picture wobbles when shaken
-const CONFETTI_PIECES = 150;
+const BUBBLES = 35; // Bubbles that float up when a bowl breaks
 
 // Each kind of event has a letter, and a colour setting for its balls. 'x' is any other ball.
 const KIND_COLORS = { f: 'followColor', s: 'subColor', b: 'bitsColor', c: 'chatColor' };
@@ -3603,7 +3669,7 @@ const KIND_LETTERS = { follow: 'f', follower: 'f', sub: 's', subscription: 's', 
 
 // The starting values for anything missing from the settings block.
 const SHARED_DEFAULTS = {
-  version: 2,
+  version: 3,
   savedAt: 0,
   ballSize: 30,
   gravity: 1,
@@ -3624,9 +3690,16 @@ const SHARED_DEFAULTS = {
   subColor: '#b388ff',
   bitsColor: '#ffd54f',
   chatColor: '#69f0ae',
-  confetti: true,
+  bubbles: true,
   showCounter: false,
   volume: 0.3, // 0 is silent, 1 is loudest
+  grabBalls: true,
+  ballPictures: ['ball'], // Each ball uses one of these pictures
+  // Gambling mode
+  gambling: false,
+  pegSize: 16,
+  pegBounce: 0.6,
+  pegColor: '#ffffff',
 };
 const STARTER_OUTLINE = [
   [104, 420], [110, 486], [127, 549], [154, 607], [191, 658], [236, 699], [287, 730], [342, 750],
@@ -3646,6 +3719,15 @@ const BOWL_DEFAULTS = {
   dropWidth: 296,
   breakMode: 'count', // 'count', 'auto' or 'off'
   breakAt: null, // Empty means "work it out from the outline"
+  // More picture layers (picture is the back one). '' means none.
+  front: '',
+  depth: '',
+  depthInFront: false,
+  frontX: 0, // How far each layer has been pulled away from the back picture
+  frontY: 0,
+  depthX: 0,
+  depthY: 0,
+  pegs: [], // Gambling mode pegs: [x, y] points
 };</code></pre><div class="explain">
 <p>The first line pulls the parts of Matter.js this file uses out of <code>Matter</code>, so the code can say <code>Bodies.circle</code> instead of <code>Matter.Bodies.circle</code>.</p>
 <p>Then come the fixed numbers, written in CAPITALS by habit, which means "don't change while running". Each comment says what the number does. The ones you're most likely to change:</p>
@@ -3663,11 +3745,11 @@ const BOWL_DEFAULTS = {
 </ul>
 <p>The version 2 extras:</p>
 <ul>
-<li><code>NAME_TIME = 240</code>: how long (in steps, so 4 seconds) a viewer's name floats above their ball. <code>SHAKE_TIME</code>: how long the bowl picture wobbles when shaken. <code>CONFETTI_PIECES = 150</code>: raise it for a bigger burst.</li>
+<li><code>NAME_TIME = 240</code>: how long (in steps, so 4 seconds) a viewer's name floats above their ball. <code>SHAKE_TIME</code>: how long the bowl picture wobbles when shaken. <code>BUBBLES = 35</code>: how many bubbles float up when a bowl breaks.</li>
 <li><code>KIND_COLORS</code>: each kind of ball has a one-letter name (<code>f</code>ollow, <code>s</code>ub, <code>b</code>its, <code>c</code>hat, and <code>x</code> for anything else) and the setting that holds its colour.</li>
 <li><code>KIND_LETTERS</code>: the words a Mix It Up command may send as <code>kind</code>, and the letter each means. Add a word here to accept it too.</li>
 </ul>
-<p><code>SHARED_DEFAULTS</code> and <code>BOWL_DEFAULTS</code> are the starting values for anything missing from the settings, including the Fun settings: the four colours, whether names, confetti and the counter show, and <code>volume</code> (0 to 1). <code>STARTER_OUTLINE</code> is the traced shape of the starter bowl.</p></div></section>
+<p><code>SHARED_DEFAULTS</code> and <code>BOWL_DEFAULTS</code> are the starting values for anything missing from the settings, including the Fun settings (the four colours, whether names, bubbles and the counter show, <code>volume</code> from 0 to 1, <code>grabBalls</code>, and the list of <code>ballPictures</code>) and gambling mode (<code>gambling</code> on or off, <code>pegSize</code>, <code>pegBounce</code>, <code>pegColor</code>). Each bowl also has <code>front</code> and <code>depth</code> pictures (empty means none), how far each has been pulled away from the back picture (<code>frontX</code>, <code>frontY</code>, <code>depthX</code>, <code>depthY</code>, all 0 when lined up), <code>depthInFront</code>, and its <code>pegs</code>. <code>STARTER_OUTLINE</code> is the traced shape of the starter bowl.</p></div></section>
 <section id="code-12"><h3>2. Small helpers</h3><pre><code>// =====================================================================================
 // 2. SMALL HELPERS
 // =====================================================================================
@@ -3729,6 +3811,7 @@ function normalizeBowl(raw) {
   const bowl = { ...BOWL_DEFAULTS, ...raw };
   bowl.id = bowl.id || newId('bowl');
   bowl.outline = copyOf(bowl.outline); // Its own copy, so drawing never changes the defaults
+  bowl.pegs = copyOf(bowl.pegs);
   return bowl;
 }
 
@@ -3758,7 +3841,7 @@ function readFileSettings() {
 }</code></pre><div class="explain">
 <p>Settings can come from this file, from browser storage, or from Import, and an older copy may be missing newer settings. <code>{ ...BOWL_DEFAULTS, ...raw }</code> means "start with all the defaults, then put whatever <code>raw</code> has on top". So anything missing gets its default.</p>
 <ul>
-<li>Each bowl gets an <code>id</code> if it has none, and its own copy of its outline, so drawing on one bowl can never change another or the defaults.</li>
+<li>Each bowl gets an <code>id</code> if it has none, and its own copy of its outline and pegs, so drawing on one bowl can never change another or the defaults.</li>
 <li>Pictures stored as lists of lines are joined back into one text with <code>join('')</code>.</li>
 <li>There's always at least one bowl, and the live bowl always exists.</li>
 </ul>
@@ -3766,14 +3849,15 @@ function readFileSettings() {
 <section id="code-15"><h3>Leaving out unused pictures</h3><pre><code>// A copy with only the pictures still in use, so deleted pictures don't take up space.
 function tidySettings(settings) {
   const tidy = copyOf(settings);
-  const inUse = new Set(['ball', 'starter', ...tidy.bowls.map((bowl) =&gt; bowl.picture)]);
+  const inUse = new Set(['starter', ...tidy.ballPictures]);
+  for (const bowl of tidy.bowls) [bowl.picture, bowl.front, bowl.depth].forEach((id) =&gt; inUse.add(id));
   tidy.pictures = {};
   for (const id of inUse) {
     if (settings.pictures[id]) tidy.pictures[id] = settings.pictures[id];
   }
   return tidy;
 }</code></pre><div class="explain">
-<p>When you change a bowl's picture, the old one is still in <code>pictures</code>. <code>tidySettings</code> makes a copy that keeps only the ball picture, the starter bowl (for "Add") and pictures some bowl still uses. That's why files don't keep growing as you try different pictures.</p></div></section>
+<p>When you change a bowl's picture, the old one is still in <code>pictures</code>. <code>tidySettings</code> makes a copy that keeps only the ball pictures, the starter bowl (for "Add") and pictures some bowl still uses as its back, front or depth. That's why files don't keep growing as you try different pictures.</p></div></section>
 <section id="code-16"><h3>Making text safe for Mix It Up</h3><pre><code>// Mix It Up rewrites a dollar sign followed by letters, and a word in curly brackets.
 // These characters are swapped for codes that mean the same thing to JSON.
 // The less-than sign is swapped too, so nothing in the settings can end the script block early.
@@ -4010,6 +4094,32 @@ function makeBallSprites(image, settings) {
     sprites[kind] = sprite;
   }
   return sprites;
+}</code></pre><div class="explain">
+<ul>
+<li><code>loadPicture</code> loads a picture from the settings only once, and remembers it in <code>pictureCache</code>. A missing or broken picture gives <code>null</code>, and the code carries on without it.</li>
+<li><code>makeBallSprite</code> paints the ball picture into a circle once, filling the circle like "cover" on a phone wallpaper. With no picture, the ball is plain orange.</li>
+<li><code>makeBallSprites</code> makes one ball per kind of event. For each colour it paints over the ball with <code>globalCompositeOperation = 'color'</code>, which keeps the picture's light and dark (so the stripe and shading stay) but swaps in the new colour, like looking through a coloured lens. The circle cut from <code>makeBallSprite</code> still applies, so only the ball is coloured. With <em>Colour balls by event</em> off, all five are the plain picture.</li>
+<li><code>makeCrackedPicture</code> paints the bowl picture, then the crack lines: a dark line, then a thin light line on top, which reads as a crack. <code>source-atop</code> only paints where the picture already has colour, so cracks don't appear on its see-through parts.</li>
+</ul></div></section>
+<section id="code-22"><h3>Flattening layers, and picking a ball's look</h3><pre><code>// All of a bowl's picture layers flattened into one picture, for breaking it.
+// Returns the picture and where it goes on the stage (layers pulled apart make it bigger).
+function flattenLayers(layers) {
+  const left = Math.min(...layers.map((layer) =&gt; layer.x));
+  const top = Math.min(...layers.map((layer) =&gt; layer.y));
+  const right = Math.max(...layers.map((layer) =&gt; layer.x + layer.width));
+  const bottom = Math.max(...layers.map((layer) =&gt; layer.y + layer.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(right - left));
+  canvas.height = Math.max(1, Math.round(bottom - top));
+  const painter = canvas.getContext('2d');
+  for (const layer of layers) painter.drawImage(layer.picture, layer.x - left, layer.y - top, layer.width, layer.height);
+  return { picture: canvas, x: left, y: top, width: canvas.width, height: canvas.height };
+}
+
+// Picks which ball picture a ball gets from its place in the line, the same way every time,
+// so balls keep their look after a reload. (A well-known trick to turn a number into a random-looking one.)
+function pickLook(slot, count) {
+  return Math.floor(Math.abs(Math.sin(slot * 12.9898 + 1) * 43758.5453)) % count;
 }
 
 // The bowl picture with crack lines drawn on it. "source-atop" only paints where the picture
@@ -4035,12 +4145,10 @@ function makeCrackedPicture(image, width, height, cracks) {
   return canvas;
 }</code></pre><div class="explain">
 <ul>
-<li><code>loadPicture</code> loads a picture from the settings only once, and remembers it in <code>pictureCache</code>. A missing or broken picture gives <code>null</code>, and the code carries on without it.</li>
-<li><code>makeBallSprite</code> paints the ball picture into a circle once, filling the circle like "cover" on a phone wallpaper. With no picture, the ball is plain orange.</li>
-<li><code>makeBallSprites</code> makes one ball per kind of event. For each colour it paints over the ball with <code>globalCompositeOperation = 'color'</code>, which keeps the picture's light and dark (so the stripe and shading stay) but swaps in the new colour, like looking through a coloured lens. The circle cut from <code>makeBallSprite</code> still applies, so only the ball is coloured. With <em>Colour balls by event</em> off, all five are the plain picture.</li>
-<li><code>makeCrackedPicture</code> paints the bowl picture, then the crack lines: a dark line, then a thin light line on top, which reads as a crack. <code>source-atop</code> only paints where the picture already has colour, so cracks don't appear on its see-through parts.</li>
+<li><code>flattenLayers</code> paints all of a bowl's layers (back, depth, front) into one picture, used when it breaks so every layer cracks and shatters together. If you've pulled layers apart, the flat picture is made big enough to hold all of them: it starts at the left-most, top-most corner of any layer.</li>
+<li><code>pickLook</code> decides which ball picture a ball gets. It turns the ball's place in the line into a random-looking number with <code>Math.sin</code> (a well-known trick: the far decimal places of a sine look random but are always the same for the same number). So balls look mixed, but a ball gets the same picture again when the pile is rebuilt after a reload.</li>
 </ul></div></section>
-<section id="code-22"><h3>5b. Sounds</h3><pre><code>// =====================================================================================
+<section id="code-23"><h3>5b. Sounds</h3><pre><code>// =====================================================================================
 // 5b. SOUNDS
 // Made by the browser itself, so there are no sound files. In OBS, tick "Control audio via
 // OBS" on the source to hear them on stream.
@@ -4067,11 +4175,16 @@ function playSound(kind, volume) {
       loudness.gain.value = volume;
       noise.start(now);
     } else {
-      // A short tone that slides: up for a new ball ("plip"), down for a shake ("bwomp").
+      // A short tone that slides: up for a new ball ("plip"), down for a shake ("bwomp")
+      // and quickly down for a bubble ("pop").
       const tone = audio.createOscillator();
-      const start = kind === 'shake' ? 220 : random(500, 900);
-      const end = kind === 'shake' ? 70 : start * 2;
-      const length = kind === 'shake' ? 0.4 : 0.12;
+      const sounds = {
+        drop: [random(500, 900), 2, 0.12],
+        shake: [220, 0.3, 0.4],
+        pop: [random(700, 1100), 0.2, 0.06],
+      };
+      const [start, slide, length] = sounds[kind] || sounds.drop;
+      const end = start * slide;
       tone.frequency.setValueAtTime(start, now);
       tone.frequency.exponentialRampToValueAtTime(end, now + length);
       loudness.gain.setValueAtTime(volume * 0.4, now);
@@ -4087,11 +4200,11 @@ function playSound(kind, volume) {
 <p>Sounds made by the browser itself, with the Web Audio system, so the file needs no sound files. <code>audio</code> is the browser's sound "studio", made the first time a sound plays.</p>
 <ul>
 <li><strong>Crash</strong>: a short recording of random noise is made on the spot. Each sample is a random number between -1 and 1, made quieter towards the end (<code>Math.pow(1 - i / length, 3)</code>), which sounds like something shattering.</li>
-<li><strong>Plip</strong> (a new ball) and <strong>bwomp</strong> (a shake): an <em>oscillator</em>, a pure tone, slides from one pitch to another while its loudness fades to nothing. Each plip starts at a random pitch between 500 and 900, so a flood of balls sounds like rain, not a machine gun. Change those numbers for higher or lower plips.</li>
+<li><strong>Plip</strong> (a new ball), <strong>bwomp</strong> (a shake) and <strong>pop</strong> (a bubble): an <em>oscillator</em>, a pure tone, slides from one pitch to another while its loudness fades to nothing. The <code>sounds</code> list gives each one a starting pitch, how far it slides (2 means up to double, 0.2 means down to a fifth) and how long it lasts in seconds. Plips and pops start at a random pitch, so a flood of balls or a cloud of bubbles sounds like rain, not a machine gun.</li>
 <li><code>volume</code> comes from the <em>Sound volume</em> slider; 0 plays nothing at all. Everything is inside <code>try</code>, so a PC without sound carries on silently.</li>
 </ul>
 <p>In OBS, a browser source only sends its sound to your stream if <em>Control audio via OBS</em> is ticked on it.</p></div></section>
-<section id="code-23"><h3>6. The game: remembering what each ball is</h3><pre><code>// =====================================================================================
+<section id="code-24"><h3>6. The game: remembering what each ball is</h3><pre><code>// =====================================================================================
 // 6. THE GAME: physics, dropping, breaking and drawing
 // The overlay runs one game with the real ball count. The editor's test view runs another.
 //   state: the numbers this game keeps (balls, bowlId, breaks). The game changes them.
@@ -4119,14 +4232,16 @@ function lineUp(state) {
 </ul>
 <p><code>owe</code> is the one place balls are added: it raises the count and adds a letter and a name for each new ball (<code>'s'.repeat(3)</code> is <code>"sss"</code>). <code>lineUp</code> makes both lists exactly as long as the count, cutting or padding with <code>x</code> and <code>null</code>. That's what lets a version 1 save, which has a count but no lists, carry on working.</p>
 <p>The rule that keeps everything right: <strong>position 0 in the lists is always the first ball of the bowl on screen</strong>. A ball's place is simply how many balls have dropped before it, and when a bowl breaks, its balls are cut off the front of both lists.</p></div></section>
-<section id="code-24"><h3>Setting up a game</h3><pre><code>async function createGame({ canvas, settings, state, save, onBreak }) {
+<section id="code-25"><h3>Setting up a game</h3><pre><code>async function createGame({ canvas, settings, state, save, onBreak }) {
   const context = canvas.getContext('2d');
   const engine = Engine.create({ enableSleeping: true });
   engine.gravity.y = settings.gravity;
 
   const radius = settings.ballSize / 2;
   const maxSpeed = 0.75 * (radius + WALL / 2);
-  const sprites = makeBallSprites(await loadPicture(settings, 'ball'), settings);
+  // One set of coloured balls for each ball picture.
+  const ballImages = await Promise.all(settings.ballPictures.map((id) =&gt; loadPicture(settings, id)));
+  const looks = (ballImages.length ? ballImages : [null]).map((image) =&gt; makeBallSprites(image, settings));
 
   const balls = new Set(); // Balls in the bowl
   const debris = new Set(); // Balls falling away from a broken bowl
@@ -4141,7 +4256,10 @@ function lineUp(state) {
   let restingAtTop = 0; // Steps in a row a ball has rested at the rim
   let stillFor = 0; // Steps in a row every ball in the bowl has been (almost) still
   let shakeUntil = 0; // The bowl picture wobbles until this step
-  let confetti = [];
+  let bubbles = [];
+  let pegs = []; // Gambling mode pegs in the physics world
+  let held = null; // The ball being dragged with the mouse
+  let pointer = null; // Where the mouse is, on the stage
   let stopped = false;</code></pre><div class="explain">
 <p><code>createGame</code> builds one running bowl and gives back a few controls. The overlay calls it once with the real count. The editor's test view calls it with a pretend count. It gets:</p>
 <ul>
@@ -4150,18 +4268,28 @@ function lineUp(state) {
 <li><code>onBreak</code>: what to do when a bowl breaks (the overlay tells Mix It Up).</li>
 </ul>
 <p>Inside, <code>Engine.create({ enableSleeping: true })</code> makes the physics world. "Sleeping" lets balls that have stopped moving rest without being recalculated, which saves effort with big piles. <code>maxSpeed</code> is the speed limit that stops balls jumping through walls: three quarters of the distance from a ball's middle to the far side of a wall, per step.</p>
-<p>The <code>let</code> lines are the game's memory. <code>phase</code> is the most important: the bowl is always <em>filling</em>, <em>cracking</em>, <em>broken</em> or <em>returning</em>, and <code>steps</code> counts physics steps so each phase knows how long it has lasted.</p></div></section>
-<section id="code-25"><h3>Getting a bowl ready</h3><pre><code>  function findBowl(id) {
+<p><code>looks</code> is one set of coloured balls (see <code>makeBallSprites</code>) for each ball picture. The <code>let</code> lines are the game's memory, including the pegs in the world, the floating bubbles, and the ball being dragged. <code>phase</code> is the most important: the bowl is always <em>filling</em>, <em>cracking</em>, <em>broken</em> or <em>returning</em>, and <code>steps</code> counts physics steps so each phase knows how long it has lasted.</p></div></section>
+<section id="code-26"><h3>Getting a bowl ready</h3><pre><code>  function findBowl(id) {
     return settings.bowls.find((bowl) =&gt; bowl.id === id) || settings.bowls[0];
   }
 
-  // Gets a bowl ready to show: its picture, size and limits. Walls are added later.
+  // One picture layer: the picture and where it goes. Every layer is as wide as the bowl,
+  // which is what makes layers exported at the same size line up by themselves.
+  async function prepareLayer(bowl, id, dx, dy) {
+    const picture = id ? await loadPicture(settings, id) : null;
+    if (!picture) return null;
+    const height = bowl.width * picture.height / picture.width;
+    return { picture, x: bowl.x + dx, y: bowl.y + dy, width: bowl.width, height };
+  }
+
+  // Gets a bowl ready to show: its pictures, size and limits. Walls are added later.
   async function prepareBowl(bowl) {
-    const picture = await loadPicture(settings, bowl.picture);
+    const back = await prepareLayer(bowl, bowl.picture, 0, 0);
     return {
       bowl,
-      picture,
-      height: picture ? bowl.width * picture.height / picture.width : 0,
+      back,
+      depth: await prepareLayer(bowl, bowl.depth, bowl.depthX, bowl.depthY),
+      front: await prepareLayer(bowl, bowl.front, bowl.frontX, bowl.frontY),
       limit: breakLimit(bowl, settings),
       capacity: estimateCapacity(bowl, settings),
       rimY: rimHeight(bowl.outline),
@@ -4173,9 +4301,27 @@ function lineUp(state) {
     current = next;
     current.walls = makeWalls(next.bowl.outline);
     Composite.add(engine.world, current.walls);
+    current.layers = [next.back, next.depth, next.front].filter(Boolean);
     dropped = 0;
     restingAtTop = 0;
     stillFor = 0;
+  }</code></pre><div class="explain">
+<ul>
+<li><code>findBowl</code>: the bowl with this id, or the first one if it's gone (for example, deleted in the editor).</li>
+<li><code>prepareLayer</code> loads one picture layer and works out where it goes. Every layer is drawn as wide as the bowl, from the bowl's corner plus that layer's pull-apart distance. That's why layers that were exported from the same picture at the same size line up by themselves.</li>
+<li><code>prepareBowl</code> gets all three layers ready (back, depth, front; a missing one is <code>null</code>) and works out the break limit, capacity and rim. It's <code>async</code> because loading a picture takes a moment. That's why the next bowl starts loading the moment the old one cracks.</li>
+<li><code>putOnStage</code> makes the walls, adds them to the world, lists the layers the bowl has, and starts the count for this bowl at zero.</li>
+<li><code>wanted()</code>: how many balls this bowl should get, which is everything owed, but never more than its break limit. Balls beyond the limit wait for the next bowl.</li>
+</ul></div></section>
+<section id="code-27"><h3>Gambling mode pegs</h3><pre><code>  // Gambling mode: a small round static body for each peg. Pegs belong to the bowl on stage.
+  function setPegs() {
+    Composite.remove(engine.world, pegs);
+    pegs = settings.gambling ? current.bowl.pegs.map(([x, y]) =&gt; Bodies.circle(x, y, settings.pegSize / 2, {
+      isStatic: true,
+      restitution: settings.pegBounce, // How hard balls bounce off
+      friction: 0,
+    })) : [];
+    Composite.add(engine.world, pegs);
   }
 
   function setPhase(next) {
@@ -4187,18 +4333,21 @@ function lineUp(state) {
   function wanted() {
     return Math.min(state.balls, current.limit);
   }</code></pre><div class="explain">
-<ul>
-<li><code>findBowl</code>: the bowl with this id, or the first one if it's gone (for example, deleted in the editor).</li>
-<li><code>prepareBowl</code> loads the bowl's picture and works out its height (keeping the picture's shape), its break limit, capacity and rim. It's <code>async</code> because loading a picture takes a moment. That's why the next bowl starts loading the moment the old one cracks.</li>
-<li><code>putOnStage</code> makes the walls, adds them to the world and starts the count for this bowl at zero.</li>
-<li><code>wanted()</code>: how many balls this bowl should get, which is everything owed, but never more than its break limit. Balls beyond the limit wait for the next bowl.</li>
-</ul></div></section>
-<section id="code-26"><h3>Dropping a ball</h3><pre><code>  // live is false while rebuilding the pile after a reload: no sound, no name.
+<p>Each peg becomes a small, round, <code>isStatic</code> body (it never moves). <code>restitution</code> is the <em>Peg bounce</em> slider: Matter.js uses the bouncier of the two things that touch, so raising it makes balls ping off pegs harder, whatever the ball's own bounciness. With gambling mode off, the list is empty, so pegs do nothing and aren't drawn. Pegs belong to the bowl on stage: they're swapped when a new bowl comes back.</p></div></section>
+<section id="code-28"><h3>Dropping a ball</h3><pre><code>  // live is false while rebuilding the pile after a reload: no sound, no name.
   function dropBall(live) {
     const { bowl } = current;
     // Always a little scatter, so balls don't land balanced on top of each other.
     const scatter = bowl.dropWidth + radius;
-    const x = bowl.dropX + (Math.random() - 0.5) * scatter;
+    let x = bowl.dropX + (Math.random() - 0.5) * scatter;
+    if (!live &amp;&amp; bowl.outline.length &gt; 1) {
+      // Rebuilding after a reload: straight down into the middle of the bowl, well away from
+      // its rim, so balls that had landed don't get a second chance to miss.
+      const sides = bowl.outline.map(([px]) =&gt; px);
+      const left = Math.min(...sides);
+      const width = Math.max(...sides) - left;
+      x = left + width * random(0.2, 0.8);
+    }
     const ball = Bodies.circle(x, bowl.dropY, radius, {
       restitution: settings.bounciness,
       friction: settings.friction,
@@ -4206,7 +4355,9 @@ function lineUp(state) {
     });
     // The kinds and names lists line up with the balls owed to this bowl, so this ball's
     // place in them is the number of balls dropped so far.
+    ball.slot = dropped; // Its place in the line, used if it gets lost
     ball.kind = state.kinds[dropped] || 'x';
+    ball.look = looks[pickLook(dropped, looks.length)];
     if (live &amp;&amp; settings.showNames &amp;&amp; state.names[dropped]) {
       ball.sender = state.names[dropped]; // Not "label": Matter.js already uses that name
       ball.senderUntil = steps + NAME_TIME;
@@ -4223,8 +4374,8 @@ function lineUp(state) {
 <li><code>friction</code> = Friction. Raise it and balls stop rolling sooner; 0 makes them slide like ice.</li>
 <li><code>frictionStatic: 0</code> stops balls sticking to slopes when they're still.</li>
 </ul>
-<p>The ball then looks up its place in the lists (<code>dropped</code>, the number dropped before it) to learn its kind, and its sender if names are on. <code>live</code> is false while the pile is rebuilt after a reload: those balls get their colour back, but no name and no sound, because nobody needs to hear 150 plips at once.</p></div></section>
-<section id="code-27"><h3>One step of physics</h3><pre><code>  // One step of physics. Fast balls are slowed, and balls that leave the stage are removed.
+<p>The ball then remembers its place in the line (<code>slot</code>, the number dropped before it), and uses it to learn its kind, its sender if names are on, and its look (which ball picture). When the pile is rebuilt after a reload, balls drop straight down into the middle of the bowl instead of from the drop point, so they can't miss and land elsewhere this time. <code>live</code> is false while the pile is rebuilt after a reload: those balls get their colour back, but no name and no sound, because nobody needs to hear 150 plips at once.</p></div></section>
+<section id="code-29"><h3>One step of physics</h3><pre><code>  // One step of physics. Fast balls are slowed, and balls that leave the stage are removed.
   function physicsStep() {
     Engine.update(engine, TICK);
     for (const group of [balls, debris]) {
@@ -4234,12 +4385,28 @@ function lineUp(state) {
         if (ball.position.y &gt; SIZE + settings.ballSize) {
           group.delete(ball);
           Composite.remove(engine.world, ball);
+          if (group === balls) lose(ball);
         }
       }
     }
-  }
-
-  // Shards aren't part of the physics world. They just fly and spin under gravity.
+  }</code></pre><div class="explain">
+<p>Moves the world forward one sixtieth of a second (<code>Engine.update(engine, TICK)</code>). Then, for every ball: if it's faster than the speed limit, slow it down to the limit; if it has fallen below the bottom of the stage, remove it for good.</p>
+<p>Shards and bubbles move in <code>moveShards</code>, explained a little further down.</p></div></section>
+<section id="code-30"><h3>Losing a ball</h3><pre><code>  // A ball that left the stage while its bowl was standing (it missed, spilled, was shaken
+  // out or dragged out) is gone: it comes off the count, and out of the kinds and names lists.
+  function lose(ball) {
+    if (phase !== 'filling' &amp;&amp; phase !== 'returning') return; // A break has counted it already
+    if (held === ball) held = null;
+    state.balls = Math.max(0, state.balls - 1);
+    state.kinds = state.kinds.slice(0, ball.slot) + state.kinds.slice(ball.slot + 1);
+    state.names.splice(ball.slot, 1);
+    for (const other of balls) if (other.slot &gt; ball.slot) other.slot--;
+    dropped = Math.max(0, dropped - 1);
+    save();
+  }</code></pre><div class="explain">
+<p>Version 3's most important rule: <strong>the count is always the balls you can see.</strong> A ball that leaves the stage while its bowl is standing is lost for good, whether it missed the bowl in gambling mode, spilled over the rim, was shaken out or was dragged out. <code>lose</code> takes 1 off the count, removes its letter and name from the lists (at its <code>slot</code>), moves every later ball's slot down one so they stay lined up, and saves.</p>
+<p>During a break it does nothing, because <code>breakNow</code> has already counted those balls.</p></div></section>
+<section id="code-31"><h3>Shards and bubbles</h3><pre><code>  // Shards aren't part of the physics world. They just fly and spin under gravity.
   function moveShards() {
     for (const shard of shards) {
       shard.vy += 0.28 * settings.gravity; // About as fast as Matter.js makes balls fall
@@ -4248,18 +4415,29 @@ function lineUp(state) {
       shard.angle += shard.spin;
     }
     shards = shards.filter((shard) =&gt; shard.y - shard.reach &lt; SIZE);
-    for (const piece of confetti) {
-      piece.vy += 0.3 * settings.gravity;
-      piece.vx *= 0.98; // Air slows them down sideways
-      piece.x += piece.vx;
-      piece.y += piece.vy;
-      piece.angle += piece.spin;
+    for (const bubble of bubbles) {
+      bubble.age++;
+      if (bubble.popped) continue;
+      bubble.y += bubble.vy; // Bubbles float up...
+      bubble.x += Math.sin(bubble.age * 0.08 + bubble.wobble) * 0.7; // ...wobbling side to side
+      if (bubble.age &gt;= bubble.life || bubble.y &lt; -bubble.size) {
+        bubble.popped = true;
+        bubble.age = 0; // Now counts the steps since it popped
+        playSound('pop', settings.volume);
+      }
     }
-    confetti = confetti.filter((piece) =&gt; piece.y &lt; SIZE + 20);
+    bubbles = bubbles.filter((bubble) =&gt; !bubble.popped || bubble.age &lt; 10);
   }</code></pre><div class="explain">
-<p>Moves the world forward one sixtieth of a second (<code>Engine.update(engine, TICK)</code>). Then, for every ball: if it's faster than the speed limit, slow it down to the limit; if it has fallen below the bottom of the stage, remove it for good.</p>
-<p><code>moveShards</code> moves the pieces of a broken bowl, and the confetti, which falls a little slower and loses 2% of its sideways speed each step (<code>vx *= 0.98</code>) so it drifts like paper. They aren't in the physics world, because they don't need to hit anything. Each step their downward speed grows by <code>0.28 × gravity</code> (about how fast Matter.js makes balls fall), and they move and spin. Pieces below the stage are dropped.</p></div></section>
-<section id="code-28"><h3>Is the bowl full?</h3><pre><code>  // Does this bowl count as full yet?
+<p>Shards aren't in the physics world, because they don't need to hit anything. Each step their downward speed grows by <code>0.28 × gravity</code> (about how fast Matter.js makes balls fall), and they move and spin; pieces below the stage are dropped. Bubbles float <em>up</em> (<code>vy</code> is negative) and wobble side to side along a sine wave, each starting at a different point on the wave (<code>wobble</code>) so they don't sway in step. Each bubble has a <code>life</code>, a random number of steps; when it runs out, or the bubble floats off the top, it pops, plays the pop sound, and shows as a fading ring for 10 steps before it's removed.</p></div></section>
+<section id="code-32"><h3>Dragging a ball</h3><pre><code>  // Dragging with the mouse: the held ball is pulled towards the pointer each step, so it
+  // still bumps into walls and other balls, and flies on when you let go.
+  function pullHeldBall() {
+    if (!held || !pointer) return;
+    Sleeping.set(held, false);
+    Body.setVelocity(held, { x: (pointer[0] - held.position.x) * 0.3, y: (pointer[1] - held.position.y) * 0.3 });
+  }</code></pre><div class="explain">
+<p>The ball under the mouse isn't teleported to the pointer. Each step it's given a speed towards the pointer (30% of the distance), so it still bumps into walls, pegs and other balls, and flies on when you let go, which means you can throw it. The speed limit still applies, so you can't drag a ball through a wall; lift it over the rim instead. The mouse handling itself is near the end of <code>createGame</code>.</p></div></section>
+<section id="code-33"><h3>Is the bowl full?</h3><pre><code>  // Does this bowl count as full yet?
   function checkFull() {
     const mode = current.bowl.breakMode;
     if (mode === 'count') {
@@ -4282,15 +4460,16 @@ function lineUp(state) {
       if (restingAtTop &gt;= RESTING_AT_TOP) breakNow();
     }
   }</code></pre><div class="explain">
-<p>Runs every step while filling. Three modes, set per bowl in the editor:</p>
+<p>Runs every step while filling. <code>dropped</code> counts the balls dropped into this bowl and not lost, so in every mode it's about balls that are really there. Three modes, set per bowl in the editor:</p>
 <ul>
 <li><strong>At a number of balls</strong> (<code>'count'</code>): once the bowl has had all its balls, wait until every ball has been almost still (<code>speed &lt; 0.5</code>) for <code>FULL_PAUSE</code> steps in a row, so nothing is left hanging in mid-air when it cracks. If balls keep wobbling, it breaks anyway after <code>FULL_WAIT_MAX</code> steps.</li>
 <li><strong>When the pile reaches the top</strong> (<code>'auto'</code>): if some ball has stopped moving with its top at or above the rim for <code>RESTING_AT_TOP</code> steps in a row, the bowl is full. Balls near the drop point are ignored, because a brand-new ball is still for a moment too.</li>
 <li><strong>Never</strong> (<code>'off'</code>): nothing to check.</li>
 </ul></div></section>
-<section id="code-29"><h3>The heartbeat</h3><pre><code>  function update() {
+<section id="code-34"><h3>The heartbeat</h3><pre><code>  function update() {
     if (stopped) return;
     steps++;
+    pullHeldBall();
     physicsStep();
     moveShards();
     const age = steps - phaseStart;
@@ -4299,7 +4478,7 @@ function lineUp(state) {
     else if (phase === 'broken' &amp;&amp; upcoming &amp;&amp; age &gt;= settings.returnSeconds * 60) comeBack();
     else if (phase === 'returning' &amp;&amp; age &gt;= FADE_TIME) setPhase('filling');
   }</code></pre><div class="explain">
-<p><code>update</code> runs 60 times a second. It counts the step, moves the physics and the shards, then asks "has the current phase finished?":</p>
+<p><code>update</code> runs 60 times a second. It counts the step, pulls a dragged ball, moves the physics, the shards and the bubbles, then asks "has the current phase finished?":</p>
 <ul>
 <li><em>filling</em>: is the bowl full? (<code>checkFull</code>)</li>
 <li><em>cracking</em>: has <code>CRACK_TIME</code> passed? Then shatter.</li>
@@ -4307,7 +4486,7 @@ function lineUp(state) {
 <li><em>returning</em>: has <code>FADE_TIME</code> passed? Then it's filling again.</li>
 </ul>
 <p>This pattern, one variable that's always exactly one of a few phases plus rules for moving between them, is called a <em>state machine</em>. It keeps the break sequence easy to follow and change.</p></div></section>
-<section id="code-30"><h3>Breaking, part 1: the count and the cracks</h3><pre><code>  // Step 1 of a break: work out the count, draw cracks and shake. Returns false if it can't break now.
+<section id="code-35"><h3>Breaking, part 1: the count and the cracks</h3><pre><code>  // Step 1 of a break: work out the count, draw cracks and shake. Returns false if it can't break now.
   function breakNow() {
     if (phase !== 'filling' &amp;&amp; phase !== 'returning') return false;
     const used = dropped;
@@ -4325,11 +4504,13 @@ function lineUp(state) {
       upcoming = next;
     });
 
-    const { pieces, cracks } = makeShards(current.bowl.width, current.height, settings.shards);
-    current.pieces = pieces;
-    current.cracked = current.picture
-      ? makeCrackedPicture(current.picture, current.bowl.width, current.height, cracks)
-      : null;
+    held = null;
+    current.flat = current.layers.length ? flattenLayers(current.layers) : null;
+    if (current.flat) {
+      const { pieces, cracks } = makeShards(current.flat.width, current.flat.height, settings.shards);
+      current.pieces = pieces;
+      current.cracked = makeCrackedPicture(current.flat.picture, current.flat.width, current.flat.height, cracks);
+    }
     setPhase('cracking');
     onBreak({ bowlName: current.bowl.name, balls: used, breaks: state.breaks, nextBowlName: nextBowl.name });
     return true;
@@ -4340,8 +4521,8 @@ function lineUp(state) {
 <li>The same number of letters and names are cut off the front of <code>state.kinds</code> and <code>state.names</code> (<code>slice(used)</code>), so the lists stay lined up with the carried-over balls.</li>
 <li><code>state.bowlId</code> becomes the next bowl now, so a refresh during the break shows the new bowl.</li>
 </ul>
-<p>Then the next bowl's picture starts loading, the shards and crack lines are worked out, the cracked picture is painted, the phase becomes <em>cracking</em>, and <code>onBreak</code> is told: which bowl, how many balls, how many breaks, and which bowl comes next.</p></div></section>
-<section id="code-31"><h3>Breaking, part 2: everything falls</h3><pre><code>  // Step 2: the walls vanish, the pieces fly apart and every ball falls.
+<p>Then the next bowl's pictures start loading, a dragged ball is let go, the layers are flattened into one picture, the shards and crack lines are worked out from it, the cracked picture is painted, the phase becomes <em>cracking</em>, and <code>onBreak</code> is told: which bowl, how many balls, how many breaks, and which bowl comes next.</p></div></section>
+<section id="code-36"><h3>Breaking, part 2: everything falls</h3><pre><code>  // Step 2: the walls vanish, the pieces fly apart and every ball falls.
   function shatter() {
     Composite.remove(engine.world, current.walls);
     for (const ball of balls) {
@@ -4352,7 +4533,7 @@ function lineUp(state) {
     }
     balls.clear();
 
-    const { bowl } = current;
+    const flat = current.flat;
     shards = current.cracked ? current.pieces.map((points) =&gt; {
       const [cx, cy] = centroid(points);
       const shape = points.map(([x, y]) =&gt; [x - cx, y - cy]); // Corners, measured from the middle
@@ -4362,27 +4543,27 @@ function lineUp(state) {
         picture: current.cracked,
         offsetX: -cx,
         offsetY: -cy,
-        x: bowl.x + cx,
-        y: bowl.y + cy,
+        x: flat.x + cx,
+        y: flat.y + cy,
         angle: 0,
-        vx: (cx - bowl.width / 2) * 0.012 + random(-1, 1), // Pieces fly outwards from the middle
+        vx: (cx - flat.width / 2) * 0.012 + random(-1, 1), // Pieces fly outwards from the middle
         vy: random(-3, -0.5), // and jump up a little first
         spin: random(-0.05, 0.05),
       };
     }) : [];
 
     playSound('crash', settings.volume);
-    if (settings.confetti) {
-      for (let i = 0; i &lt; CONFETTI_PIECES; i++) {
-        confetti.push({
-          x: bowl.x + bowl.width / 2,
-          y: bowl.y + current.height / 3,
-          vx: random(-9, 9),
-          vy: random(-16, -5),
-          size: random(6, 12),
-          color: 'hsl(' + Math.round(random(0, 360)) + ', 90%, 60%)',
-          angle: random(0, Math.PI),
-          spin: random(-0.3, 0.3),
+    if (settings.bubbles &amp;&amp; flat) {
+      for (let i = 0; i &lt; BUBBLES; i++) {
+        bubbles.push({
+          x: flat.x + random(0.15, 0.85) * flat.width,
+          y: flat.y + random(0.2, 0.8) * flat.height,
+          vy: -random(0.8, 2.5),
+          size: random(8, 26),
+          wobble: random(0, 6),
+          age: 0,
+          life: Math.round(random(40, 220)), // Steps until it pops
+          popped: false,
         });
       }
     }
@@ -4391,10 +4572,10 @@ function lineUp(state) {
 <ul>
 <li>The walls are removed, so nothing holds the balls up.</li>
 <li>Each ball is moved to the <code>DEBRIS</code> category (so it won't land in the next bowl), woken up (<code>Sleeping.set(ball, false)</code>, or a resting ball would float in mid-air), and nudged sideways and up a little. Then it moves from <code>balls</code> to <code>debris</code>.</li>
-<li>The crash plays, and if <em>Confetti</em> is on, 150 coloured pieces start at the bowl's middle, flying outwards and upwards at random. <code>hsl(…, 90%, 60%)</code> is a colour picked by its position round the colour wheel (0 to 360), so every piece is a bright, random colour.</li>
+<li>The crash plays, and if <em>Bubbles</em> is on, 35 bubbles appear at random over the bowl, each with its own size, rising speed, wobble and lifetime.</li>
 <li>Each piece becomes a shard: its corners measured from its own middle (so it can spin around its middle), where it is on the stage, and a random push. <code>vx</code> pushes pieces away from the bowl's centre (raise <code>0.012</code> for a more violent explosion), <code>vy</code> makes them hop up first, <code>spin</code> sets how fast they turn.</li>
 </ul></div></section>
-<section id="code-32"><h3>Shaking the bowl</h3><pre><code>  // Throws every ball in the bowl up into the air. Some may fly out!
+<section id="code-37"><h3>Shaking the bowl</h3><pre><code>  // Throws every ball in the bowl up into the air. Some may fly out!
   function shake(strength) {
     if (phase !== 'filling' &amp;&amp; phase !== 'returning') return;
     shakeUntil = steps + SHAKE_TIME;
@@ -4405,9 +4586,10 @@ function lineUp(state) {
     playSound('shake', settings.volume);
   }</code></pre><div class="explain">
 <p><code>shake</code> throws every ball in the bowl up and a little sideways: <code>-random(3, 7) * strength</code> upwards (negative y is up). Sleeping balls are woken first, or they'd ignore it. The bowl picture wobbles for <code>SHAKE_TIME</code> steps (see <code>draw</code>), and the bwomp plays. The walls don't move, so a strong shake can fling balls over the rim and off the stage. They still counted as dropped, just like balls that spill. A bowl that's cracking or broken can't be shaken.</p></div></section>
-<section id="code-33"><h3>Breaking, part 3, and emptying</h3><pre><code>  // Step 3: the next bowl fades in and the waiting balls start dropping again.
+<section id="code-38"><h3>Breaking, part 3, and emptying</h3><pre><code>  // Step 3: the next bowl fades in and the waiting balls start dropping again.
   function comeBack() {
     putOnStage(upcoming);
+    setPegs();
     upcoming = null;
     setPhase('returning');
   }
@@ -4436,15 +4618,16 @@ function lineUp(state) {
     lastDrop = steps;
   }</code></pre><div class="explain">
 <ul>
-<li><code>comeBack</code> puts the prepared bowl on stage and starts it fading in. Waiting balls start dropping straight away, during the fade.</li>
+<li><code>comeBack</code> puts the prepared bowl on stage with its pegs and starts it fading in. Waiting balls start dropping straight away, during the fade.</li>
 <li><code>empty</code> removes every ball (in the bowl and falling), sets the count to 0 and clears the kinds and names. A break in progress still finishes, with an empty bowl coming back.</li>
 <li><code>refill</code> runs when the page opens: it rebuilds the pile out of sight by dropping a ball, running 6 physics steps, and repeating, then 180 more steps to let it settle. All of that happens before the first frame is drawn, so viewers never see it. Balls beyond the capacity estimate are counted as long gone instead of rebuilt.</li>
 </ul></div></section>
-<section id="code-34"><h3>Drawing</h3><pre><code>  function drawBall(ball) {
+<section id="code-39"><h3>Drawing balls and text</h3><pre><code>  function drawBall(ball) {
     context.save();
     context.translate(ball.position.x, ball.position.y);
     context.rotate(ball.angle);
-    context.drawImage(sprites[ball.kind] || sprites.x, -radius, -radius, settings.ballSize, settings.ballSize);
+    const look = ball.look || looks[0];
+    context.drawImage(look[ball.kind] || look.x, -radius, -radius, settings.ballSize, settings.ballSize);
     context.restore();
   }
 
@@ -4457,6 +4640,33 @@ function lineUp(state) {
     context.strokeText(text, x, y);
     context.fillStyle = '#fff';
     context.fillText(text, x, y);
+  }</code></pre><div class="explain">
+<ul>
+<li><code>drawBall</code> moves the pen to the ball, turns it the way the ball has rolled, and draws the ball's look (its picture) in the colour for its kind (<code>look[ball.kind]</code>).</li>
+<li><code>drawText</code> writes white text with a dark edge (<code>strokeText</code> then <code>fillText</code>), which stays readable over any game.</li>
+</ul></div></section>
+<section id="code-40"><h3>Drawing a frame</h3><pre><code>  // A see-through bubble with a shine. A popped bubble is a ring that grows and fades.
+  function drawBubble(bubble) {
+    context.beginPath();
+    if (bubble.popped) {
+      context.globalAlpha = 1 - bubble.age / 10;
+      context.arc(bubble.x, bubble.y, bubble.size * (1 + bubble.age / 15), 0, Math.PI * 2);
+      context.strokeStyle = '#fff';
+      context.lineWidth = 2;
+      context.stroke();
+      context.globalAlpha = 1;
+      return;
+    }
+    context.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(170, 220, 255, 0.18)';
+    context.fill();
+    context.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    context.lineWidth = 2;
+    context.stroke();
+    context.beginPath(); // The shine, top left
+    context.arc(bubble.x - bubble.size * 0.35, bubble.y - bubble.size * 0.35, bubble.size * 0.25, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    context.fill();
   }
 
   function drawSender(ball) {
@@ -4469,23 +4679,36 @@ function lineUp(state) {
   function draw() {
     if (stopped) return;
     context.clearRect(0, 0, SIZE, SIZE);
-    if (current &amp;&amp; current.picture &amp;&amp; phase !== 'broken') {
-      const { bowl } = current;
-      let picture = current.picture;
-      let shakeX = 0;
-      let shakeY = 0;
-      if (phase === 'cracking') {
-        picture = current.cracked || picture;
-        const shake = 4 * (steps - phaseStart) / CRACK_TIME; // The shaking grows
-        shakeX = random(-shake, shake);
-        shakeY = random(-shake, shake);
-      } else if (steps &lt; shakeUntil) {
-        shakeX = random(-6, 6);
-        shakeY = random(-6, 6);
-      }
-      context.globalAlpha = phase === 'returning' ? Math.min(1, (steps - phaseStart) / FADE_TIME) : 1;
-      context.drawImage(picture, bowl.x + shakeX, bowl.y + shakeY, bowl.width, current.height);
+    // The bowl's layers wobble together, and fade in together.
+    let shakeX = 0;
+    let shakeY = 0;
+    if (phase === 'cracking') {
+      const shake = 4 * (steps - phaseStart) / CRACK_TIME; // The shaking grows
+      shakeX = random(-shake, shake);
+      shakeY = random(-shake, shake);
+    } else if (steps &lt; shakeUntil) {
+      shakeX = random(-6, 6);
+      shakeY = random(-6, 6);
+    }
+    const fade = phase === 'returning' ? Math.min(1, (steps - phaseStart) / FADE_TIME) : 1;
+    const drawLayer = (layer) =&gt; {
+      if (!layer || phase === 'broken' || phase === 'cracking') return;
+      context.globalAlpha = fade;
+      context.drawImage(layer.picture, layer.x + shakeX, layer.y + shakeY, layer.width, layer.height);
       context.globalAlpha = 1;
+    };
+    // Behind the balls: the back, and the depth layer unless it goes in front.
+    drawLayer(current.back);
+    if (!current.bowl.depthInFront) drawLayer(current.depth);
+    // While cracking, all layers are shown as one cracked picture.
+    if (phase === 'cracking' &amp;&amp; current.cracked) {
+      context.drawImage(current.cracked, current.flat.x + shakeX, current.flat.y + shakeY);
+    }
+    context.fillStyle = settings.pegColor;
+    for (const peg of pegs) {
+      context.beginPath();
+      context.arc(peg.position.x, peg.position.y, settings.pegSize / 2, 0, Math.PI * 2);
+      context.fill();
     }
     for (const shard of shards) {
       context.save();
@@ -4500,35 +4723,56 @@ function lineUp(state) {
     }
     balls.forEach(drawBall);
     debris.forEach(drawBall);
+    // In front of the balls: the depth layer if ticked, then the front.
+    if (current.bowl.depthInFront) drawLayer(current.depth);
+    drawLayer(current.front);
     balls.forEach(drawSender);
-    for (const piece of confetti) {
-      context.save();
-      context.translate(piece.x, piece.y);
-      context.rotate(piece.angle);
-      context.fillStyle = piece.color;
-      context.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2);
-      context.restore();
-    }
+    bubbles.forEach(drawBubble);
     if (settings.showCounter &amp;&amp; current &amp;&amp; phase !== 'broken') {
       const count = Number.isFinite(current.limit) ? dropped + ' / ' + current.limit : String(dropped);
       drawText(count, current.bowl.x + current.bowl.width / 2, current.rimY - 24, 36);
     }
     requestAnimationFrame(draw);
   }</code></pre><div class="explain">
-<p><code>draw</code> runs before every screen refresh (<code>requestAnimationFrame</code>). It clears the canvas and paints, back to front:</p>
+<p><code>drawBubble</code> draws a pale, see-through circle with a white edge and a small white shine at the top left. A popped bubble is a white ring that grows and fades. <code>drawSender</code> writes a viewer's name above their new ball, fading out over its last half second. (It's called <em>sender</em>, not <em>label</em>, because Matter.js already gives every body a <code>label</code>, "Circle Body", which is exactly what showed up when it was called that.)</p>
+<p><code>draw</code> runs before every screen refresh. It works out the wobble (growing while cracking, or while shaken) and the fade-in, then paints, back to front:</p>
 <ol>
-<li>The bowl. While cracking, the cracked picture is drawn shifted by a random amount that grows each step, which is the shake (raise the <code>4</code> to shake harder). While returning, <code>globalAlpha</code> fades it from see-through to solid. While broken, it isn't drawn.</li>
-<li>The shards. Each one moves the pen to the shard, turns it, cuts a shard-shaped hole to paint through (<code>clip</code>), and paints the cracked picture so the right part shows through.</li>
-<li>The balls, in the bowl and falling, each turned the way it has rolled, using the sprite for its kind (<code>sprites[ball.kind]</code>).</li>
-<li>Names above the newest balls (<code>drawSender</code>). It's called <em>sender</em>, not <em>label</em>, because Matter.js already gives every body a <code>label</code> ("Circle Body"), which is exactly what showed up when it was called that. Each name fades out over its last half second.</li>
-<li>The confetti: small rectangles, each turned to its own angle.</li>
-<li>The counter, if it's on: balls dropped into this bowl, and its limit if it breaks at a number.</li>
-</ol>
-<p><code>drawText</code> writes white text with a dark edge (<code>strokeText</code> then <code>fillText</code>), which stays readable over any game.</p>
-<p>While the bowl is being shaken (<code>steps &lt; shakeUntil</code>), the picture is drawn a few dots off in a random direction each frame: the wobble.</p></div></section>
-<section id="code-35"><h3>Starting the game</h3><pre><code>  // ---- Start ----
+<li>The back layer, then the depth layer unless it goes in front.</li>
+<li>While cracking: the cracked, flattened picture of all layers instead.</li>
+<li>The pegs, as circles in the peg colour.</li>
+<li>The shards, each clipped to its shape.</li>
+<li>The balls, in the bowl and falling.</li>
+<li>The depth layer if it goes in front, then the front layer. This is what makes balls look <em>inside</em> the bowl: the front rim covers them.</li>
+<li>Names, bubbles, and the counter.</li>
+</ol></div></section>
+<section id="code-41"><h3>Grabbing balls with the mouse</h3><pre><code>  // ---- Grabbing balls with the mouse ----
+  function toStagePoint(event) {
+    const box = canvas.getBoundingClientRect();
+    return [(event.clientX - box.left) * SIZE / box.width, (event.clientY - box.top) * SIZE / box.height];
+  }
+  function onPointerDown(event) {
+    if (!settings.grabBalls) return;
+    pointer = toStagePoint(event);
+    for (const ball of balls) {
+      if (distance([ball.position.x, ball.position.y], pointer) &lt; radius * 1.4) held = ball;
+    }
+    if (held) canvas.setPointerCapture(event.pointerId); // Keep the ball even if the mouse leaves
+  }
+  function onPointerMove(event) {
+    if (held) pointer = toStagePoint(event);
+  }
+  function onPointerUp() {
+    held = null;
+  }
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerup', onPointerUp);</code></pre><div class="explain">
+<p>When the mouse button goes down on the canvas, the ball under it (if any) becomes <code>held</code>. <code>toStagePoint</code> turns the mouse position into stage dots, because the canvas is stretched to fit the window. <code>setPointerCapture</code> keeps the mouse "attached" even if it leaves the canvas. Moving updates <code>pointer</code>, letting go clears <code>held</code>, and <code>pullHeldBall</code> does the rest.</p>
+<p>On stream there's no mouse, so nothing happens. In OBS, right-click the source and choose <strong>Interact</strong>: that window passes your mouse to the page, so you can reach in and take a ball out live. Untick <em>Let me grab balls</em> to switch it off.</p></div></section>
+<section id="code-42"><h3>Starting the game</h3><pre><code>  // ---- Start ----
   putOnStage(await prepareBowl(findBowl(state.bowlId)));
-  refill();
+  refill(); // Pegs come after, so rebuilding the pile doesn't gamble again
+  setPegs();
 
   const dropTimer = setInterval(() =&gt; {
     const open = phase === 'filling' || phase === 'returning';
@@ -4545,16 +4789,19 @@ function lineUp(state) {
       stopped = true;
       clearInterval(dropTimer);
       clearInterval(stepTimer);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
       context.clearRect(0, 0, SIZE, SIZE);
     },
     // For checking what's happening, for example from the browser console.
-    info: () =&gt; ({ phase, inBowl: balls.size, falling: debris.size, dropped, limit: current.limit, bowl: current.bowl.name }),
+    info: () =&gt; ({ phase, inBowl: balls.size, falling: debris.size, dropped, limit: current.limit, bowl: current.bowl.name, pegs: pegs.length, bubbles: bubbles.length }),
     positions: () =&gt; [...balls].map((ball) =&gt; [Math.round(ball.position.x), Math.round(ball.position.y)]),
   };
 }</code></pre><div class="explain">
-<p>Put the right bowl on stage, rebuild the pile, then start three loops: <code>dropTimer</code> drops a waiting ball every <code>DROP_EVERY</code> milliseconds (only while the bowl is there), <code>stepTimer</code> runs <code>update</code> 60 times a second, and <code>draw</code> keeps painting.</p>
-<p>The game hands back its controls: <code>breakNow</code>, <code>empty</code>, <code>shake</code>, <code>stop</code> (used when the test view closes) and two for checking from the console. Type <code>realGame.info()</code> in the overlay's console to see the phase, how many balls are in the bowl and its limit.</p></div></section>
-<section id="code-36"><h3>Which bowl comes back</h3><pre><code>// After a break: the same bowl again, or the next one in the list.
+<p>Put the right bowl on stage, rebuild the pile, and only then add the pegs, so rebuilding after a reload can't gamble the same balls twice. Then start three loops: <code>dropTimer</code> drops a waiting ball every <code>DROP_EVERY</code> milliseconds (only while the bowl is there), <code>stepTimer</code> runs <code>update</code> 60 times a second, and <code>draw</code> keeps painting.</p>
+<p>The game hands back its controls: <code>breakNow</code>, <code>empty</code>, <code>shake</code>, <code>stop</code> (used when the test view closes; it also unhooks the mouse) and two for checking from the console. Type <code>realGame.info()</code> in the overlay's console to see the phase, how many balls are in the bowl and its limit.</p></div></section>
+<section id="code-43"><h3>Which bowl comes back</h3><pre><code>// After a break: the same bowl again, or the next one in the list.
 function pickNextBowl(settings, currentId) {
   const list = settings.bowls;
   const index = list.findIndex((bowl) =&gt; bowl.id === currentId);
@@ -4562,7 +4809,7 @@ function pickNextBowl(settings, currentId) {
   return list[(index + 1) % list.length];
 }</code></pre><div class="explain">
 <p>With "The next bowl in the list comes back" off, it's the same bowl again. With it on, it's the next one, and <code>% list.length</code> wraps from the last bowl back to the first.</p></div></section>
-<section id="code-37"><h3>7. The real bowl</h3><pre><code>// =====================================================================================
+<section id="code-44"><h3>7. The real bowl</h3><pre><code>// =====================================================================================
 // 7. THE REAL BOWL AND THE FUNCTIONS MIX IT UP CALLS
 // The ball count and the followers already counted are kept in this browser's storage,
 // so they survive OBS restarts and source refreshes.
@@ -4589,7 +4836,7 @@ function saveState() {
 <li><code>followers</code> is a <code>Set</code>: a list that can't hold the same name twice, and can answer "is this name in it?" instantly.</li>
 <li><code>breakWaiting</code> catches a <code>breakBowl()</code> that arrives in the second or so before the game has loaded.</li>
 </ul></div></section>
-<section id="code-38"><h3>Understanding what Mix It Up sends</h3><pre><code>// Mix It Up sends one object of named texts, such as { count: "5" }.
+<section id="code-45"><h3>Understanding what Mix It Up sends</h3><pre><code>// Mix It Up sends one object of named texts, such as { count: "5" }.
 // Typed in the console it might be a plain 5. This accepts both and picks out the value.
 // With firstIfMissing false, a missing name gives '' instead of the first value.
 function pickValue(input, names, firstIfMissing = true) {
@@ -4618,7 +4865,7 @@ function toWholeNumber(value) {
 <p>Mix It Up's <em>Run Widget Function</em> calls a function with <strong>one object of named texts</strong>. A parameter named <code>count</code> with value <code>5</code> arrives as <code>{ count: "5" }</code>. (This comes from Mix It Up's source code: it calls <code>contentWindow[functionName](parameters)</code>.) In the console you'd more naturally type <code>addBalls(5)</code>. <code>pickValue</code> accepts both: for an object it looks for a sensible name (<code>count</code>, <code>amount</code>…, in any capitals), or takes the first value; anything else is used as it is.</p>
 <p><code>firstIfMissing</code> is for <em>optional</em> parameters. With it off, a missing name gives nothing rather than "the first value", so <code>{ count: "5" }</code> isn't mistaken for a user called 5. <code>pickUser</code> uses that to read the optional <code>user</code> parameter, removing a leading <code>@</code> and keeping at most 25 letters so a silly name can't cover the screen.</p>
 <p><code>toWholeNumber</code> accepts <code>5</code>, <code>"5"</code>, <code>" 1,000 "</code> and <code>"25.7"</code> (rounded down). Anything else gives <code>NaN</code>, "not a number". The usual case is a special identifier Mix It Up didn't recognise, arriving as the literal text <code>$bitsamount</code>. <code>!(count &gt; 0)</code> is true for <code>NaN</code>, zero and negatives, so all of those are ignored with a note in the console instead of breaking anything.</p></div></section>
-<section id="code-39"><h3>The functions Mix It Up calls</h3><pre><code>// The one place balls are added to the real bowl.
+<section id="code-46"><h3>The functions Mix It Up calls</h3><pre><code>// The one place balls are added to the real bowl.
 function addKind(count, kind, name) {
   owe(realState, count, kind, name);
   saveState();
@@ -4691,7 +4938,7 @@ function shakeBowl(input) {
 <li><code>shakeBowl()</code> shakes the pile. An optional <code>strength</code> between 0.5 and 3 sets how hard; anything else (or nothing) means 1.5. Hook it to a channel point reward and let viewers bounce your bowl.</li>
 </ul>
 <p>They're written as <code>function name() {}</code> at the top level, which makes them reachable as <code>window.addBalls</code>, which is exactly where Mix It Up looks.</p></div></section>
-<section id="code-40"><h3>Mix It Up's own widget events</h3><pre><code>// ---- Events Mix It Up sends by itself when the widget's event boxes are ticked ----
+<section id="code-47"><h3>Mix It Up's own widget events</h3><pre><code>// ---- Events Mix It Up sends by itself when the widget's event boxes are ticked ----
 // The names are fixed by Mix It Up. Each one gets a "data" object about the event.
 // Untick a box in Mix It Up and that event stops adding balls.
 // The name of the person in data.User (or data.Gifter), or '' if there isn't one.
@@ -4745,7 +4992,7 @@ document.addEventListener('DOMContentLoaded', () =&gt; Object.assign(window, MIX
 <li><code>ChatMessageReceived</code> runs for every chat message. Mix It Up counts each viewer's messages and has already added this one, so <code>TotalChatMessageSent === 1</code> means it's their first. That's the same rule Mix It Up's own <em>Chat User First Message</em> event uses.</li>
 </ul>
 <p>A new Custom widget comes with example code in its Javascript tab that defines functions with these same names. Mix It Up puts that code <em>after</em> this file, so it would win. <code>MIX_IT_UP_FUNCTIONS</code> plus the <code>DOMContentLoaded</code> line point the names back at the bowl's functions once the page has finished loading.</p></div></section>
-<section id="code-41"><h3>Telling Mix It Up the bowl broke</h3><pre><code>// Tells Mix It Up the bowl broke, by running a command through its Developer API.
+<section id="code-48"><h3>Telling Mix It Up the bowl broke</h3><pre><code>// Tells Mix It Up the bowl broke, by running a command through its Developer API.
 function tellMixItUp(settings, info) {
   const id = settings.breakCommandId.trim();
   if (!id) return;
@@ -4766,7 +5013,7 @@ function tellMixItUp(settings, info) {
     .catch(() =&gt; note("Couldn't reach Mix It Up's Developer API to say the bowl broke"));
 }</code></pre><div class="explain">
 <p>Mix It Up's <em>Developer API</em> (Services → Developer API) lets programs on your PC run commands by sending a request to <code>http://localhost:8911/api/v2/commands/</code> plus the command's ID. <code>fetch</code> sends it, with the bowl's details as special identifiers: <code>bowlname</code>, <code>bowlballs</code>, <code>bowlbreaks</code> and <code>nextbowlname</code>, which become <code>$bowlname</code> and so on in that command. Mix It Up's API allows requests from web pages, which is what makes this possible. If no ID is set, or Mix It Up doesn't answer, nothing happens apart from a note in the console.</p></div></section>
-<section id="code-42"><h3>8. The overlay</h3><pre><code>// =====================================================================================
+<section id="code-49"><h3>8. The overlay</h3><pre><code>// =====================================================================================
 // 8. THE OVERLAY
 // =====================================================================================
 async function startOverlay() {
@@ -4805,12 +5052,13 @@ async function startOverlay() {
 <li>If you chose a different live bowl in the editor since this overlay last ran, start on it. Otherwise carry on with whichever bowl was showing (it may have changed by breaking).</li>
 <li>Start the game with the real count, and on each break, tell Mix It Up.</li>
 </ol></div></section>
-<section id="code-43"><h3>9. The editor: settings and memory</h3><pre><code>// =====================================================================================
+<section id="code-50"><h3>9. The editor: settings and memory</h3><pre><code>// =====================================================================================
 // 9. THE EDITOR
 // =====================================================================================
 const HINTS = {
   draw: 'Click to add points, or hold and draw. Drag a point to move it, click the line to add one, right-click a point to remove it. Drag the ball to set the drop point.',
-  move: 'Drag to place the picture. Use Bowl size to resize it.',
+  move: 'Drag to place the pictures. Choose below whether all layers move, or just one. Bowl size resizes them.',
+  pegs: 'Click to add a peg, drag one to move it, right-click one to remove it. Turn pegs on in Gambling mode.',
 };
 // [setting, label, lowest, highest, step]
 const BOWL_SLIDERS = [
@@ -4827,6 +5075,10 @@ const BREAK_SLIDERS = [
   ['shards', 'Shards', 2, 16, 1],
   ['returnSeconds', 'Comes back after (seconds)', 1, 15, 0.5],
 ];
+const PEG_SLIDERS = [
+  ['pegSize', 'Peg size', 6, 50, 1],
+  ['pegBounce', 'Peg bounce', 0, 1.2, 0.05],
+];
 const FUN_SLIDERS = [
   ['volume', 'Sound volume (0 = off)', 0, 1, 0.05],
 ];
@@ -4842,9 +5094,9 @@ let testState = null;
 let testRun = 0; // Stops an older test from starting after a newer one
 const history = [];
 const pictureShapes = new Map(); // Picture id: height divided by width</code></pre><div class="explain">
-<p>The editor's fixed lists. <code>FUN_SLIDERS</code> holds the volume slider. Each slider is <code>[setting, label, lowest, highest, step]</code>. To let Gravity go higher, change <code>3</code> in <code>['gravity', 'Gravity', 0.1, 3, 0.1]</code>. To add a new slider, add a line here (section <em>Part 4</em> has a recipe). <code>BOWL_SLIDERS</code> change the bowl being edited; the others change shared settings.</p>
+<p>The editor's fixed lists. <code>FUN_SLIDERS</code> holds the volume slider and <code>PEG_SLIDERS</code> the peg size and bounce. <code>HINTS</code> has a line for each tool: draw, move and pegs. Each slider is <code>[setting, label, lowest, highest, step]</code>. To let Gravity go higher, change <code>3</code> in <code>['gravity', 'Gravity', 0.1, 3, 0.1]</code>. To add a new slider, add a line here (section <em>Part 4</em> has a recipe). <code>BOWL_SLIDERS</code> change the bowl being edited; the others change shared settings.</p>
 <p>Then the editor's memory: which bowl is being edited, draw or move mode, what's being dragged, the test game, the undo <code>history</code> (outlines saved as text before each change), and each picture's shape (height ÷ width).</p></div></section>
-<section id="code-44"><h3>Small editor helpers</h3><pre><code>function setStatus(text) {
+<section id="code-51"><h3>Small editor helpers</h3><pre><code>function setStatus(text) {
   byId('status').textContent = text;
 }
 
@@ -4869,8 +5121,7 @@ async function measurePictures() {
   const setSource = (element, attribute, source) =&gt; {
     if (element.getAttribute(attribute) !== source) element.setAttribute(attribute, source || '');
   };
-  setSource(byId('ball-preview'), 'src', activeSettings.pictures.ball);
-  setSource(byId('drop-ball'), 'href', activeSettings.pictures.ball);
+  setSource(byId('drop-ball'), 'href', activeSettings.pictures[activeSettings.ballPictures[0]]);
 }</code></pre><div class="explain">
 <ul>
 <li><code>setStatus</code> writes the message in the top right ("Saved", "Copied"…).</li>
@@ -4878,17 +5129,55 @@ async function measurePictures() {
 <li><code>toStage</code> turns a mouse position into stage dots. <code>getScreenCTM().inverse()</code> is the SVG's own "screen to drawing" conversion, so it's right however big the stage is on screen.</li>
 <li><code>measurePictures</code> loads each picture once to learn its shape, and shows the ball picture in the panel. Long data URLs are only set when they actually change.</li>
 </ul></div></section>
-<section id="code-45"><h3>Drawing the editing layer</h3><pre><code>// Draws the editing layer: picture, outline, points and drop point.
+<section id="code-52"><h3>Showing layers and ball pictures</h3><pre><code>// Puts a picture layer on the editing layer, at its place, or hides it.
+function renderLayer(element, preview, id, dx, dy) {
+  const bowl = currentBowl();
+  const source = activeSettings.pictures[id] || '';
+  if (element.getAttribute('href') !== source) element.setAttribute('href', source);
+  if (preview.getAttribute('src') !== source) preview.setAttribute('src', source);
+  element.setAttribute('x', bowl.x + dx);
+  element.setAttribute('y', bowl.y + dy);
+  element.setAttribute('width', bowl.width);
+  element.setAttribute('height', source ? bowl.width * (pictureShapes.get(id) || 1) : 0);
+}
+
+// The ball pictures as small buttons. Clicking one removes it (one always stays).
+function renderBallPictures() {
+  byId('ball-pictures').replaceChildren(...activeSettings.ballPictures.map((id, index) =&gt; {
+    const button = document.createElement('button');
+    button.title = 'Remove this ball picture';
+    button.innerHTML = '&lt;img alt=""&gt;&lt;span&gt;×&lt;/span&gt;';
+    button.querySelector('img').src = activeSettings.pictures[id] || '';
+    button.addEventListener('click', () =&gt; {
+      if (activeSettings.ballPictures.length &lt; 2) return setStatus('Keep at least one ball picture');
+      activeSettings.ballPictures.splice(index, 1);
+      measurePictures().then(refreshControls);
+      saveNow();
+    });
+    return button;
+  }));
+}</code></pre><div class="explain">
+<ul>
+<li><code>renderLayer</code> places one picture layer on the editing layer, at the bowl's corner plus its pull-apart distance, and shows it in the panel. A missing layer gets a height of 0, which hides it.</li>
+<li><code>renderBallPictures</code> shows each ball picture as a small button with a red ×. Clicking one removes it, unless it's the last one.</li>
+</ul></div></section>
+<section id="code-53"><h3>Drawing the editing layer</h3><pre><code>// Draws the editing layer: picture, outline, points and drop point.
 function render() {
   const bowl = currentBowl();
-  const source = activeSettings.pictures[bowl.picture] || '';
-  const image = byId('bowl');
-  if (image.getAttribute('href') !== source) image.setAttribute('href', source);
-  if (byId('bowl-preview').getAttribute('src') !== source) byId('bowl-preview').setAttribute('src', source);
-  image.setAttribute('x', bowl.x);
-  image.setAttribute('y', bowl.y);
-  image.setAttribute('width', bowl.width);
-  image.setAttribute('height', bowl.width * (pictureShapes.get(bowl.picture) || 1));
+  renderLayer(byId('bowl'), byId('back-preview'), bowl.picture, 0, 0);
+  renderLayer(byId('bowl-depth'), byId('depth-preview'), bowl.depth, bowl.depthX, bowl.depthY);
+  renderLayer(byId('bowl-front'), byId('front-preview'), bowl.front, bowl.frontX, bowl.frontY);
+
+  byId('pegs').classList.toggle('off', !activeSettings.gambling);
+  byId('pegs').replaceChildren(...bowl.pegs.map(([x, y], index) =&gt; {
+    const peg = document.createElementNS(SVG_NS, 'circle');
+    peg.setAttribute('cx', x);
+    peg.setAttribute('cy', y);
+    peg.setAttribute('r', activeSettings.pegSize / 2);
+    peg.setAttribute('fill', activeSettings.pegColor);
+    peg.dataset.peg = index;
+    return peg;
+  }));
 
   byId('outline').setAttribute('points', bowl.outline.join(' '));
   byId('handles').replaceChildren(...bowl.outline.map(([x, y], index) =&gt; {
@@ -4932,9 +5221,9 @@ function updateBreakHint() {
   };
   byId('break-hint').textContent = hints[bowl.breakMode];
 }</code></pre><div class="explain">
-<p><code>render</code> updates the SVG to match the settings: the picture's place and size, the outline (an SVG <code>polyline</code>, from <code>outline.join(' ')</code>), a white circle per point (each remembers its position in the list in <code>data-index</code>, so clicking it tells the code which point it is), and the drop marker: a band as wide as <em>Drop width</em>, a ball, and an arrow. It runs on every mouse move while dragging, so it's kept simple.</p>
+<p><code>render</code> updates the SVG to match the settings: the three picture layers, the pegs (each a circle that remembers its number in <code>data-peg</code>, dimmed while gambling mode is off), the outline (an SVG <code>polyline</code>, from <code>outline.join(' ')</code>), a white circle per point (each remembers its position in the list in <code>data-index</code>, so clicking it tells the code which point it is), and the drop marker: a band as wide as <em>Drop width</em>, a ball, and an arrow. It runs on every mouse move while dragging, so it's kept simple.</p>
 <p><code>updateBreakHint</code> shows the right explanation under <em>Breaks</em>, the "about N" suggestion, and hides the number box unless the bowl breaks at a number.</p></div></section>
-<section id="code-46"><h3>Keeping the panel in step</h3><pre><code>// Puts every control back in line with the settings, for example after choosing another bowl.
+<section id="code-54"><h3>Keeping the panel in step</h3><pre><code>// Puts every control back in line with the settings, for example after choosing another bowl.
 function refreshControls() {
   const bowl = currentBowl();
   for (const slider of document.querySelectorAll('[data-setting]')) {
@@ -4948,6 +5237,8 @@ function refreshControls() {
   byId('cycle').checked = activeSettings.cycleBowls;
   for (const box of document.querySelectorAll('[data-check]')) box.checked = activeSettings[box.dataset.check];
   for (const picker of document.querySelectorAll('[data-color]')) picker.value = activeSettings[picker.dataset.color];
+  for (const box of document.querySelectorAll('[data-bowl-check]')) box.checked = bowl[box.dataset.bowlCheck];
+  renderBallPictures();
   byId('break-command').value = activeSettings.breakCommandId;
   renderBowlList();
   updateResetHint();
@@ -4988,7 +5279,7 @@ function selectBowl(id) {
 <li><code>renderBowlList</code> rebuilds the bowl list: a button per bowl, a <em>Live</em> badge on the live one, and <code>aria-pressed</code> on the one being edited (so it's highlighted, and screen readers say "pressed"). Delete is greyed out when only one bowl is left.</li>
 <li><code>selectBowl</code> switches to another bowl and clears the undo history, since undo belongs to one outline.</li>
 </ul></div></section>
-<section id="code-47"><h3>Saving by itself</h3><pre><code>// ---- Saving ----
+<section id="code-55"><h3>Saving by itself</h3><pre><code>// ---- Saving ----
 function saveSoon() {
   setStatus('Saving…');
   clearTimeout(saveTimer);
@@ -5003,9 +5294,10 @@ function saveNow() {
   if (testing) startTest();
 }</code></pre><div class="explain">
 <p>Every change calls <code>saveSoon</code>, which waits <code>SAVE_DELAY</code> (300 ms) and then saves, restarting the wait if another change comes first. Dragging a slider makes dozens of changes a second, and this saves once when you stop. <code>saveNow</code> stamps <code>savedAt</code>, writes the tidied settings to storage, and restarts the test view if it's open, so you see the change straight away.</p></div></section>
-<section id="code-48"><h3>Drawing the outline</h3><pre><code>// ---- Drawing the outline and moving things ----
+<section id="code-56"><h3>Drawing the outline</h3><pre><code>// ---- Drawing the outline and moving things ----
 function remember() {
-  history.push(JSON.stringify(currentBowl().outline));
+  const { outline, pegs } = currentBowl();
+  history.push(JSON.stringify({ outline, pegs }));
 }
 
 // Where a new point belongs: the stretch of line it adds the least length to.
@@ -5031,11 +5323,25 @@ function startDrag(event) {
       bowl.dropY = y;
     };
   } else if (mode === 'move') {
-    const offsetX = point[0] - bowl.x;
-    const offsetY = point[1] - bowl.y;
+    // Moves the whole bowl, or pulls just one layer away (its offset from the back picture).
+    const what = byId('move-what').value;
+    const keyX = { all: 'x', front: 'frontX', depth: 'depthX' }[what];
+    const keyY = { all: 'y', front: 'frontY', depth: 'depthY' }[what];
+    const offsetX = point[0] - bowl[keyX];
+    const offsetY = point[1] - bowl[keyY];
     drag = ([x, y]) =&gt; {
-      bowl.x = x - offsetX;
-      bowl.y = y - offsetY;
+      bowl[keyX] = x - offsetX;
+      bowl[keyY] = y - offsetY;
+    };
+  } else if (mode === 'pegs') {
+    remember();
+    let index = target.dataset.peg === undefined ? -1 : Number(target.dataset.peg);
+    if (index &lt; 0) {
+      bowl.pegs.push(point); // A click on empty space adds a peg
+      index = bowl.pegs.length - 1;
+    }
+    drag = (position) =&gt; {
+      bowl.pegs[index] = position;
     };
   } else if (target.dataset.index !== undefined) {
     remember();
@@ -5062,6 +5368,13 @@ function startDrag(event) {
 
 function removePoint(event) {
   event.preventDefault();
+  if (mode === 'pegs' &amp;&amp; event.target.dataset.peg !== undefined) {
+    remember();
+    currentBowl().pegs.splice(Number(event.target.dataset.peg), 1);
+    render();
+    saveSoon();
+    return;
+  }
   if (event.target.dataset.index === undefined || mode !== 'draw') return;
   remember();
   currentBowl().outline.splice(Number(event.target.dataset.index), 1);
@@ -5072,20 +5385,24 @@ function removePoint(event) {
 function setMode(next) {
   mode = next;
   byId('editor-stage').classList.toggle('moving', mode === 'move');
+  byId('editor-stage').classList.toggle('pegging', mode === 'pegs');
   byId('draw-mode').classList.toggle('active', mode === 'draw');
   byId('move-mode').classList.toggle('active', mode === 'move');
+  byId('peg-mode').classList.toggle('active', mode === 'pegs');
+  byId('move-what').hidden = mode !== 'move';
   byId('hint').textContent = HINTS[mode];
 }</code></pre><div class="explain">
 <p><code>startDrag</code> runs when the mouse button goes down on the stage, and decides what you're grabbing. The answer becomes <code>drag</code>, a small function that the <em>pointermove</em> handler calls with each new mouse position:</p>
 <ul>
 <li>On the drop marker: move the drop point.</li>
-<li>In <em>Move picture</em> mode: move the picture, keeping the spot you grabbed under the mouse.</li>
+<li>In <em>Move picture</em> mode: move the whole bowl, or, depending on the choice under the buttons, only the front or depth picture (that changes its pull-apart distance), keeping the spot you grabbed under the mouse.</li>
+<li>In <em>Place pegs</em> mode: on a peg, move it; on empty space, add a peg there and keep dragging it.</li>
 <li>On a point: move that point.</li>
 <li>On the line: add a point there (<code>nearestStretch</code> finds the stretch that the new point lengthens least) and drag it.</li>
 <li>On empty space: add a point at the end, then, while the button is held, add another each time the mouse moves <code>MIN_STEP</code> (16) dots. That's freehand drawing. Lower <code>MIN_STEP</code> for smoother but heavier outlines.</li>
 </ul>
-<p><code>remember</code> saves the outline before each change, for Undo. <code>removePoint</code> handles right-click. <code>setMode</code> switches between drawing and moving, and updates the buttons and hint.</p></div></section>
-<section id="code-49"><h3>Uploading pictures</h3><pre><code>// ---- Pictures ----
+<p><code>remember</code> saves the outline and pegs before each change, for Undo. <code>removePoint</code> handles right-click on a point or a peg. <code>setMode</code> switches between drawing and moving, and updates the buttons and hint.</p></div></section>
+<section id="code-57"><h3>Uploading pictures</h3><pre><code>// ---- Pictures ----
 // Shrinks a picture and turns it into text. WebP is used when it comes out smaller than PNG.
 async function pictureToText(file, maxSide) {
   const picture = await loadImage(URL.createObjectURL(file));
@@ -5097,31 +5414,83 @@ async function pictureToText(file, maxSide) {
   const png = canvas.toDataURL('image/png');
   const webp = canvas.toDataURL('image/webp', 0.9);
   return webp.startsWith('data:image/webp') &amp;&amp; webp.length &lt; png.length ? webp : png;
+}</code></pre><div class="explain">
+<p><code>pictureToText</code> draws the chosen file onto a canvas, shrunk so its longest side is at most 1600 pixels (400 for the ball), then turns it into a data URL. It makes both a PNG and a WebP (a newer, usually smaller format that OBS's browser understands) and keeps the smaller one. A new bowl picture gets a new name in <code>pictures</code>, so a duplicated bowl keeps its own picture.</p></div></section>
+<section id="code-58"><h3>Bowl layers, ball pictures and peg patterns</h3><pre><code>// Adds one picture to the settings and gives back its new id.
+async function addPicture(file, maxSide) {
+  const id = newId('picture');
+  activeSettings.pictures[id] = await pictureToText(file, maxSide);
+  return id;
 }
 
-async function uploadPicture(kind, file) {
-  if (!file) return;
+// Several pictures chosen at once for a bowl: names with "front", "back" or "depth" go to that
+// layer; the rest fill Back, Front, then Depth, in order.
+function sortLayers(files) {
+  const named = (...words) =&gt; files.find((file) =&gt; words.some((word) =&gt; file.name.toLowerCase().includes(word)));
+  const layers = { picture: named('back'), front: named('front'), depth: named('depth', 'shadow', 'inside') };
+  const rest = files.filter((file) =&gt; !Object.values(layers).includes(file));
+  for (const layer of ['picture', 'front', 'depth']) if (!layers[layer]) layers[layer] = rest.shift();
+  return layers;
+}
+
+async function uploadBowlPictures(layer, files) {
+  if (!files.length) return;
   setStatus('Saving…');
-  let text;
+  const bowl = currentBowl();
+  const layers = files.length &gt; 1 ? sortLayers(files) : { [layer]: files[0] };
   try {
-    text = await pictureToText(file, kind === 'ball' ? MAX_BALL_PICTURE : MAX_PICTURE);
+    for (const [key, file] of Object.entries(layers)) if (file) bowl[key] = await addPicture(file, MAX_PICTURE);
   } catch {
     setStatus("That file isn't a picture");
     return;
   }
-  if (kind === 'ball') {
-    activeSettings.pictures.ball = text;
-  } else {
-    const id = newId('picture');
-    activeSettings.pictures[id] = text;
-    currentBowl().picture = id;
+  if (files.length &gt; 1) lineUpLayers(bowl);
+  await measurePictures();
+  refreshControls();
+  saveNow();
+}
+
+async function uploadBallPictures(files) {
+  setStatus('Saving…');
+  try {
+    for (const file of files) activeSettings.ballPictures.push(await addPicture(file, MAX_BALL_PICTURE));
+  } catch {
+    setStatus("That file isn't a picture");
+    return;
   }
   await measurePictures();
   refreshControls();
   saveNow();
+}
+
+// Puts every layer back exactly over the back picture.
+function lineUpLayers(bowl) {
+  bowl.frontX = bowl.frontY = bowl.depthX = bowl.depthY = 0;
+}
+
+// A Plinko-style triangle of pegs between the drop point and the rim.
+function pegPattern(bowl) {
+  const rows = 5;
+  const gap = Math.max(50, activeSettings.ballSize * 2.2); // Room for a ball between pegs
+  const top = bowl.dropY + 80;
+  const bottom = rimHeight(bowl.outline) - 60;
+  const step = Math.max(gap * 0.8, (bottom - top) / (rows - 1));
+  bowl.pegs = [];
+  for (let row = 0; row &lt; rows; row++) {
+    for (let i = 0; i &lt;= row + 1; i++) {
+      bowl.pegs.push([Math.round(bowl.dropX + (i - (row + 1) / 2) * gap), Math.round(top + row * step)]);
+    }
+  }
 }</code></pre><div class="explain">
-<p><code>pictureToText</code> draws the chosen file onto a canvas, shrunk so its longest side is at most 1600 pixels (400 for the ball), then turns it into a data URL. It makes both a PNG and a WebP (a newer, usually smaller format that OBS's browser understands) and keeps the smaller one. A new bowl picture gets a new name in <code>pictures</code>, so a duplicated bowl keeps its own picture.</p></div></section>
-<section id="code-50"><h3>The test view</h3><pre><code>// ---- The test view ----
+<ul>
+<li><code>addPicture</code> shrinks a picture, adds it to the settings under a new name, and gives back the name.</li>
+<li><code>sortLayers</code>: when you choose several pictures at once for a bowl, a file name containing "back", "front" or "depth" (or "shadow" or "inside") puts it on that layer. Any others fill Back, Front, then Depth, in order.</li>
+<li><code>uploadBowlPictures</code> adds the pictures to their layers. Several at once also lines the layers up, since they're probably one set.</li>
+<li><code>uploadBallPictures</code> adds every chosen picture to the ball pictures (shrunk to 400 pixels).</li>
+<li><code>lineUpLayers</code> sets every pull-apart distance back to 0.</li>
+<li><code>pegPattern</code> builds a Plinko triangle: 5 rows, 2 pegs in the first and one more in each row, staggered so every row's pegs sit between the row above's. Each gap is at least 2.2 balls wide (or 50 dots), so balls always fit through. Rows run from 80 dots below the drop point to 60 above the rim. Change <code>rows</code> for a taller triangle.</li>
+</ul></div></section>
+<section id="code-59"><h3>The test view</h3><pre><code>// ---- The test view ----
 async function startTest() {
   const run = ++testRun;
   const balls = testState ? testState.balls : 0;
@@ -5163,7 +5532,7 @@ function toggleTest() {
 }</code></pre><div class="explain">
 <p>The test view is a second game on the same canvas, with a pretend <code>testState</code> and a <code>save</code> that does nothing, so test balls never touch the real count. Each restart keeps the test balls and their colours, so changing gravity or a colour re-drops the same pile.</p>
 <p><code>testRun</code> handles a race: starting a game takes a moment (pictures load), and you might change something again before it's ready. Each start gets a number, and a game that finishes loading after a newer one started stops itself. <code>toggleTest</code> swaps the editing layer for the test view and back. The SVG is shown and hidden with the <code>hidden</code> <em>attribute</em>, because SVG elements don't have the <code>.hidden</code> shortcut that HTML elements do.</p></div></section>
-<section id="code-51"><h3>Managing bowls</h3><pre><code>// ---- Bowls ----
+<section id="code-60"><h3>Managing bowls</h3><pre><code>// ---- Bowls ----
 function addBowl() {
   const bowl = normalizeBowl({ name: 'Bowl ' + (activeSettings.bowls.length + 1) });
   activeSettings.bowls.push(bowl);
@@ -5204,7 +5573,7 @@ function deleteBowl() {
 <li><strong>Rename</strong>: <code>prompt</code> shows the browser's little question box. Names are trimmed and kept under 60 letters.</li>
 <li><strong>Delete</strong>: <code>confirm</code> asks first. If you delete the live bowl, the first bowl becomes live.</li>
 </ul></div></section>
-<section id="code-52"><h3>Getting it onto the stream</h3><pre><code>// ---- Getting it onto the stream ----
+<section id="code-61"><h3>Getting it onto the stream</h3><pre><code>// ---- Getting it onto the stream ----
 
 // "Empty the real bowl" only takes effect in the next copy made, and only once.
 function settingsForCopy() {
@@ -5244,7 +5613,7 @@ async function copyText(text) {
 <li><code>download</code> makes a file from text (a <code>Blob</code>), gives it a temporary address, and clicks an invisible link to it. That's how a page saves a file to your Downloads folder.</li>
 <li><code>copyText</code> puts text on the clipboard. If the modern way isn't allowed, it falls back to the old way: a hidden text box, select all, copy.</li>
 </ul></div></section>
-<section id="code-53"><h3>The Mix It Up widget file</h3><pre><code>// A Mix It Up widget file. Mix It Up reads it with Overlay Widgets, Import.
+<section id="code-62"><h3>The Mix It Up widget file</h3><pre><code>// A Mix It Up widget file. Mix It Up reads it with Overlay Widgets, Import.
 // The names and numbers below come from Mix It Up's own source code:
 //   Type 999 = Custom widget, DisplayOption 1 = Single Widget URL.
 function buildWidgetFile(settings) {
@@ -5307,7 +5676,7 @@ function updateResetHint() {
 <li>Mix It Up needs a <code>$type</code> line at the start of each part, naming its type. This file isn't allowed to contain a dollar sign followed by letters, so it builds the word from <code>String.fromCharCode(36)</code> (character 36 is the dollar sign) and slips the two lines in.</li>
 </ul>
 <p><code>updateResetHint</code> explains what <em>Empty the real bowl</em> will do, in red while an empty is waiting to go out.</p></div></section>
-<section id="code-54"><h3>Export and Import</h3><pre><code>// ---- Export, import and the pop-up box ----
+<section id="code-63"><h3>Export and Import</h3><pre><code>// ---- Export, import and the pop-up box ----
 function openDialog({ title, hint, text, actionLabel, onAction }) {
   byId('dialog-title').textContent = title;
   byId('dialog-hint').textContent = hint;
@@ -5359,7 +5728,7 @@ async function useSettings(settings) {
   refreshControls();
 }</code></pre><div class="explain">
 <p><code>openDialog</code> fills in the pop-up box and shows it. <strong>Export</strong> shows the settings as text with a Copy button. <strong>Import</strong> reads what you paste, refuses anything that isn't bowl settings, asks before replacing everything, then saves. <code>useSettings</code> switches the editor over to a new set of settings.</p></div></section>
-<section id="code-55"><h3>Building the panel</h3><pre><code>// ---- Building the panel ----
+<section id="code-64"><h3>Building the panel</h3><pre><code>// ---- Building the panel ----
 function buildSliders(container, list, scope) {
   for (const [key, label, min, max, step] of list) {
     const row = document.createElement('label');
@@ -5381,7 +5750,7 @@ function buildSliders(container, list, scope) {
   }
 }</code></pre><div class="explain">
 <p><code>buildSliders</code> turns each line of a slider list into a label, a number display and a range slider. Moving it changes the setting, on the current bowl or the shared settings, and saves soon.</p></div></section>
-<section id="code-56"><h3>Starting the editor</h3><pre><code>async function startEditor() {
+<section id="code-65"><h3>Starting the editor</h3><pre><code>async function startEditor() {
   document.body.classList.add('editing');
   byId('panel').hidden = false;
   byId('editor-stage').removeAttribute('hidden'); // SVG has no .hidden, so the attribute is used
@@ -5396,6 +5765,7 @@ function buildSliders(container, list, scope) {
   buildSliders('shared-sliders', SHARED_SLIDERS, 'shared');
   buildSliders('break-sliders', BREAK_SLIDERS, 'shared');
   buildSliders('fun-sliders', FUN_SLIDERS, 'shared');
+  buildSliders('peg-sliders', PEG_SLIDERS, 'shared');
   setMode('draw');
   refreshControls();
   setStatus(storedIsNewer ? 'Loaded your edits from this browser' : 'Ready');
@@ -5415,9 +5785,10 @@ function buildSliders(container, list, scope) {
   });
   byId('draw-mode').addEventListener('click', () =&gt; setMode('draw'));
   byId('move-mode').addEventListener('click', () =&gt; setMode('move'));
+  byId('peg-mode').addEventListener('click', () =&gt; setMode('pegs'));
   byId('undo').addEventListener('click', () =&gt; {
     if (!history.length) return;
-    currentBowl().outline = JSON.parse(history.pop());
+    Object.assign(currentBowl(), JSON.parse(history.pop())); // Outline and pegs as they were
     render();
     saveSoon();
   });
@@ -5440,12 +5811,51 @@ function buildSliders(container, list, scope) {
   });
 
   // Pictures
-  for (const kind of ['bowl', 'ball']) {
-    byId(kind + '-file').addEventListener('change', (event) =&gt; {
-      uploadPicture(kind, event.target.files[0]);
-      event.target.value = ''; // So the same file can be chosen again after editing it.
+  for (const input of document.querySelectorAll('[data-layer]')) {
+    input.addEventListener('change', () =&gt; {
+      uploadBowlPictures(input.dataset.layer, [...input.files]);
+      input.value = ''; // So the same file can be chosen again after editing it.
     });
   }
+  byId('ball-file').addEventListener('change', (event) =&gt; {
+    uploadBallPictures([...event.target.files]);
+    event.target.value = '';
+  });
+  byId('remove-front').addEventListener('click', () =&gt; {
+    currentBowl().front = '';
+    render();
+    saveNow();
+  });
+  byId('remove-depth').addEventListener('click', () =&gt; {
+    currentBowl().depth = '';
+    render();
+    saveNow();
+  });
+  byId('line-up').addEventListener('click', () =&gt; {
+    lineUpLayers(currentBowl());
+    render();
+    saveNow();
+  });
+  for (const box of document.querySelectorAll('[data-bowl-check]')) {
+    box.addEventListener('change', () =&gt; {
+      currentBowl()[box.dataset.bowlCheck] = box.checked;
+      saveSoon();
+    });
+  }
+
+  // Gambling mode
+  byId('peg-pattern').addEventListener('click', () =&gt; {
+    remember();
+    pegPattern(currentBowl());
+    render();
+    saveNow();
+  });
+  byId('clear-pegs').addEventListener('click', () =&gt; {
+    remember();
+    currentBowl().pegs = [];
+    render();
+    saveNow();
+  });
 
   // Settings that aren't sliders
   byId('break-mode').addEventListener('change', () =&gt; {
@@ -5471,12 +5881,14 @@ function buildSliders(container, list, scope) {
   for (const box of document.querySelectorAll('[data-check]')) {
     box.addEventListener('change', () =&gt; {
       activeSettings[box.dataset.check] = box.checked;
+      render();
       saveSoon();
     });
   }
   for (const picker of document.querySelectorAll('[data-color]')) {
     picker.addEventListener('change', () =&gt; {
       activeSettings[picker.dataset.color] = picker.value;
+      render();
       saveSoon();
     });
   }
@@ -5532,8 +5944,8 @@ function buildSliders(container, list, scope) {
   });
 }</code></pre><div class="explain">
 <p>Shows the panel and the editing layer, and picks the settings: the ones saved in this browser if they're newer than this file, otherwise the file's. Then it builds the sliders, and connects every button and box to what it does with <code>addEventListener('click', ...)</code>, which means "when this is clicked, run this". This part is long but plain: one or two lines per control.</p>
-<p>The Fun tick boxes and colour pickers are connected with one short loop each. Each box says which setting it changes in its HTML (<code>data-check="confetti"</code>, <code>data-color="subColor"</code>), so a new tick box only needs a line of HTML and a default. The test buttons <em>Follow</em>, <em>Sub</em>, <em>Bits</em> and <em>1st chat</em> add one coloured ball from "TestViewer", and <em>Shake</em> shakes the test bowl.</p></div></section>
-<section id="code-57"><h3>10. Editor or overlay?</h3><pre><code>// =====================================================================================
+<p>The picture boxes, the No front / No depth / Line up buttons, Peg pattern and Clear pegs each get a few lines. The Fun and gambling tick boxes and colour pickers are connected with one short loop each. Each box says which setting it changes in its HTML (<code>data-check="bubbles"</code>, <code>data-color="subColor"</code>), so a new tick box only needs a line of HTML and a default. The test buttons <em>Follow</em>, <em>Sub</em>, <em>Bits</em> and <em>1st chat</em> add one coloured ball from "TestViewer", and <em>Shake</em> shakes the test bowl.</p></div></section>
+<section id="code-66"><h3>10. Editor or overlay?</h3><pre><code>// =====================================================================================
 // 10. START: EDITOR OR OVERLAY?
 // #edit or #overlay in the address decides. Otherwise: opened as a file in a normal browser
 // window means the editor; anything else (OBS, Mix It Up, a web address) means the overlay.
@@ -5600,7 +6012,9 @@ const MODE = chooseMode();
 <li><strong>Colours:</strong> use the four colour pickers under <em>Fun</em>. To colour another kind of ball, say raids: add <code>r: 'raidColor'</code> to <code>KIND_COLORS</code> and <code>raidColor: '#ff7043',</code> to <code>SHARED_DEFAULTS</code>, then in your <code>Raid</code> function use <code>addKind(count, 'r', nameOf(data.User))</code>.</li>
 <li><strong>Names show longer:</strong> raise <code>NAME_TIME</code> (60 = one second). Bigger names: change <code>16</code> in <code>drawSender</code>.</li>
 <li><strong>Sounds:</strong> in <code>playSound</code>, <code>random(500, 900)</code> is the plip's pitch range (lower numbers, deeper plips), and <code>0.12</code> its length in seconds. For the crash, change <code>0.8</code> (length) or the <code>3</code> in <code>Math.pow</code> (higher dies away faster).</li>
-<li><strong>More confetti:</strong> raise <code>CONFETTI_PIECES</code>. Bigger pieces: widen <code>random(6, 12)</code>. Higher burst: <code>random(-16, -5)</code> to <code>random(-24, -8)</code>.</li>
+<li><strong>More bubbles:</strong> raise <code>BUBBLES</code>. Bigger bubbles: widen <code>size: random(8, 26)</code>. Longer before they pop: raise <code>random(40, 220)</code> (steps; 60 is a second). Faster rising: <code>vy: -random(0.8, 2.5)</code> to <code>-random(2, 4)</code>.</li>
+<li><strong>Pegs:</strong> size, bounce and colour are in the editor. For a taller peg triangle, change <code>rows = 5</code> in <code>pegPattern</code>. To make misses hurt less, untick gambling mode for a while; the pegs stay saved.</li>
+<li><strong>Dragging feels slow or wild:</strong> in <code>pullHeldBall</code>, <code>0.3</code> is how strongly the ball follows the mouse. Lower is lazier, higher is snappier.</li>
 <li><strong>Counter position:</strong> in <code>draw</code>, <code>current.rimY - 24</code> is 24 dots above the rim. Use a fixed spot like <code>60</code> to put it at the top.</li>
 <li><strong>Gentler shakes for everyone:</strong> in <code>shakeBowl</code>, change the <code>1.5</code> default and the <code>3</code> maximum.</li>
 </ul>
@@ -5663,6 +6077,15 @@ const MODE = chooseMode();
 
 <h3>The bowl breaks too early or too late</h3>
 <p>Type your own number in <em>Breaks at</em>, or switch to <em>when the pile reaches the top</em>. The suggested number comes from the outline's area and the ball size, so it changes when you redraw the outline or change Ball size.</p>
+
+<h3>The count went down by itself</h3>
+<p>Since version 3, a ball that leaves the stage before the bowl breaks is lost: with gambling mode on, misses are part of the game, and shaking or dragging can throw balls out. Without gambling mode, balls only fall out if the outline lets them (a gap, or a pile above the rim). Turn off gambling mode, or move pegs so the gaps lead into the bowl.</p>
+
+<h3>I can't grab balls</h3>
+<p>On stream there's no mouse: in OBS, right-click the bowl's source and choose <strong>Interact</strong>, then click and drag a ball in that window. Check <em>Let me grab balls with the mouse</em> is ticked, and copy the widget again after changing it. In the editor, grabbing works in the test view.</p>
+
+<h3>The front and back pictures don't line up</h3>
+<p>Layers line up by their top-left corners and are drawn at the same width. Pictures exported from the same image at the same size (the easy way: one picture split into layers in your art program) line up exactly. If yours don't, choose <em>Move only the front picture</em> under Move picture and drag it into place; <em>Line up</em> puts it back.</p>
 
 <h3>No sound</h3>
 <p>Check <em>Sound volume</em> isn't 0 in the editor (and that you copied the widget again after changing it). In OBS, open the source's properties and tick <strong>Control audio via OBS</strong>, then check its level in OBS's audio mixer isn't muted. In the editor's test view, sounds start after your first click on the page; browsers don't allow sound before that.</p>

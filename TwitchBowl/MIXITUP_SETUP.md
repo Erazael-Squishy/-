@@ -1,6 +1,6 @@
 # Twitch Bowl: setting it up in Mix It Up and OBS
 
-*Version 2: names on balls, colours by event, shaking, sounds, confetti and a counter. See "Version 2 extras" at the end.*
+*Version 3: gambling mode (pegs), grabbing balls, layered bowl pictures and several ball pictures, on top of version 2's names, colours, shaking, sounds, bubbles and counter. See "Extras" at the end.*
 
 The bowl is one file, `bowl.html`. Mix It Up shows it on stream and tells it when to add balls. Nothing logs into Twitch, and nothing needs installing.
 
@@ -183,9 +183,9 @@ More fixes are in `bowl-guide.html`, Part 5.
 
 ---
 
-## Version 2 extras
+## Extras
 
-All of these are under **Fun** in the Bowl Editor, and work with both setups:
+All of these are in the Bowl Editor, and work with both setups:
 
 | Extra | What it does | Setting |
 | --- | --- | --- |
@@ -193,10 +193,16 @@ All of these are under **Fun** in the Bowl Editor, and work with both setups:
 | Colours | Follow, sub, bits and first-chat balls each have a colour, and keep it after a reload | *Colour balls by event*, plus a colour picker for each |
 | Shake | `shakeBowl` throws the pile into the air (Step 3) | — |
 | Sounds | A "plip" for each ball, a crash when the bowl breaks, a "bwomp" for a shake | *Sound volume* (0 = off). Tick *Control audio via OBS* on the source |
-| Confetti | A burst of confetti when the bowl breaks | *Confetti when it breaks* |
+| Bubbles | Bubbles float up and pop (with a pop sound) when the bowl breaks | *Bubbles when it breaks* |
 | Counter | "47 / 176" above the bowl | *Show the count above the bowl* (off at first) |
+| Gambling mode | Pegs on the stage that balls bounce off on the way down, so some miss the bowl. Misses are lost | *Gambling mode*: the on/off switch, peg size, bounce and colour, *Peg pattern*. Place pegs with the *Place pegs* tool |
+| Grab balls | Click a ball and drag it, or throw it out of the bowl. A ball that leaves the stage comes off the count | *Let me grab balls with the mouse*. On stream: right-click the source in OBS → **Interact** |
+| Ball pictures | Several pictures; each ball uses one | *Add ball pictures* (choose several at once); click one to remove it |
+| Bowl layers | A **Back** picture behind the balls, a **Front** picture in front of them (so balls look inside the bowl), and an optional **Depth** picture | The three boxes under *Bowl pictures*. Choose 2 or 3 files at once with *Back* and they're sorted by name ("front", "back", "depth"). They line up by themselves; *Move picture* → *Move only the front/depth picture* pulls them apart, *Line up* puts them back |
 
-Coming from version 1? Your ball count and followers carry over. Just paste or import the new copy as in "Changing the bowl later".
+**Since version 3, the count is always the balls you can see.** A ball that leaves the stage before its bowl breaks is gone for good: it missed (gambling mode), spilled, was shaken out or was dragged out.
+
+Coming from version 1 or 2? Your ball count and followers carry over. Just paste or import the new copy as in "Changing the bowl later".
 
 ## What I checked, and what I couldn't
 

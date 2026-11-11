@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Twitch Bowl</title>
 <!--
-  TWITCH BOWL, version 2: the whole overlay and its editor in one file.
+  TWITCH BOWL, version 3: the whole overlay and its editor in one file.
 
   - Inside Mix It Up or OBS, it shows only the overlay: a bowl that fills with balls.
   - Opened straight from your computer in Chrome (double-click), it shows the editor.
@@ -69,6 +69,13 @@
   #drop-band { fill: var(--accent); opacity: 0.35; }
   #drop-arrow { fill: var(--accent); }
   #drop-ball { clip-path: circle(50%); }
+  #pegs circle { stroke: var(--accent); stroke-width: 3; cursor: grab; }
+  #pegs.off { opacity: 0.4; }
+  #editor-stage.pegging #handles, #editor-stage.pegging #outline { pointer-events: none; opacity: 0.5; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .thumbs button { position: relative; width: 48px; height: 48px; padding: 4px; }
+  .thumbs img { width: 100%; height: 100%; object-fit: contain; }
+  .thumbs span { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); color: #17121f; font-size: 12px; line-height: 18px; }
   aside { display: flex; flex-direction: column; gap: 16px; }
   h1 { margin: 0; font-size: 18px; }
   h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
@@ -148,6 +155,9 @@
     <canvas id="stage" width="800" height="800"></canvas>
     <svg id="editor-stage" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" hidden="">
       <image id="bowl"></image>
+      <image id="bowl-depth"></image>
+      <image id="bowl-front"></image>
+      <g id="pegs"></g>
       <polyline id="outline"></polyline>
       <g id="handles"></g>
       <g id="drop">
@@ -181,19 +191,38 @@
     </section>
 
     <section>
-      <h2>Pictures</h2>
+      <h2>Bowl pictures</h2>
       <div class="row">
         <label class="picture">
-          <img id="bowl-preview" alt="This bowl's picture">
-          <span>Change bowl</span>
-          <input id="bowl-file" type="file" accept="image/*">
+          <img id="back-preview" alt="This bowl's back picture">
+          <span>Back</span>
+          <input data-layer="picture" type="file" accept="image/*" multiple="">
         </label>
         <label class="picture">
-          <img id="ball-preview" alt="The ball picture">
-          <span>Change ball</span>
-          <input id="ball-file" type="file" accept="image/*">
+          <img id="front-preview" alt="This bowl's front picture">
+          <span>Front</span>
+          <input data-layer="front" type="file" accept="image/*">
+        </label>
+        <label class="picture">
+          <img id="depth-preview" alt="This bowl's depth picture">
+          <span>Depth</span>
+          <input data-layer="depth" type="file" accept="image/*">
         </label>
       </div>
+      <div class="row">
+        <button id="remove-front">No front</button>
+        <button id="remove-depth">No depth</button>
+        <button id="line-up">Line up</button>
+      </div>
+      <label class="check" style="margin-top: 10px"><input type="checkbox" data-bowl-check="depthInFront"> Depth goes in front of the balls</label>
+      <p class="hint">Back goes behind the balls, Front in front of them, Depth is an extra layer. Choose 2 or 3 pictures at once with Back: names with "front", "back" or "depth" are sorted by themselves. Layers line up by themselves; pull them apart with Move picture.</p>
+      <h2 style="margin-top: 14px">Ball pictures</h2>
+      <label class="picture">
+        <span>Add ball pictures (choose several at once)</span>
+        <input id="ball-file" type="file" accept="image/*" multiple="">
+      </label>
+      <div id="ball-pictures" class="thumbs"></div>
+      <p class="hint">Each ball uses one of these. Click one to remove it.</p>
     </section>
 
     <section id="tools">
@@ -201,7 +230,13 @@
       <div class="row">
         <button id="draw-mode" class="active">Draw outline</button>
         <button id="move-mode">Move picture</button>
+        <button id="peg-mode">Place pegs</button>
       </div>
+      <select id="move-what" class="wide">
+        <option value="all">Move the whole bowl</option>
+        <option value="front">Move only the front picture</option>
+        <option value="depth">Move only the depth picture</option>
+      </select>
       <p class="hint" id="hint"></p>
       <div class="row">
         <button id="undo">Undo</button>
@@ -243,7 +278,20 @@
     </section>
 
     <section>
+      <h2>Gambling mode</h2>
+      <label class="check"><input type="checkbox" data-check="gambling"> Pegs on: balls bounce off them and may miss the bowl</label>
+      <div id="peg-sliders"></div>
+      <label class="setting"><span>Peg colour</span><input type="color" data-color="pegColor" style="width: 60px; height: 28px; padding: 0"></label>
+      <div class="row">
+        <button id="peg-pattern">Peg pattern</button>
+        <button id="clear-pegs">Clear pegs</button>
+      </div>
+      <p class="hint">Place pegs with the "Place pegs" tool. Balls that miss the bowl are lost.</p>
+    </section>
+
+    <section>
       <h2>Fun</h2>
+      <label class="check"><input type="checkbox" data-check="grabBalls"> Let me grab balls with the mouse (in OBS: Interact)</label>
       <label class="check"><input type="checkbox" data-check="showNames"> Show who sent each ball</label>
       <label class="check"><input type="checkbox" data-check="colorByEvent"> Colour balls by event</label>
       <div class="row colors">
@@ -252,7 +300,7 @@
         <label>Bits<input type="color" data-color="bitsColor"></label>
         <label>1st chat<input type="color" data-color="chatColor"></label>
       </div>
-      <label class="check" style="margin-top: 10px"><input type="checkbox" data-check="confetti"> Confetti when it breaks</label>
+      <label class="check" style="margin-top: 10px"><input type="checkbox" data-check="bubbles"> Bubbles when it breaks</label>
       <label class="check"><input type="checkbox" data-check="showCounter"> Show the count above the bowl</label>
       <div id="fun-sliders"></div>
     </section>
@@ -350,9 +398,17 @@
  "subColor": "#b388ff",
  "bitsColor": "#ffd54f",
  "chatColor": "#69f0ae",
- "confetti": true,
+ "bubbles": true,
  "showCounter": false,
  "volume": 0.3,
+ "grabBalls": true,
+ "ballPictures": [
+  "ball"
+ ],
+ "gambling": false,
+ "pegSize": 16,
+ "pegBounce": 0.6,
+ "pegColor": "#ffffff",
  "widgetEvents": true,
  "bowls": [
   {
@@ -385,17 +441,18 @@
    "dropY": 30,
    "dropWidth": 296,
    "breakMode": "count",
-   "breakAt": null
+   "breakAt": null,
+   "front": "",
+   "depth": "",
+   "depthInFront": false,
+   "frontX": 0,
+   "frontY": 0,
+   "depthX": 0,
+   "depthY": 0,
+   "pegs": []
   }
  ],
  "pictures": {
-  "ball": [
-   "data:image/png;base64,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"
-  ],
   "starter": [
    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAAAALQCAYAAADPfd1WAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAG9iSURBVHhe7f1ZdF7lmeB955BD+ivAsiRbNng24AlPTIaEJG4gxFAmEKaYWZ40WbbkUfIoz/IsD9gCDwgzxCRVFbq6vzRvvR9V7k7Vu7xIvWtR1IlJnZg+cp3p0N/aMibhegR4kCzd+/n91/qdJGBs7efZe9+X9/CDGX/77vgZf/dBc6qmHjjw9M1j774NAAAAAHrDtEP7fxZnUin5wYy/fX/OA3/3wYVU3fPOmx/+f0ZN+QkAAAAA9Ia7T7y5M86kUmIACAAAAADfwQCwjxkAAgAAANCbDAD7mAEgAAAAAL0pHwPAv/3gQqoMAAEAAADoTXcfe3NnnEml5KsB4PsXUnXvyWMfxI0CAAAAAD3l7mNHdsaZVErSHwC+e/z9uFEAAAAAoKcYAPYxA0AAAAAAepMBYB8zAAQAAACgNxkA9jEDQAAAAAB6kwFgHzMABAAAAKA3pT8A/Jt3n57xt+9fSNW9H7z9D3GjAAAAAEBPuff9E+/GmVRKfjDjb957IP6PKbnv1x3/K24UAAAAAOgp935w4mScSaXk4gDwb96/kKr7PjAABAAAAKD33Pv+iZNxJpUSA0AAAAAA+A4GgH3MABAAAACA3mQA2McMAAEAAADoTTkZAL53IVX3fdDxT3GjAAAAAEBPuff94yfjTColBoAAAAAA8B3ufffEh3EmlZIfzPjNO9Pi/5iS+3/77n/EjQIAAAAAPeW+Ux2fxJlUSn4w41THkPg/puT+3xgAAgAAANB7DAD72P2/ee9PcaMAAAAAQE/JxwDwt+9dSNX9H578P3GjAAAAAEBPue/Dk3+MM6mU/GDGqVM3xv8xNXGjAAAAAEBPuf83734R51Ep+UFW/B9TEz",
    "cKAAAAAPQUA8B+IG4UAAAAAOgpBoD9QNmDP3sibhgAAAAA6An3//bd83EelZKuAeD9v3nvXPw/UjLkqeefjxsGAAAAAHpCnEWl5uIA8Lfvnp3x23cvpMoAEAAAAIDeEmdRqTEABAAAAIDvEGdRqcnFAHBMTd3CuGEAAAAA4Frd+vizj8dZVGq+egbgux/P+M27F1J1+5JlVXHjAAAAAMC1Gvr8nCfjLCol93948pwBIAAAAAB8i+QHgL959+zXA8D7L/4PSTIABAAAAKA3ZAPAOItKyX1/MQA8Ff/PlEzY1LIibhwAAAAAuFZ3Ll81N86iUnLfhyc/++olICfb4/+Zkglbt66OGwcAAAAArtWdy1ZWxllUYj7OxQBwyv69O+PGAQAAAIBrNWH71iVxFpWYSwPA91q7+T+TMeWNtn1x4wAAAADAtZq0c+fyOItKyocnP+oaAN73m5PNBf9nQqYfO/JW3DgAAAAAcK2m7t+zIc6ikvLbk+0XB4AfdjTe/5uTF1J1T8db78eNAwAAAADXatpbb+yMs6ikfD0APNUx5/4PT2aXBCbp3neO/fe4cQAAAADgWt19vP1wnEWl5L5TJ5u7BoD3fvjO0/H/TMl97739T3HjAAAAAMC1uvedoyfjLColXw8AZ5zqeCD+nym55/0T/0/cOAAAAABwre579/ipOItKSXbnby4GgPd+8M5/xI0DAAAAANfqvg/e/iTOolLylwPAIfH/TMl9v37nT3HjAAAAAMC1uvfXHf8cZ1Epufc3J2fmYgCYiRsHAAAAAK7Vfafe+SLOoVKS3fl7cQD4cfsN8f9MTdw4AAAAAHCt0h8Avju+awCYFf/P1Ax56vnn4wYCAAAAgGsRZ1Cpye78/XoAeN+H75yL/0BKDAABAAAA6GlxBpWaGadO3fjnAeCvT569/9TJC6kaPb+mOm4gAAAAALhatz0z56k4g0rN18O/iwPAd87cf+qdC6m6fUljVdxIAAAAAHC1hj",
@@ -436,6 +493,13 @@
    "ISZbcvlS5c1FK6sPZc4YIHAIpT6YK686UL6lo930+SJElSbnJ7MABkaj/Ljodu85UkSZKU69weDEAR6iibv+iBeEyUJEmSpFzn9mAA8qzrNt+Fi1rc5itJkiRJP/jBD0rn1z5duqDuo7h4AoDUZMczt/lKkiRJ0reUXSXhqkAAUpMdt1ztJ0mSJElXmKsCAejvuq72m1/7dDyGSZIkSZKuoK6rAucvaildUHuubEHdBQDoY2fLFtQ0utpPkiRJknqhgQuqZ5UtqOkoW1B7AQCur5qO8nm1M+OxSZIkSZLUC2VvEM6uvihbUHu2cIEGAD1kfs1n2fEmO+7EY5EkSZIk6TpVNr/6gYELa9sHzq89X7qg9gIAXIvseDJwQW1b6bzq8fGYI0mSJEnqwyp+1XRD14tD5teeios5APg+AxfUdHihhyRJkiQl0s3z6ktK59dUDlxQeyYu8ADgkq7jxPyayorq6hvjsUSSJEmSlEgDF9SNKp1fm71F+Gxc+AFQlM5mx4Xs+BCPGZIkSZKkxPO8QIDiNHBBTWe2/y/xFl9JkiRJKo4uPS8we95TtiiMC0UA0tc19PvquX7Zfj8eCyRJkiRJRdLXw8B5NR0D59d0ls6vvQBAmrL9eLY/N/STJEmSJHWbYSBAegz9JEmSJElXlWEgQP9l6CdJkiRJ6tEMAwH6nqGfJEmSJOm69I1h4Lya86Xzay4A0GvODZxf0z5wbvUsQz9JkiRJUp9UMq92Zum8mtbS+TVnu1m4AnCl5tV8lu1Xyyprp8V9riRJkiRJfdrABXWjBs6raRw4v+Z0wYIWgG+V7TcHzq+uyfajcd8qSZIkSVK/7OZ59SWl86rnlM6vOXXxuYGFC16AYvXVfvFUtp/M9pdxHypJkiRJUnJlz68auKC2LXueVVwIAxQJz/OTJEmSJBVHpfOqxw+srK4ZOLfmo4Hzai4A5NbF/Vxjtt+L+0JJkiRJkoqm7EUiJfNqWkvm1nxWsHgGSE",
    "jJ3JozXfuzebUz475OkiRJkiR99ezAAfOq55TMq+komVtzPi6uAfqVuTXnBs6tac/2W57lJ0mSJEnSVdR1u3D2ZuF5NacLFt4A11nJvJrOrtt6s8cYeGOvJEmSJEk9W/bQ/K7bhefWthgIAtfRxwPnVjcPmF/9QNwvSZIkSZKkXsxAEOhpX1/hN6+m8ZbK2mlxvyNJkiRJkvq47Aqd7EqdgfOqPh44r/oCwHcpmVt1vmRe1amB86oab6lcaOAnSZIkSVJqGQgCf+nrgV9ldU32jNG4z5AkSZIkSYmXXeHT9fD+uVXtJXOrP4vDASB3TpfMq2otrax6euCCBV7aIUmSJElSsVVRXX3jgNe/ukqwsvqjksqq8wPnVl8A0pMN9UvmVndkQ36380qSJEmSpG9twOvVQ7KrhUrmVrUOnFt9Og4ZgL53cVhf1fV23pJ5C2dmw/z4XZYkSZIkSbrsvr51uLK67auhQ8FAAugdl4Z9JXOrW7pu5X3NrbySJEmSJOk6lL1AoGsYkd0+nA0FK6vPxcEFcKWqzma341+6si+7Ijd+9yRJkiRJkvqsv3ymYPYsspLKqjOFAw4gc/H7UdU+sLKqMfveuI1XkiRJkiQlW3YL8YDXq+f8xctGDAYpGl1v3P7qqr7se+AFHZIkSZIkqWjKbiPuus2x64rBqvaSuVUfD5hb3VlycWgCybj4uc2e01fV3vV5nrdwZvb5jp95SZIkSZIk/eAHP7h53rySrluJK6trshcffDVYORuHLnD9ZZ/Diy/kyD6f2ec0+7zGz7AkSZIkSZKusuwNqNnQpWRuVeWAuQubSyqrTl28crAquwIrG9DA1ausOndxwLewI/t8DXh9wZzs8+ZlHJIkSZIkSf2kruHga9nbUxdmtxW3llRWfTygsuqzksqu4Q5FbkBlVedXn4mPss/IwMqFXVfxuV1XkiRJkiQpJ331QpIHBlRWPZ0NgLoGhdlVhJVVH5e8XnU6DoxIw6XB3s",
    "Xh3sK2rm371dt13aYrSZIkSZKkgi7danzRxUHhV8PCriHTRQvPxkEUPWnhmT8P9S5esWewJ0mSJEmSpD6p4le/uuHPA8PsNuSqyq+Hhl/dihx9ddVaN4Ov9H1123U3f+avrs772p9/ZtnQNf5cJUmSdPX9/wEyYaACUIE+bAAAAABJRU5ErkJggg=="
+  ],
+  "ball": [
+   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAxUSURBVHhe7Z1dbFxHFcf72Dd4cHa9e++ubawkBaLwQqUK8YIigVQJqZWQipCohFSEhIRUJNQHFKmQxNn4Y+39cpxPJWmVFIJKCuEhggoqCooAlQIljT82u94PbzY2ruOmTZoPZ9F/Yds7/3vXu7b3487uOdLvxb47u3fOmZkzZ87MPPKIiIiISFdI6cIX+v9zbPDZ4uG+56uxeGTwudKvdz3GnxXRRG6e2P7NxSPBvbmY+XouZk6nRn0rsyFP6d19PRtmZshTSo/6VnMRM5WLGG8sHRvYBwPh7xRpoxSPDj61kAiez4T9hZmDnoesxGZw9UAPDGM5Fw1cKsaDYhCtlNIf+h4tJAKxdNifmQl51lg5bWF/z8P0qK+Yj5pnCon+Pv7NIg0QjM+ZiDk9fWDzrRxdembcqMlmh4wKMM6FeGCM30Fkg1KcHNidjZiXZ0Pe+1zJ6wElXp/sKy0eHSh9eHZn6d75z5dKr+3eMPd/sav8+eUTg6XFIwPlcmFE/H3VmB7yrGUmjCs3Ep/5Mr+byDoCxWcmjL9f3W+vVCegmIqyWYnN4M4rny0bRS5i1m0Q8+PGXC7S9yS/q4hFCpPm4+mwcaWW4lHpaOG3Xm6NwmsBg4ABzh3qtf1WJj3my12f7H+G372r5dpxjxddPVeWFXje+Vig9P5LO2wKcBO3zz5WNs5aPQMMAT0d10XXyUIi8NOZg9W9eThk6G4fvLrLVtluZ/X09lJq1Gd7pwpwaLNR8yLXSVcIHKPUaO8SV0oFdKfvnRwsPfylvWJ1A73WeoaQHPbe7qp4Qj4auFBtnEeLXzm13VaJnUAtQ8AwuHKq79NcXx0jCJKkx/wFfvEKmGp1QouvBY",
+   "a0aj5CcsR3K58I7uG6017QxVWbz2Ma99HPPmerqE4GMYZCPGirCwDfoKMCSYiZ80sCtIJO7e7rBbGLayPO08fMuPlP7YcEBED4xUA67N90hK7TwAwHU1yuI5Aa7V3GNJnr1fUCy6023nfLWL9RMOtBvIPrC7OEfHxgB9exawXOHtbh+UXQ5bsleudWEFV0GhLgP2mxpgDlw2L5BTCvly6/PjAkwDHmOkTAzNVh5GrKx9xXx0heO8EQicUmrkvMEFzZE2DMd+r2Ycmi/M3jNFV05XDgFNbNThji7DUArDRy3aKndU32kdNUT5TfWLDCyHWMqGHb4wTIluUfJmN+c3CKFWCqzTppmSBPj38QvH1RfnNAj4qeles8Hw+cY900XTD+cGwfK3ky1WsuaFy8ooiV1cJUi9PNnKJ8rcrJ63bQyHg1MXnIe7dl/gDW81n58FT5hwrNA7kFrAM446yrhgu6Gk7mwMKOePytxylGUJgMhlhnDRWsTlm/EF2RjPvtAY2O1w1mhjwPmjYUYEsWWxwSH/mHCa0Di0e8gpibMN9k3W1ZsCbN2buYkvAPEloPltetesEQ3fBNKMhOUb7kQE/XpXG5FQwFvJ8xOdK7zDrctMxH/HushQPx+t2F06wgEzF+yLrclKRGfUlrwYj2idfvPjhKODfsvcm63LBg+xJP+9y+PatbgUPY8F4Au3StBSIMyV8suAdOItlSL+DU+rs9jdvtNLQX4NYPT1PGfvfDvUBqpHeJdVuX8LwfW5r4ywT34dQL5CIb3IpeOBzcay0A835p/fqA9Rmr/jIR4wLreF3JTBgpawFYeOAvEdwLemur/uZC3tus46qCxQR2/mStXy+w+dSqP1B3ePh6Ijhl/SCcP/4Cwf1wYKjuRSLO9sFiAxcuuB9M2dWG7L3LurYJTuKcHlIPY8TBR1y44H7gtHPqGE5iY50rgsOQrR9AAVywoA8cE8jH+06wzhUpxILKYQ4ogAsV9IFnA+kxf4",
+   "Z1rsh82FC2eEnwR284KDQ9tG2Ndf6xOI3/KIALFfSC/YCq00Hb+B8ySqV/hQTNyR1/QjWAqOHsB9yY6lfm/9mXvl4qfTAvaM7S73+iGEBmwvgr674s/GDxNz+wFSbox/v/OK32AOe+UWLdlyX/828pD77357CtMEE/7qR+q+j1WuKLzgaQPvEV5cHbsxdthQn68fDmrKLXqwf9zgYwM6zmlz9YfsdWmKAnc9Hdim5tR8wsHR143PoAjIELEfQFDr1VvzjbQTGA5ePbn7Q+gHGCCxH0pfDqdxQDsJ1FzDGAzKmv2QoR9IUNwLYmwMe9iAF0Fou/+7FiALkIHStTPNyn7PzFlJALEfTFbgDGG4oBoEuwPoAugwsR9GX5jyHFADIT/suKASDoIwbQuaz8JaHod37MeFsxAOkBOhtu4PNh/98UA+BEUDGAzqKmD3Bjqv8F6wMyC+gs2ABsG0VkGtjZXP/V9xQDsMUBVk5uf9r6QOrIl2yFCPrCgaBcLDilGAAWB6wPYPGACxH0hZf6bWsByAfEMqH1ISwjckGCnmBtx6rbhcm+pxQDgPBDSCTgggQ94cbteJgkUoWsD62+dcxWkKAf9xYuK3qdDe90TghZvPQj5UFMHbgwQT9u/fsVRa+Y4bHuy7KQCJ63PigLQp0BRwFx6CfrviyLR9RYwNzYoC3HXNCP4tmvqgbAQaCKLJ4Z2GF9EMhJ4PrDN4yse2oYX/wox8LpDa6YURr1/p6H6Rf7HmW9fyx8NJycDaQ3fEhEzSPjcOOE9QM4F5gLFfSBbxXJjBuXWOeK4DYwpcsQP0Br0ICtuszFjGdZ5zZJDntvWT+Ee+25YMH94GgfpTHXGv8rkp0wX7d+EIcOcuGC++HrZtNjvvpuFcNBQorlyDCgHU4HRGVj5gus66rCV8HLDSF6wTeI4GiYurr/iuSj5hlrATIb0As+HcyWBFpLcEsYHxcr5wXqAY6J5avksmHzadZxTUmH/RlrIXJknB",
+   "4UD6vO38xB70es27rk+mT/M9aCgJwa5m6cWn9m3DjJuq1bEDqUXkAfbK1/aNu9DTl/LFg5kl5ADxre+iuSHO79wFqoXBnrTuyt3/NgS62/IrxABOTuQHeBa3y59eejAefEj83ItZHeVWvhcoOYu8iMq5dDzBz03HfM/N2sII+c4wJykYQ7WD2trvmXW388GGIdbllwxKj1S9DliEPYXpxuDq+Z9LFZQZfCdwlipVCGgvbBCR/opTMRn3oGYCPFySGE98k/TGg+nO4FsJTPOmu4cIgYyKygtTh5/clD3rsNdfyqCdLGZkPe+9Yvx9qz5Ay0Bgy510bUVC90/YWpKhdBNEOK8eBzPCsQf6A1cKYPsB340ApBoMH2Q2IB2w8WGgcSc7jO58eN+lK9miF8ySQQp7A5ODl9LRv3qwn8gblD3jv8wySFrLHcenmnTfnTQ561fCK4h3XSckESKTuFQLaVNQYonz1+pHgXEsFvsy7aJrDE6QPqlXNg6Zj0BFvBSfllj/9wcC/roO2CDCKeGQDxCTaH05gPbCd8uUlgmU5GgJClTBHrBz0n1yFoy3Rvo4IYgdNwgCVLbFfmlxU+AY2EEzsAGpUWyq8IhgMnxxArV5Je7gzCu3yYQxk4fG4c82sJDp/EPNX2QjJNtIE1fd7KBdCTusrb36ggTpAc8Sm7jStgSEAiI1dGN4Eu3ym0C9B4ql70rJtkI+ZlfkEAq+/WqSJWUDmZo0I67E9hdxbXo9aC82k5oaQCxr5u8Q0w1iOzmusAlJ29qHmG665jpDg5sJt3HlvBdLFThwXMgOD7cGCnArr8li7ptlPy8cA5p6liuRUc+F/wqFMMoaJ4Jyev/L77e0q5CfPNti7qtEPy8YEd8+PGNFeIFfQIuiaa1FI8SI70rrhiQaedkosHnp8LqecTMtiTiNCoDtFExO9huOspHgc2ZCNmmOuiawVbmLIR8ww2M3JlWcHwgMpFJXPFtxM4dhi2qnn1nyjes4",
+   "aj2jrOw2+k5CKB2GzIOYBkBaeWwBjQM7TaX0BPhGkclO4YvbMpftvafNj/2tsvfqq7xvmtCAyh1tBgBYmSCKrgWLsPz+5smFFA2SgP0TrshkLuI393NbBFC/f0NmSTZrcKomG46hS7XbmC6wERR/QUcMisoOeAYtGS+X8wJHyu2pRtXXAeX9i4Mj9hfJffRWSLAoexPHPY3+M4hWwn6TF/Bo6dtPYWCRZJslHzIp9i0iqSw97VTNj4UzZmfl+U3maBAtA74ErU9JhvuhxtbGAvgfJSY74Uys9FA/vEmdNEYBhYgwBwxsoK/D+4QTs53JtOjfjesf4dN2pUPiPTNZGOlv8Cvio5/xlTZs8AAAAASUVORK5CYII="
   ]
  }
 }
@@ -708,7 +772,7 @@ const STORAGE = { settings: 'twitchBowl.settings', state: 'twitchBowl.state' };
 const MIX_IT_UP_API = 'http://localhost:8911/api/v2/commands';
 const NAME_TIME = 240; // Steps a sender's name shows above their ball (4 seconds)
 const SHAKE_TIME = 30; // Steps the bowl picture wobbles when shaken
-const CONFETTI_PIECES = 150;
+const BUBBLES = 35; // Bubbles that float up when a bowl breaks
 
 // Each kind of event has a letter, and a colour setting for its balls. 'x' is any other ball.
 const KIND_COLORS = { f: 'followColor', s: 'subColor', b: 'bitsColor', c: 'chatColor' };
@@ -717,7 +781,7 @@ const KIND_LETTERS = { follow: 'f', follower: 'f', sub: 's', subscription: 's', 
 
 // The starting values for anything missing from the settings block.
 const SHARED_DEFAULTS = {
-  version: 2,
+  version: 3,
   savedAt: 0,
   ballSize: 30,
   gravity: 1,
@@ -738,9 +802,16 @@ const SHARED_DEFAULTS = {
   subColor: '#b388ff',
   bitsColor: '#ffd54f',
   chatColor: '#69f0ae',
-  confetti: true,
+  bubbles: true,
   showCounter: false,
   volume: 0.3, // 0 is silent, 1 is loudest
+  grabBalls: true,
+  ballPictures: ['ball'], // Each ball uses one of these pictures
+  // Gambling mode
+  gambling: false,
+  pegSize: 16,
+  pegBounce: 0.6,
+  pegColor: '#ffffff',
 };
 const STARTER_OUTLINE = [
   [104, 420], [110, 486], [127, 549], [154, 607], [191, 658], [236, 699], [287, 730], [342, 750],
@@ -760,6 +831,15 @@ const BOWL_DEFAULTS = {
   dropWidth: 296,
   breakMode: 'count', // 'count', 'auto' or 'off'
   breakAt: null, // Empty means "work it out from the outline"
+  // More picture layers (picture is the back one). '' means none.
+  front: '',
+  depth: '',
+  depthInFront: false,
+  frontX: 0, // How far each layer has been pulled away from the back picture
+  frontY: 0,
+  depthX: 0,
+  depthY: 0,
+  pegs: [], // Gambling mode pegs: [x, y] points
 };
 
 // =====================================================================================
@@ -815,6 +895,7 @@ function normalizeBowl(raw) {
   const bowl = { ...BOWL_DEFAULTS, ...raw };
   bowl.id = bowl.id || newId('bowl');
   bowl.outline = copyOf(bowl.outline); // Its own copy, so drawing never changes the defaults
+  bowl.pegs = copyOf(bowl.pegs);
   return bowl;
 }
 
@@ -846,7 +927,8 @@ function readFileSettings() {
 // A copy with only the pictures still in use, so deleted pictures don't take up space.
 function tidySettings(settings) {
   const tidy = copyOf(settings);
-  const inUse = new Set(['ball', 'starter', ...tidy.bowls.map((bowl) => bowl.picture)]);
+  const inUse = new Set(['starter', ...tidy.ballPictures]);
+  for (const bowl of tidy.bowls) [bowl.picture, bowl.front, bowl.depth].forEach((id) => inUse.add(id));
   tidy.pictures = {};
   for (const id of inUse) {
     if (settings.pictures[id]) tidy.pictures[id] = settings.pictures[id];
@@ -1070,6 +1152,27 @@ function makeBallSprites(image, settings) {
   return sprites;
 }
 
+// All of a bowl's picture layers flattened into one picture, for breaking it.
+// Returns the picture and where it goes on the stage (layers pulled apart make it bigger).
+function flattenLayers(layers) {
+  const left = Math.min(...layers.map((layer) => layer.x));
+  const top = Math.min(...layers.map((layer) => layer.y));
+  const right = Math.max(...layers.map((layer) => layer.x + layer.width));
+  const bottom = Math.max(...layers.map((layer) => layer.y + layer.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(right - left));
+  canvas.height = Math.max(1, Math.round(bottom - top));
+  const painter = canvas.getContext('2d');
+  for (const layer of layers) painter.drawImage(layer.picture, layer.x - left, layer.y - top, layer.width, layer.height);
+  return { picture: canvas, x: left, y: top, width: canvas.width, height: canvas.height };
+}
+
+// Picks which ball picture a ball gets from its place in the line, the same way every time,
+// so balls keep their look after a reload. (A well-known trick to turn a number into a random-looking one.)
+function pickLook(slot, count) {
+  return Math.floor(Math.abs(Math.sin(slot * 12.9898 + 1) * 43758.5453)) % count;
+}
+
 // The bowl picture with crack lines drawn on it. "source-atop" only paints where the picture
 // is already visible, so the cracks never show up on its see-through parts.
 function makeCrackedPicture(image, width, height, cracks) {
@@ -1120,11 +1223,16 @@ function playSound(kind, volume) {
       loudness.gain.value = volume;
       noise.start(now);
     } else {
-      // A short tone that slides: up for a new ball ("plip"), down for a shake ("bwomp").
+      // A short tone that slides: up for a new ball ("plip"), down for a shake ("bwomp")
+      // and quickly down for a bubble ("pop").
       const tone = audio.createOscillator();
-      const start = kind === 'shake' ? 220 : random(500, 900);
-      const end = kind === 'shake' ? 70 : start * 2;
-      const length = kind === 'shake' ? 0.4 : 0.12;
+      const sounds = {
+        drop: [random(500, 900), 2, 0.12],
+        shake: [220, 0.3, 0.4],
+        pop: [random(700, 1100), 0.2, 0.06],
+      };
+      const [start, slide, length] = sounds[kind] || sounds.drop;
+      const end = start * slide;
       tone.frequency.setValueAtTime(start, now);
       tone.frequency.exponentialRampToValueAtTime(end, now + length);
       loudness.gain.setValueAtTime(volume * 0.4, now);
@@ -1167,7 +1275,9 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
 
   const radius = settings.ballSize / 2;
   const maxSpeed = 0.75 * (radius + WALL / 2);
-  const sprites = makeBallSprites(await loadPicture(settings, 'ball'), settings);
+  // One set of coloured balls for each ball picture.
+  const ballImages = await Promise.all(settings.ballPictures.map((id) => loadPicture(settings, id)));
+  const looks = (ballImages.length ? ballImages : [null]).map((image) => makeBallSprites(image, settings));
 
   const balls = new Set(); // Balls in the bowl
   const debris = new Set(); // Balls falling away from a broken bowl
@@ -1182,20 +1292,33 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   let restingAtTop = 0; // Steps in a row a ball has rested at the rim
   let stillFor = 0; // Steps in a row every ball in the bowl has been (almost) still
   let shakeUntil = 0; // The bowl picture wobbles until this step
-  let confetti = [];
+  let bubbles = [];
+  let pegs = []; // Gambling mode pegs in the physics world
+  let held = null; // The ball being dragged with the mouse
+  let pointer = null; // Where the mouse is, on the stage
   let stopped = false;
 
   function findBowl(id) {
     return settings.bowls.find((bowl) => bowl.id === id) || settings.bowls[0];
   }
 
-  // Gets a bowl ready to show: its picture, size and limits. Walls are added later.
+  // One picture layer: the picture and where it goes. Every layer is as wide as the bowl,
+  // which is what makes layers exported at the same size line up by themselves.
+  async function prepareLayer(bowl, id, dx, dy) {
+    const picture = id ? await loadPicture(settings, id) : null;
+    if (!picture) return null;
+    const height = bowl.width * picture.height / picture.width;
+    return { picture, x: bowl.x + dx, y: bowl.y + dy, width: bowl.width, height };
+  }
+
+  // Gets a bowl ready to show: its pictures, size and limits. Walls are added later.
   async function prepareBowl(bowl) {
-    const picture = await loadPicture(settings, bowl.picture);
+    const back = await prepareLayer(bowl, bowl.picture, 0, 0);
     return {
       bowl,
-      picture,
-      height: picture ? bowl.width * picture.height / picture.width : 0,
+      back,
+      depth: await prepareLayer(bowl, bowl.depth, bowl.depthX, bowl.depthY),
+      front: await prepareLayer(bowl, bowl.front, bowl.frontX, bowl.frontY),
       limit: breakLimit(bowl, settings),
       capacity: estimateCapacity(bowl, settings),
       rimY: rimHeight(bowl.outline),
@@ -1207,9 +1330,21 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     current = next;
     current.walls = makeWalls(next.bowl.outline);
     Composite.add(engine.world, current.walls);
+    current.layers = [next.back, next.depth, next.front].filter(Boolean);
     dropped = 0;
     restingAtTop = 0;
     stillFor = 0;
+  }
+
+  // Gambling mode: a small round static body for each peg. Pegs belong to the bowl on stage.
+  function setPegs() {
+    Composite.remove(engine.world, pegs);
+    pegs = settings.gambling ? current.bowl.pegs.map(([x, y]) => Bodies.circle(x, y, settings.pegSize / 2, {
+      isStatic: true,
+      restitution: settings.pegBounce, // How hard balls bounce off
+      friction: 0,
+    })) : [];
+    Composite.add(engine.world, pegs);
   }
 
   function setPhase(next) {
@@ -1227,7 +1362,15 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     const { bowl } = current;
     // Always a little scatter, so balls don't land balanced on top of each other.
     const scatter = bowl.dropWidth + radius;
-    const x = bowl.dropX + (Math.random() - 0.5) * scatter;
+    let x = bowl.dropX + (Math.random() - 0.5) * scatter;
+    if (!live && bowl.outline.length > 1) {
+      // Rebuilding after a reload: straight down into the middle of the bowl, well away from
+      // its rim, so balls that had landed don't get a second chance to miss.
+      const sides = bowl.outline.map(([px]) => px);
+      const left = Math.min(...sides);
+      const width = Math.max(...sides) - left;
+      x = left + width * random(0.2, 0.8);
+    }
     const ball = Bodies.circle(x, bowl.dropY, radius, {
       restitution: settings.bounciness,
       friction: settings.friction,
@@ -1235,7 +1378,9 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     });
     // The kinds and names lists line up with the balls owed to this bowl, so this ball's
     // place in them is the number of balls dropped so far.
+    ball.slot = dropped; // Its place in the line, used if it gets lost
     ball.kind = state.kinds[dropped] || 'x';
+    ball.look = looks[pickLook(dropped, looks.length)];
     if (live && settings.showNames && state.names[dropped]) {
       ball.sender = state.names[dropped]; // Not "label": Matter.js already uses that name
       ball.senderUntil = steps + NAME_TIME;
@@ -1257,9 +1402,23 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
         if (ball.position.y > SIZE + settings.ballSize) {
           group.delete(ball);
           Composite.remove(engine.world, ball);
+          if (group === balls) lose(ball);
         }
       }
     }
+  }
+
+  // A ball that left the stage while its bowl was standing (it missed, spilled, was shaken
+  // out or dragged out) is gone: it comes off the count, and out of the kinds and names lists.
+  function lose(ball) {
+    if (phase !== 'filling' && phase !== 'returning') return; // A break has counted it already
+    if (held === ball) held = null;
+    state.balls = Math.max(0, state.balls - 1);
+    state.kinds = state.kinds.slice(0, ball.slot) + state.kinds.slice(ball.slot + 1);
+    state.names.splice(ball.slot, 1);
+    for (const other of balls) if (other.slot > ball.slot) other.slot--;
+    dropped = Math.max(0, dropped - 1);
+    save();
   }
 
   // Shards aren't part of the physics world. They just fly and spin under gravity.
@@ -1271,14 +1430,26 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       shard.angle += shard.spin;
     }
     shards = shards.filter((shard) => shard.y - shard.reach < SIZE);
-    for (const piece of confetti) {
-      piece.vy += 0.3 * settings.gravity;
-      piece.vx *= 0.98; // Air slows them down sideways
-      piece.x += piece.vx;
-      piece.y += piece.vy;
-      piece.angle += piece.spin;
+    for (const bubble of bubbles) {
+      bubble.age++;
+      if (bubble.popped) continue;
+      bubble.y += bubble.vy; // Bubbles float up...
+      bubble.x += Math.sin(bubble.age * 0.08 + bubble.wobble) * 0.7; // ...wobbling side to side
+      if (bubble.age >= bubble.life || bubble.y < -bubble.size) {
+        bubble.popped = true;
+        bubble.age = 0; // Now counts the steps since it popped
+        playSound('pop', settings.volume);
+      }
     }
-    confetti = confetti.filter((piece) => piece.y < SIZE + 20);
+    bubbles = bubbles.filter((bubble) => !bubble.popped || bubble.age < 10);
+  }
+
+  // Dragging with the mouse: the held ball is pulled towards the pointer each step, so it
+  // still bumps into walls and other balls, and flies on when you let go.
+  function pullHeldBall() {
+    if (!held || !pointer) return;
+    Sleeping.set(held, false);
+    Body.setVelocity(held, { x: (pointer[0] - held.position.x) * 0.3, y: (pointer[1] - held.position.y) * 0.3 });
   }
 
   // Does this bowl count as full yet?
@@ -1308,6 +1479,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   function update() {
     if (stopped) return;
     steps++;
+    pullHeldBall();
     physicsStep();
     moveShards();
     const age = steps - phaseStart;
@@ -1335,11 +1507,13 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       upcoming = next;
     });
 
-    const { pieces, cracks } = makeShards(current.bowl.width, current.height, settings.shards);
-    current.pieces = pieces;
-    current.cracked = current.picture
-      ? makeCrackedPicture(current.picture, current.bowl.width, current.height, cracks)
-      : null;
+    held = null;
+    current.flat = current.layers.length ? flattenLayers(current.layers) : null;
+    if (current.flat) {
+      const { pieces, cracks } = makeShards(current.flat.width, current.flat.height, settings.shards);
+      current.pieces = pieces;
+      current.cracked = makeCrackedPicture(current.flat.picture, current.flat.width, current.flat.height, cracks);
+    }
     setPhase('cracking');
     onBreak({ bowlName: current.bowl.name, balls: used, breaks: state.breaks, nextBowlName: nextBowl.name });
     return true;
@@ -1356,7 +1530,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     }
     balls.clear();
 
-    const { bowl } = current;
+    const flat = current.flat;
     shards = current.cracked ? current.pieces.map((points) => {
       const [cx, cy] = centroid(points);
       const shape = points.map(([x, y]) => [x - cx, y - cy]); // Corners, measured from the middle
@@ -1366,27 +1540,27 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
         picture: current.cracked,
         offsetX: -cx,
         offsetY: -cy,
-        x: bowl.x + cx,
-        y: bowl.y + cy,
+        x: flat.x + cx,
+        y: flat.y + cy,
         angle: 0,
-        vx: (cx - bowl.width / 2) * 0.012 + random(-1, 1), // Pieces fly outwards from the middle
+        vx: (cx - flat.width / 2) * 0.012 + random(-1, 1), // Pieces fly outwards from the middle
         vy: random(-3, -0.5), // and jump up a little first
         spin: random(-0.05, 0.05),
       };
     }) : [];
 
     playSound('crash', settings.volume);
-    if (settings.confetti) {
-      for (let i = 0; i < CONFETTI_PIECES; i++) {
-        confetti.push({
-          x: bowl.x + bowl.width / 2,
-          y: bowl.y + current.height / 3,
-          vx: random(-9, 9),
-          vy: random(-16, -5),
-          size: random(6, 12),
-          color: 'hsl(' + Math.round(random(0, 360)) + ', 90%, 60%)',
-          angle: random(0, Math.PI),
-          spin: random(-0.3, 0.3),
+    if (settings.bubbles && flat) {
+      for (let i = 0; i < BUBBLES; i++) {
+        bubbles.push({
+          x: flat.x + random(0.15, 0.85) * flat.width,
+          y: flat.y + random(0.2, 0.8) * flat.height,
+          vy: -random(0.8, 2.5),
+          size: random(8, 26),
+          wobble: random(0, 6),
+          age: 0,
+          life: Math.round(random(40, 220)), // Steps until it pops
+          popped: false,
         });
       }
     }
@@ -1407,6 +1581,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   // Step 3: the next bowl fades in and the waiting balls start dropping again.
   function comeBack() {
     putOnStage(upcoming);
+    setPegs();
     upcoming = null;
     setPhase('returning');
   }
@@ -1439,7 +1614,8 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     context.save();
     context.translate(ball.position.x, ball.position.y);
     context.rotate(ball.angle);
-    context.drawImage(sprites[ball.kind] || sprites.x, -radius, -radius, settings.ballSize, settings.ballSize);
+    const look = ball.look || looks[0];
+    context.drawImage(look[ball.kind] || look.x, -radius, -radius, settings.ballSize, settings.ballSize);
     context.restore();
   }
 
@@ -1454,6 +1630,30 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     context.fillText(text, x, y);
   }
 
+  // A see-through bubble with a shine. A popped bubble is a ring that grows and fades.
+  function drawBubble(bubble) {
+    context.beginPath();
+    if (bubble.popped) {
+      context.globalAlpha = 1 - bubble.age / 10;
+      context.arc(bubble.x, bubble.y, bubble.size * (1 + bubble.age / 15), 0, Math.PI * 2);
+      context.strokeStyle = '#fff';
+      context.lineWidth = 2;
+      context.stroke();
+      context.globalAlpha = 1;
+      return;
+    }
+    context.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(170, 220, 255, 0.18)';
+    context.fill();
+    context.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    context.lineWidth = 2;
+    context.stroke();
+    context.beginPath(); // The shine, top left
+    context.arc(bubble.x - bubble.size * 0.35, bubble.y - bubble.size * 0.35, bubble.size * 0.25, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    context.fill();
+  }
+
   function drawSender(ball) {
     if (!ball.sender || steps > ball.senderUntil) return;
     context.globalAlpha = Math.min(1, (ball.senderUntil - steps) / 30); // Fades out at the end
@@ -1464,23 +1664,36 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   function draw() {
     if (stopped) return;
     context.clearRect(0, 0, SIZE, SIZE);
-    if (current && current.picture && phase !== 'broken') {
-      const { bowl } = current;
-      let picture = current.picture;
-      let shakeX = 0;
-      let shakeY = 0;
-      if (phase === 'cracking') {
-        picture = current.cracked || picture;
-        const shake = 4 * (steps - phaseStart) / CRACK_TIME; // The shaking grows
-        shakeX = random(-shake, shake);
-        shakeY = random(-shake, shake);
-      } else if (steps < shakeUntil) {
-        shakeX = random(-6, 6);
-        shakeY = random(-6, 6);
-      }
-      context.globalAlpha = phase === 'returning' ? Math.min(1, (steps - phaseStart) / FADE_TIME) : 1;
-      context.drawImage(picture, bowl.x + shakeX, bowl.y + shakeY, bowl.width, current.height);
+    // The bowl's layers wobble together, and fade in together.
+    let shakeX = 0;
+    let shakeY = 0;
+    if (phase === 'cracking') {
+      const shake = 4 * (steps - phaseStart) / CRACK_TIME; // The shaking grows
+      shakeX = random(-shake, shake);
+      shakeY = random(-shake, shake);
+    } else if (steps < shakeUntil) {
+      shakeX = random(-6, 6);
+      shakeY = random(-6, 6);
+    }
+    const fade = phase === 'returning' ? Math.min(1, (steps - phaseStart) / FADE_TIME) : 1;
+    const drawLayer = (layer) => {
+      if (!layer || phase === 'broken' || phase === 'cracking') return;
+      context.globalAlpha = fade;
+      context.drawImage(layer.picture, layer.x + shakeX, layer.y + shakeY, layer.width, layer.height);
       context.globalAlpha = 1;
+    };
+    // Behind the balls: the back, and the depth layer unless it goes in front.
+    drawLayer(current.back);
+    if (!current.bowl.depthInFront) drawLayer(current.depth);
+    // While cracking, all layers are shown as one cracked picture.
+    if (phase === 'cracking' && current.cracked) {
+      context.drawImage(current.cracked, current.flat.x + shakeX, current.flat.y + shakeY);
+    }
+    context.fillStyle = settings.pegColor;
+    for (const peg of pegs) {
+      context.beginPath();
+      context.arc(peg.position.x, peg.position.y, settings.pegSize / 2, 0, Math.PI * 2);
+      context.fill();
     }
     for (const shard of shards) {
       context.save();
@@ -1495,15 +1708,11 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     }
     balls.forEach(drawBall);
     debris.forEach(drawBall);
+    // In front of the balls: the depth layer if ticked, then the front.
+    if (current.bowl.depthInFront) drawLayer(current.depth);
+    drawLayer(current.front);
     balls.forEach(drawSender);
-    for (const piece of confetti) {
-      context.save();
-      context.translate(piece.x, piece.y);
-      context.rotate(piece.angle);
-      context.fillStyle = piece.color;
-      context.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2);
-      context.restore();
-    }
+    bubbles.forEach(drawBubble);
     if (settings.showCounter && current && phase !== 'broken') {
       const count = Number.isFinite(current.limit) ? dropped + ' / ' + current.limit : String(dropped);
       drawText(count, current.bowl.x + current.bowl.width / 2, current.rimY - 24, 36);
@@ -1511,9 +1720,33 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     requestAnimationFrame(draw);
   }
 
+  // ---- Grabbing balls with the mouse ----
+  function toStagePoint(event) {
+    const box = canvas.getBoundingClientRect();
+    return [(event.clientX - box.left) * SIZE / box.width, (event.clientY - box.top) * SIZE / box.height];
+  }
+  function onPointerDown(event) {
+    if (!settings.grabBalls) return;
+    pointer = toStagePoint(event);
+    for (const ball of balls) {
+      if (distance([ball.position.x, ball.position.y], pointer) < radius * 1.4) held = ball;
+    }
+    if (held) canvas.setPointerCapture(event.pointerId); // Keep the ball even if the mouse leaves
+  }
+  function onPointerMove(event) {
+    if (held) pointer = toStagePoint(event);
+  }
+  function onPointerUp() {
+    held = null;
+  }
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerup', onPointerUp);
+
   // ---- Start ----
   putOnStage(await prepareBowl(findBowl(state.bowlId)));
-  refill();
+  refill(); // Pegs come after, so rebuilding the pile doesn't gamble again
+  setPegs();
 
   const dropTimer = setInterval(() => {
     const open = phase === 'filling' || phase === 'returning';
@@ -1530,10 +1763,13 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       stopped = true;
       clearInterval(dropTimer);
       clearInterval(stepTimer);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
       context.clearRect(0, 0, SIZE, SIZE);
     },
     // For checking what's happening, for example from the browser console.
-    info: () => ({ phase, inBowl: balls.size, falling: debris.size, dropped, limit: current.limit, bowl: current.bowl.name }),
+    info: () => ({ phase, inBowl: balls.size, falling: debris.size, dropped, limit: current.limit, bowl: current.bowl.name, pegs: pegs.length, bubbles: bubbles.length }),
     positions: () => [...balls].map((ball) => [Math.round(ball.position.x), Math.round(ball.position.y)]),
   };
 }
@@ -1764,7 +2000,8 @@ async function startOverlay() {
 // =====================================================================================
 const HINTS = {
   draw: 'Click to add points, or hold and draw. Drag a point to move it, click the line to add one, right-click a point to remove it. Drag the ball to set the drop point.',
-  move: 'Drag to place the picture. Use Bowl size to resize it.',
+  move: 'Drag to place the pictures. Choose below whether all layers move, or just one. Bowl size resizes them.',
+  pegs: 'Click to add a peg, drag one to move it, right-click one to remove it. Turn pegs on in Gambling mode.',
 };
 // [setting, label, lowest, highest, step]
 const BOWL_SLIDERS = [
@@ -1780,6 +2017,10 @@ const SHARED_SLIDERS = [
 const BREAK_SLIDERS = [
   ['shards', 'Shards', 2, 16, 1],
   ['returnSeconds', 'Comes back after (seconds)', 1, 15, 0.5],
+];
+const PEG_SLIDERS = [
+  ['pegSize', 'Peg size', 6, 50, 1],
+  ['pegBounce', 'Peg bounce', 0, 1.2, 0.05],
 ];
 const FUN_SLIDERS = [
   ['volume', 'Sound volume (0 = off)', 0, 1, 0.05],
@@ -1822,21 +2063,55 @@ async function measurePictures() {
   const setSource = (element, attribute, source) => {
     if (element.getAttribute(attribute) !== source) element.setAttribute(attribute, source || '');
   };
-  setSource(byId('ball-preview'), 'src', activeSettings.pictures.ball);
-  setSource(byId('drop-ball'), 'href', activeSettings.pictures.ball);
+  setSource(byId('drop-ball'), 'href', activeSettings.pictures[activeSettings.ballPictures[0]]);
+}
+
+// Puts a picture layer on the editing layer, at its place, or hides it.
+function renderLayer(element, preview, id, dx, dy) {
+  const bowl = currentBowl();
+  const source = activeSettings.pictures[id] || '';
+  if (element.getAttribute('href') !== source) element.setAttribute('href', source);
+  if (preview.getAttribute('src') !== source) preview.setAttribute('src', source);
+  element.setAttribute('x', bowl.x + dx);
+  element.setAttribute('y', bowl.y + dy);
+  element.setAttribute('width', bowl.width);
+  element.setAttribute('height', source ? bowl.width * (pictureShapes.get(id) || 1) : 0);
+}
+
+// The ball pictures as small buttons. Clicking one removes it (one always stays).
+function renderBallPictures() {
+  byId('ball-pictures').replaceChildren(...activeSettings.ballPictures.map((id, index) => {
+    const button = document.createElement('button');
+    button.title = 'Remove this ball picture';
+    button.innerHTML = '<img alt=""><span>×</span>';
+    button.querySelector('img').src = activeSettings.pictures[id] || '';
+    button.addEventListener('click', () => {
+      if (activeSettings.ballPictures.length < 2) return setStatus('Keep at least one ball picture');
+      activeSettings.ballPictures.splice(index, 1);
+      measurePictures().then(refreshControls);
+      saveNow();
+    });
+    return button;
+  }));
 }
 
 // Draws the editing layer: picture, outline, points and drop point.
 function render() {
   const bowl = currentBowl();
-  const source = activeSettings.pictures[bowl.picture] || '';
-  const image = byId('bowl');
-  if (image.getAttribute('href') !== source) image.setAttribute('href', source);
-  if (byId('bowl-preview').getAttribute('src') !== source) byId('bowl-preview').setAttribute('src', source);
-  image.setAttribute('x', bowl.x);
-  image.setAttribute('y', bowl.y);
-  image.setAttribute('width', bowl.width);
-  image.setAttribute('height', bowl.width * (pictureShapes.get(bowl.picture) || 1));
+  renderLayer(byId('bowl'), byId('back-preview'), bowl.picture, 0, 0);
+  renderLayer(byId('bowl-depth'), byId('depth-preview'), bowl.depth, bowl.depthX, bowl.depthY);
+  renderLayer(byId('bowl-front'), byId('front-preview'), bowl.front, bowl.frontX, bowl.frontY);
+
+  byId('pegs').classList.toggle('off', !activeSettings.gambling);
+  byId('pegs').replaceChildren(...bowl.pegs.map(([x, y], index) => {
+    const peg = document.createElementNS(SVG_NS, 'circle');
+    peg.setAttribute('cx', x);
+    peg.setAttribute('cy', y);
+    peg.setAttribute('r', activeSettings.pegSize / 2);
+    peg.setAttribute('fill', activeSettings.pegColor);
+    peg.dataset.peg = index;
+    return peg;
+  }));
 
   byId('outline').setAttribute('points', bowl.outline.join(' '));
   byId('handles').replaceChildren(...bowl.outline.map(([x, y], index) => {
@@ -1895,6 +2170,8 @@ function refreshControls() {
   byId('cycle').checked = activeSettings.cycleBowls;
   for (const box of document.querySelectorAll('[data-check]')) box.checked = activeSettings[box.dataset.check];
   for (const picker of document.querySelectorAll('[data-color]')) picker.value = activeSettings[picker.dataset.color];
+  for (const box of document.querySelectorAll('[data-bowl-check]')) box.checked = bowl[box.dataset.bowlCheck];
+  renderBallPictures();
   byId('break-command').value = activeSettings.breakCommandId;
   renderBowlList();
   updateResetHint();
@@ -1948,7 +2225,8 @@ function saveNow() {
 
 // ---- Drawing the outline and moving things ----
 function remember() {
-  history.push(JSON.stringify(currentBowl().outline));
+  const { outline, pegs } = currentBowl();
+  history.push(JSON.stringify({ outline, pegs }));
 }
 
 // Where a new point belongs: the stretch of line it adds the least length to.
@@ -1974,11 +2252,25 @@ function startDrag(event) {
       bowl.dropY = y;
     };
   } else if (mode === 'move') {
-    const offsetX = point[0] - bowl.x;
-    const offsetY = point[1] - bowl.y;
+    // Moves the whole bowl, or pulls just one layer away (its offset from the back picture).
+    const what = byId('move-what').value;
+    const keyX = { all: 'x', front: 'frontX', depth: 'depthX' }[what];
+    const keyY = { all: 'y', front: 'frontY', depth: 'depthY' }[what];
+    const offsetX = point[0] - bowl[keyX];
+    const offsetY = point[1] - bowl[keyY];
     drag = ([x, y]) => {
-      bowl.x = x - offsetX;
-      bowl.y = y - offsetY;
+      bowl[keyX] = x - offsetX;
+      bowl[keyY] = y - offsetY;
+    };
+  } else if (mode === 'pegs') {
+    remember();
+    let index = target.dataset.peg === undefined ? -1 : Number(target.dataset.peg);
+    if (index < 0) {
+      bowl.pegs.push(point); // A click on empty space adds a peg
+      index = bowl.pegs.length - 1;
+    }
+    drag = (position) => {
+      bowl.pegs[index] = position;
     };
   } else if (target.dataset.index !== undefined) {
     remember();
@@ -2005,6 +2297,13 @@ function startDrag(event) {
 
 function removePoint(event) {
   event.preventDefault();
+  if (mode === 'pegs' && event.target.dataset.peg !== undefined) {
+    remember();
+    currentBowl().pegs.splice(Number(event.target.dataset.peg), 1);
+    render();
+    saveSoon();
+    return;
+  }
   if (event.target.dataset.index === undefined || mode !== 'draw') return;
   remember();
   currentBowl().outline.splice(Number(event.target.dataset.index), 1);
@@ -2015,8 +2314,11 @@ function removePoint(event) {
 function setMode(next) {
   mode = next;
   byId('editor-stage').classList.toggle('moving', mode === 'move');
+  byId('editor-stage').classList.toggle('pegging', mode === 'pegs');
   byId('draw-mode').classList.toggle('active', mode === 'draw');
   byId('move-mode').classList.toggle('active', mode === 'move');
+  byId('peg-mode').classList.toggle('active', mode === 'pegs');
+  byId('move-what').hidden = mode !== 'move';
   byId('hint').textContent = HINTS[mode];
 }
 
@@ -2034,26 +2336,71 @@ async function pictureToText(file, maxSide) {
   return webp.startsWith('data:image/webp') && webp.length < png.length ? webp : png;
 }
 
-async function uploadPicture(kind, file) {
-  if (!file) return;
+// Adds one picture to the settings and gives back its new id.
+async function addPicture(file, maxSide) {
+  const id = newId('picture');
+  activeSettings.pictures[id] = await pictureToText(file, maxSide);
+  return id;
+}
+
+// Several pictures chosen at once for a bowl: names with "front", "back" or "depth" go to that
+// layer; the rest fill Back, Front, then Depth, in order.
+function sortLayers(files) {
+  const named = (...words) => files.find((file) => words.some((word) => file.name.toLowerCase().includes(word)));
+  const layers = { picture: named('back'), front: named('front'), depth: named('depth', 'shadow', 'inside') };
+  const rest = files.filter((file) => !Object.values(layers).includes(file));
+  for (const layer of ['picture', 'front', 'depth']) if (!layers[layer]) layers[layer] = rest.shift();
+  return layers;
+}
+
+async function uploadBowlPictures(layer, files) {
+  if (!files.length) return;
   setStatus('Saving…');
-  let text;
+  const bowl = currentBowl();
+  const layers = files.length > 1 ? sortLayers(files) : { [layer]: files[0] };
   try {
-    text = await pictureToText(file, kind === 'ball' ? MAX_BALL_PICTURE : MAX_PICTURE);
+    for (const [key, file] of Object.entries(layers)) if (file) bowl[key] = await addPicture(file, MAX_PICTURE);
   } catch {
     setStatus("That file isn't a picture");
     return;
   }
-  if (kind === 'ball') {
-    activeSettings.pictures.ball = text;
-  } else {
-    const id = newId('picture');
-    activeSettings.pictures[id] = text;
-    currentBowl().picture = id;
+  if (files.length > 1) lineUpLayers(bowl);
+  await measurePictures();
+  refreshControls();
+  saveNow();
+}
+
+async function uploadBallPictures(files) {
+  setStatus('Saving…');
+  try {
+    for (const file of files) activeSettings.ballPictures.push(await addPicture(file, MAX_BALL_PICTURE));
+  } catch {
+    setStatus("That file isn't a picture");
+    return;
   }
   await measurePictures();
   refreshControls();
   saveNow();
+}
+
+// Puts every layer back exactly over the back picture.
+function lineUpLayers(bowl) {
+  bowl.frontX = bowl.frontY = bowl.depthX = bowl.depthY = 0;
+}
+
+// A Plinko-style triangle of pegs between the drop point and the rim.
+function pegPattern(bowl) {
+  const rows = 5;
+  const gap = Math.max(50, activeSettings.ballSize * 2.2); // Room for a ball between pegs
+  const top = bowl.dropY + 80;
+  const bottom = rimHeight(bowl.outline) - 60;
+  const step = Math.max(gap * 0.8, (bottom - top) / (rows - 1));
+  bowl.pegs = [];
+  for (let row = 0; row < rows; row++) {
+    for (let i = 0; i <= row + 1; i++) {
+      bowl.pegs.push([Math.round(bowl.dropX + (i - (row + 1) / 2) * gap), Math.round(top + row * step)]);
+    }
+  }
 }
 
 // ---- The test view ----
@@ -2314,6 +2661,7 @@ async function startEditor() {
   buildSliders('shared-sliders', SHARED_SLIDERS, 'shared');
   buildSliders('break-sliders', BREAK_SLIDERS, 'shared');
   buildSliders('fun-sliders', FUN_SLIDERS, 'shared');
+  buildSliders('peg-sliders', PEG_SLIDERS, 'shared');
   setMode('draw');
   refreshControls();
   setStatus(storedIsNewer ? 'Loaded your edits from this browser' : 'Ready');
@@ -2333,9 +2681,10 @@ async function startEditor() {
   });
   byId('draw-mode').addEventListener('click', () => setMode('draw'));
   byId('move-mode').addEventListener('click', () => setMode('move'));
+  byId('peg-mode').addEventListener('click', () => setMode('pegs'));
   byId('undo').addEventListener('click', () => {
     if (!history.length) return;
-    currentBowl().outline = JSON.parse(history.pop());
+    Object.assign(currentBowl(), JSON.parse(history.pop())); // Outline and pegs as they were
     render();
     saveSoon();
   });
@@ -2358,12 +2707,51 @@ async function startEditor() {
   });
 
   // Pictures
-  for (const kind of ['bowl', 'ball']) {
-    byId(kind + '-file').addEventListener('change', (event) => {
-      uploadPicture(kind, event.target.files[0]);
-      event.target.value = ''; // So the same file can be chosen again after editing it.
+  for (const input of document.querySelectorAll('[data-layer]')) {
+    input.addEventListener('change', () => {
+      uploadBowlPictures(input.dataset.layer, [...input.files]);
+      input.value = ''; // So the same file can be chosen again after editing it.
     });
   }
+  byId('ball-file').addEventListener('change', (event) => {
+    uploadBallPictures([...event.target.files]);
+    event.target.value = '';
+  });
+  byId('remove-front').addEventListener('click', () => {
+    currentBowl().front = '';
+    render();
+    saveNow();
+  });
+  byId('remove-depth').addEventListener('click', () => {
+    currentBowl().depth = '';
+    render();
+    saveNow();
+  });
+  byId('line-up').addEventListener('click', () => {
+    lineUpLayers(currentBowl());
+    render();
+    saveNow();
+  });
+  for (const box of document.querySelectorAll('[data-bowl-check]')) {
+    box.addEventListener('change', () => {
+      currentBowl()[box.dataset.bowlCheck] = box.checked;
+      saveSoon();
+    });
+  }
+
+  // Gambling mode
+  byId('peg-pattern').addEventListener('click', () => {
+    remember();
+    pegPattern(currentBowl());
+    render();
+    saveNow();
+  });
+  byId('clear-pegs').addEventListener('click', () => {
+    remember();
+    currentBowl().pegs = [];
+    render();
+    saveNow();
+  });
 
   // Settings that aren't sliders
   byId('break-mode').addEventListener('change', () => {
@@ -2389,12 +2777,14 @@ async function startEditor() {
   for (const box of document.querySelectorAll('[data-check]')) {
     box.addEventListener('change', () => {
       activeSettings[box.dataset.check] = box.checked;
+      render();
       saveSoon();
     });
   }
   for (const picker of document.querySelectorAll('[data-color]')) {
     picker.addEventListener('change', () => {
       activeSettings[picker.dataset.color] = picker.value;
+      render();
       saveSoon();
     });
   }
