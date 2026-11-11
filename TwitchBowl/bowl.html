@@ -268,20 +268,16 @@
         <button id="export">Export settings</button>
         <button id="import">Import settings</button>
       </div>
-      <p class="hint" id="source-hint"></p>
-      <button id="use-file-settings" class="wide" hidden="">Use this file's settings instead</button>
+      <p class="hint">Your edits are kept in this browser. Copy or download again after changing things.</p>
     </section>
 
     <section>
       <h2>Mix It Up</h2>
-      <label class="check"><input id="widget-events" type="checkbox"> Count the widget's events (Follows, Subscriptions, Bits, Chat Messages)</label>
       <label class="setting" style="grid-template-columns: 1fr">
         <span>When the bowl breaks, run this Mix It Up command (optional)</span>
         <input id="break-command" type="text" placeholder="Command ID" spellcheck="false">
       </label>
-      <button id="find-commands" class="wide" style="margin-top: 0">Find my commands</button>
-      <select id="command-list" class="wide" hidden=""></select>
-      <p class="hint">Running a command needs Mix It Up's Developer API service. See MIXITUP_SETUP.md.</p>
+      <p class="hint">Needs Mix It Up's Developer API service. MIXITUP_SETUP.md, step 4, shows how to find a command's ID.</p>
     </section>
 
     <section>
@@ -320,11 +316,45 @@
  "shards": 7,
  "returnSeconds": 3,
  "cycleBowls": false,
- "widgetEvents": true,
  "breakCommandId": "",
  "emptyToken": "",
  "emptyArmed": false,
  "liveBowlId": "bowl1",
+ "widgetEvents": true,
+ "bowls": [
+  {
+   "id": "bowl1",
+   "name": "Bowl 1",
+   "picture": "starter",
+   "x": 80,
+   "y": 420,
+   "width": 640,
+   "outline": [
+    [104, 420],
+    [110, 486],
+    [127, 549],
+    [154, 607],
+    [191, 658],
+    [236, 699],
+    [287, 730],
+    [342, 750],
+    [400, 756],
+    [458, 750],
+    [513, 730],
+    [564, 699],
+    [609, 658],
+    [646, 607],
+    [673, 549],
+    [690, 486],
+    [696, 420]
+   ],
+   "dropX": 400,
+   "dropY": 30,
+   "dropWidth": 296,
+   "breakMode": "count",
+   "breakAt": null
+  }
+ ],
  "pictures": {
   "ball": [
    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAxUSURBVHhe7Z1dbFxHFcf72Dd4cHa9e++ubawkBaLwQqUK8YIigVQJqZWQipCohFSEhIRUJNQHFKmQxNn4Y+39cpxPJWmVFIJKCuEhggoqCooAlQIljT82u94PbzY2ruOmTZoPZ9F/Yds7/3vXu7b3487uOdLvxb47u3fOmZkzZ87MPPKIiIiISFdI6cIX+v9zbPDZ4uG+56uxeGTwudKvdz3GnxXRRG6e2P7NxSPBvbmY+XouZk6nRn0rsyFP6d19PRtmZshTSo/6VnMRM5WLGG8sHRvYBwPh7xRpoxSPDj61kAiez4T9hZmDnoesxGZw9UAPDGM5Fw1cKsaDYhCtlNIf+h4tJAKxdNifmQl51lg5bWF/z8P0qK+Yj5pnCon+Pv7NIg0QjM+ZiDk9fWDzrRxdembcqMlmh4wKMM6FeGCM30Fkg1KcHNidjZiXZ0Pe+1zJ6wElXp/sKy0eHSh9eHZn6d75z5dKr+3eMPd/sav8+eUTg6XFIwPlcmFE/H3VmB7yrGUmjCs3Ep/5Mr+byDoCxWcmjL9f3W+vVCegmIqyWYnN4M4rny0bRS5i1m0Q8+PGXC7S9yS/q4hFCpPm4+mwcaWW4lHpaOG3Xm6NwmsBg4ABzh3qtf1WJj3my12f7H+G372r5dpxjxddPVeWFXje+Vig9P5LO2wKcBO3zz5WNs5aPQMMAT0d10XXyUIi8NOZg9W9eThk6G4fvLrLVtluZ/X09lJq1Gd7pwpwaLNR8yLXSVcIHKPUaO8SV0oFdKfvnRwsPfylvWJ1A73WeoaQHPbe7qp4Qj4auFBtnEeLXzm13VaJnUAtQ8AwuHKq79NcXx0jCJKkx/wFfvEKmGp1QouvBY",
@@ -374,41 +404,7 @@
    "jJ3JozXfuzebUz475OkiRJkiR99ezAAfOq55TMq+komVtzPi6uAfqVuTXnBs6tac/2W57lJ0mSJEnSVdR1u3D2ZuF5NacLFt4A11nJvJrOrtt6s8cYeGOvJEmSJEk9W/bQ/K7bhefWthgIAtfRxwPnVjcPmF/9QNwvSZIkSZKkXsxAEOhpX1/hN6+m8ZbK2mlxvyNJkiRJkvq47Aqd7EqdgfOqPh44r/oCwHcpmVt1vmRe1amB86oab6lcaOAnSZIkSVJqGQgCf+nrgV9ldU32jNG4z5AkSZIkSYmXXeHT9fD+uVXtJXOrP4vDASB3TpfMq2otrax6euCCBV7aIUmSJElSsVVRXX3jgNe/ukqwsvqjksqq8wPnVl8A0pMN9UvmVndkQ36380qSJEmSpG9twOvVQ7KrhUrmVrUOnFt9Og4ZgL53cVhf1fV23pJ5C2dmw/z4XZYkSZIkSbrsvr51uLK67auhQ8FAAugdl4Z9JXOrW7pu5X3NrbySJEmSJOk6lL1AoGsYkd0+nA0FK6vPxcEFcKWqzma341+6si+7Ijd+9yRJkiRJkvqsv3ymYPYsspLKqjOFAw4gc/H7UdU+sLKqMfveuI1XkiRJkiQlW3YL8YDXq+f8xctGDAYpGl1v3P7qqr7se+AFHZIkSZIkqWjKbiPuus2x64rBqvaSuVUfD5hb3VlycWgCybj4uc2e01fV3vV5nrdwZvb5jp95SZIkSZIk/eAHP7h53rySrluJK6trshcffDVYORuHLnD9ZZ/Diy/kyD6f2ec0+7zGz7AkSZIkSZKusuwNqNnQpWRuVeWAuQubSyqrTl28crAquwIrG9DA1ausOndxwLewI/t8DXh9wZzs8+ZlHJIkSZIkSf2kruHga9nbUxdmtxW3llRWfTygsuqzksqu4Q5FbkBlVedXn4mPss/IwMqFXVfxuV1XkiRJkiQpJ331QpIHBlRWPZ0NgLoGhdlVhJVVH5e8XnU6DoxIw6XB3s",
    "Xh3sK2rm371dt13aYrSZIkSZKkgi7danzRxUHhV8PCriHTRQvPxkEUPWnhmT8P9S5esWewJ0mSJEmSpD6p4le/uuHPA8PsNuSqyq+Hhl/dihx9ddVaN4Ov9H1123U3f+avrs772p9/ZtnQNf5cJUmSdPX9/wEyYaACUIE+bAAAAABJRU5ErkJggg=="
   ]
- },
- "bowls": [
-  {
-   "id": "bowl1",
-   "name": "Bowl 1",
-   "picture": "starter",
-   "x": 80,
-   "y": 420,
-   "width": 640,
-   "outline": [
-    [104, 420],
-    [110, 486],
-    [127, 549],
-    [154, 607],
-    [191, 658],
-    [236, 699],
-    [287, 730],
-    [342, 750],
-    [400, 756],
-    [458, 750],
-    [513, 730],
-    [564, 699],
-    [609, 658],
-    [646, 607],
-    [673, 549],
-    [690, 486],
-    [696, 420]
-   ],
-   "dropX": 400,
-   "dropY": 30,
-   "dropWidth": 296,
-   "breakMode": "count",
-   "breakAt": null
-  }
- ]
+ }
 }
 </script>
 
@@ -690,7 +686,6 @@ const SHARED_DEFAULTS = {
   shards: 7,
   returnSeconds: 3,
   cycleBowls: false,
-  widgetEvents: true,
   breakCommandId: '',
   emptyToken: '',
   emptyArmed: false,
@@ -764,45 +759,22 @@ function writeStorage(key, value) {
 // 3. SETTINGS: READING, CHECKING AND WRITING THEM
 // =====================================================================================
 
-// Turns anything into the same kind of value as the example, or gives back the example.
-function sameKind(value, example) {
-  if (typeof example === 'number') {
-    const number = Number(value);
-    return Number.isFinite(number) ? number : example;
-  }
-  if (typeof example === 'boolean') return value === true || value === 'true';
-  return value === null || value === undefined ? example : String(value);
-}
-
+// Fills in anything missing with the defaults, so settings from an older copy still work.
 function normalizeBowl(raw) {
-  raw = raw && typeof raw === 'object' ? raw : {};
-  const bowl = {};
-  for (const key of Object.keys(BOWL_DEFAULTS)) {
-    bowl[key] = key in raw ? sameKind(raw[key], BOWL_DEFAULTS[key]) : BOWL_DEFAULTS[key];
-  }
+  const bowl = { ...BOWL_DEFAULTS, ...raw };
   bowl.id = bowl.id || newId('bowl');
-  bowl.outline = (Array.isArray(raw.outline) ? raw.outline : STARTER_OUTLINE)
-    .map((point) => [Number(point[0]), Number(point[1])])
-    .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
-  if (!['count', 'auto', 'off'].includes(bowl.breakMode)) bowl.breakMode = 'count';
-  const breakAt = Math.round(Number(raw.breakAt));
-  bowl.breakAt = breakAt > 0 ? breakAt : null;
+  bowl.outline = copyOf(bowl.outline); // Its own copy, so drawing never changes the defaults
   return bowl;
 }
 
 function normalizeSettings(raw) {
-  raw = raw && typeof raw === 'object' ? raw : {};
-  const settings = {};
-  for (const key of Object.keys(SHARED_DEFAULTS)) {
-    settings[key] = key in raw ? sameKind(raw[key], SHARED_DEFAULTS[key]) : SHARED_DEFAULTS[key];
-  }
+  const settings = { ...SHARED_DEFAULTS, ...raw };
   // Pictures may be written as one long text or as a list of short lines.
   settings.pictures = {};
-  for (const [id, data] of Object.entries(raw.pictures || {})) {
-    const text = Array.isArray(data) ? data.join('') : String(data);
-    if (text.startsWith('data:image/')) settings.pictures[id] = text;
+  for (const [id, data] of Object.entries((raw && raw.pictures) || {})) {
+    settings.pictures[id] = Array.isArray(data) ? data.join('') : data;
   }
-  settings.bowls = (Array.isArray(raw.bowls) ? raw.bowls : []).map(normalizeBowl);
+  settings.bowls = ((raw && raw.bowls) || []).map(normalizeBowl);
   if (!settings.bowls.length) settings.bowls.push(normalizeBowl({ id: 'bowl1', name: 'Bowl 1' }));
   if (!settings.bowls.some((bowl) => bowl.id === settings.liveBowlId)) {
     settings.liveBowlId = settings.bowls[0].id;
@@ -872,7 +844,9 @@ function settingsFromText(text) {
     const start = text.indexOf('>', marker) + 1;
     text = text.slice(start, text.indexOf('</' + 'script>', start));
   }
-  return normalizeSettings(JSON.parse(text));
+  const raw = JSON.parse(text);
+  if (!Array.isArray(raw.bowls)) throw new Error('No bowls in this text');
+  return normalizeSettings(raw);
 }
 
 // =====================================================================================
@@ -1453,38 +1427,31 @@ function breakBowl() {
 
 // ---- Events Mix It Up sends by itself when the widget's event boxes are ticked ----
 // The names are fixed by Mix It Up. Each one gets a "data" object about the event.
-// They only count if "Count the widget's events" is on in the editor.
-function widgetEventsOn() {
-  return !activeSettings || activeSettings.widgetEvents;
-}
-
+// Untick a box in Mix It Up and that event stops adding balls.
 function Follow(data) {
-  if (!widgetEventsOn()) return;
   const user = (data && data.User) || {};
   addFollower(user.Username || user.DisplayName || '');
 }
 
 function Subscription() {
-  if (widgetEventsOn()) addBalls(1); // New subs and resubs shared in chat
+  addBalls(1); // New subs and resubs shared in chat
 }
 
 function SubscriptionGifted() {
-  if (widgetEventsOn()) addBalls(1); // One gifted sub
+  addBalls(1); // One gifted sub
 }
 
 function MassSubscriptionGifted(data) {
-  if (!widgetEventsOn()) return;
   const amount = toWholeNumber((data && data.Amount) || (data && data.Users && data.Users.length) || 0);
   addBalls(amount > 0 ? amount : 1);
 }
 
 function TwitchBits(data) {
-  if (widgetEventsOn()) addBits((data && data.Amount) || 0);
+  addBits((data && data.Amount) || 0);
 }
 
 // Mix It Up counts every chatter's messages. A count of exactly 1 means this is their first one.
 function ChatMessageReceived(data) {
-  if (!widgetEventsOn()) return;
   const user = (data && data.User) || {};
   if (Number(user.TotalChatMessageSent) === 1) {
     note('First-time chatter: ' + (user.Username || 'someone'));
@@ -1579,7 +1546,6 @@ const BREAK_SLIDERS = [
 ];
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-let fileSettings = null; // The settings written in this file
 let editingId = ''; // The bowl being edited
 let mode = 'draw';
 let drag = null;
@@ -1687,11 +1653,9 @@ function refreshControls() {
   byId('break-at').value = bowl.breakAt || '';
   byId('bits').value = activeSettings.bitsPerBall;
   byId('cycle').checked = activeSettings.cycleBowls;
-  byId('widget-events').checked = activeSettings.widgetEvents;
   byId('break-command').value = activeSettings.breakCommandId;
   renderBowlList();
   updateResetHint();
-  updateSourceHint();
   render();
 }
 
@@ -1737,16 +1701,7 @@ function saveNow() {
   activeSettings.savedAt = Date.now();
   const saved = writeStorage(STORAGE.settings, tidySettings(activeSettings));
   setStatus(saved ? 'Saved' : "Couldn't save in this browser (pictures too big?). Use Save a copy now.");
-  updateSourceHint();
   if (testing) startTest();
-}
-
-function updateSourceHint() {
-  const newer = activeSettings.savedAt > fileSettings.savedAt;
-  byId('source-hint').textContent = newer
-    ? 'Your edits are saved in this browser. To use them on stream, download the widget or copy it again.'
-    : 'These are the settings written in this file.';
-  byId('use-file-settings').hidden = !newer;
 }
 
 // ---- Drawing the outline and moving things ----
@@ -2079,26 +2034,6 @@ async function useSettings(settings) {
   refreshControls();
 }
 
-async function findCommands() {
-  setStatus('Asking Mix It Up…');
-  let commands;
-  try {
-    const response = await fetch(MIX_IT_UP_API + '?pageSize=1000');
-    const data = await response.json();
-    commands = data.Commands || data;
-  } catch {
-    setStatus("Couldn't reach Mix It Up. Is it running, with the Developer API service connected?");
-    return;
-  }
-  const list = byId('command-list');
-  const choose = new Option('Choose the command to run…', '');
-  list.replaceChildren(choose, ...commands
-    .sort((a, b) => String(a.Name).localeCompare(String(b.Name)))
-    .map((command) => new Option(command.Name + ' (' + command.Type + ')', command.ID)));
-  list.hidden = false;
-  setStatus('Found ' + commands.length + ' commands');
-}
-
 // ---- Building the panel ----
 function buildSliders(container, list, scope) {
   for (const [key, label, min, max, step] of list) {
@@ -2126,11 +2061,11 @@ async function startEditor() {
   byId('panel').hidden = false;
   byId('editor-stage').removeAttribute('hidden'); // SVG has no .hidden, so the attribute is used
 
-  // Edits made in this browser win, unless this file was saved more recently.
-  fileSettings = readFileSettings();
+  // Edits saved in this browser win, unless this file was saved more recently.
+  const fileSettings = readFileSettings();
   const stored = readStorage(STORAGE.settings);
-  const storedIsNewer = stored && Number(stored.savedAt) > fileSettings.savedAt;
-  await useSettings(storedIsNewer ? normalizeSettings(stored) : copyOf(fileSettings));
+  const storedIsNewer = stored && stored.savedAt > fileSettings.savedAt;
+  await useSettings(storedIsNewer ? normalizeSettings(stored) : fileSettings);
 
   buildSliders('bowl-sliders', BOWL_SLIDERS, 'bowl');
   buildSliders('shared-sliders', SHARED_SLIDERS, 'shared');
@@ -2207,19 +2142,8 @@ async function startEditor() {
     activeSettings.cycleBowls = byId('cycle').checked;
     saveSoon();
   });
-  byId('widget-events').addEventListener('change', () => {
-    activeSettings.widgetEvents = byId('widget-events').checked;
-    saveSoon();
-  });
   byId('break-command').addEventListener('change', () => {
     activeSettings.breakCommandId = byId('break-command').value.trim();
-    saveSoon();
-  });
-  byId('find-commands').addEventListener('click', findCommands);
-  byId('command-list').addEventListener('change', () => {
-    if (!byId('command-list').value) return;
-    activeSettings.breakCommandId = byId('command-list').value;
-    byId('break-command').value = activeSettings.breakCommandId;
     saveSoon();
   });
 
@@ -2249,11 +2173,6 @@ async function startEditor() {
   byId('export').addEventListener('click', exportSettings);
   byId('import').addEventListener('click', importSettings);
   byId('dialog-close').addEventListener('click', () => byId('text-dialog').close());
-  byId('use-file-settings').addEventListener('click', async () => {
-    if (!confirm("Throw away the edits saved in this browser and use this file's settings?")) return;
-    await useSettings(copyOf(fileSettings));
-    saveNow();
-  });
 
   // The real bowl
   byId('reset').addEventListener('click', () => {
