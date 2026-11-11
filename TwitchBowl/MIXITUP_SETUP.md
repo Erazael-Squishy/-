@@ -40,6 +40,8 @@ Skip this to use the starter bowl.
 
 ### Make the widget file
 
+`Twitch Bowl.miuoverlay` in this folder is ready to import with the starter bowl. To use your own bowl instead:
+
 1. In the Bowl Editor, press **Download Mix It Up widget**.
 2. You get `Twitch Bowl.miuoverlay` in your Downloads folder. It holds the whole bowl: pictures, settings and code. **You can send this file to anyone**, and they can follow these same steps.
 
