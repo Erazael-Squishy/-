@@ -1,6 +1,6 @@
 # Twitch Bowl: setting it up in Mix It Up and OBS
 
-*Version 3: gambling mode (pegs), grabbing balls, layered bowl pictures and several ball pictures, on top of version 2's names, colours, shaking, sounds, bubbles and counter. See "Extras" at the end.*
+*Version 4: pictures per event, leaf mode (balls drip from a leaf as water droplets), gambling for chosen events with a live on/off command, and gambling walls. Plus everything from versions 2 and 3: names, colours, shaking, sounds, bubbles, counter, pegs, grabbing balls and layered bowls. See "Extras" at the end.*
 
 The bowl is one file, `bowl.html`. Mix It Up shows it on stream and tells it when to add balls. Nothing logs into Twitch, and nothing needs installing.
 
@@ -119,6 +119,7 @@ These work with either setup. In Mix It Up, open **Commands** (left menu) → **
 | `!breakbowl` | `breakBowl` | none | Mod |
 | `!addballs` | `addBalls` | `count` = `$arg1text` | Mod |
 | `!shake` | `shakeBowl` | none, or `strength` = `1` to `3` | Anyone (give it a cooldown!) |
+| `!gamble` | `setGambling` | none (switches it on/off), or `on` = `on` / `off` | Mod |
 
 Make each one with **Add Action** → **Overlay** → **Run Widget Function** → **Widget** `Twitch Bowl`, as above. Set the permission to **Mod** so viewers can't use them. `!addballs 10` adds 10 balls, which is handy for testing.
 
@@ -198,11 +199,17 @@ All of these are in the Bowl Editor, and work with both setups:
 | Gambling mode | Pegs on the stage that balls bounce off on the way down, so some miss the bowl. Misses are lost | *Gambling mode*: the on/off switch, peg size, bounce and colour, *Peg pattern*. Place pegs with the *Place pegs* tool |
 | Grab balls | Click a ball and drag it, or throw it out of the bowl. A ball that leaves the stage comes off the count | *Let me grab balls with the mouse*. On stream: right-click the source in OBS → **Interact** |
 | Ball pictures | Several pictures; each ball uses one | *Add ball pictures* (choose several at once); click one to remove it |
+| Pictures per event | Subs, bits, follows and first chats can each have their own ball pictures (say, a star for subs, gems for bits). Others use the shared pictures, coloured by event | *Ball pictures* → *Pictures for* |
+| Leaf mode | A leaf hangs at the drop point; each ball forms at its tip as a water droplet (with the ball inside), drips, swings the leaf and splashes when it lands | *Leaf mode* under Fun, *Leaf size*, *Change leaf*. *Move picture* → *Move only the leaf* puts a custom leaf's tip on the drop marker |
+| Gamble for some events | Only the ticked kinds bounce off pegs and walls; the rest fall straight into the bowl | The tick boxes under *Gambling mode*. Live: the `!gamble` command (Step 3) |
+| Gambling walls | Straight walls you draw (side rails, funnels) that gambling balls bounce off, to keep misses fair | *Draw walls* tool under Bowl shape; right-click a wall to remove it; *Clear walls* |
 | Bowl layers | A **Back** picture behind the balls, a **Front** picture in front of them (so balls look inside the bowl), and an optional **Depth** picture | The three boxes under *Bowl pictures*. Choose 2 or 3 files at once with *Back* and they're sorted by name ("front", "back", "depth"). They line up by themselves; *Move picture* → *Move only the front/depth picture* pulls them apart, *Line up* puts them back |
 
 **Since version 3, the count is always the balls you can see.** A ball that leaves the stage before its bowl breaks is gone for good: it missed (gambling mode), spilled, was shaken out or was dragged out.
 
-Coming from version 1 or 2? Your ball count and followers carry over. Just paste or import the new copy as in "Changing the bowl later".
+Coming from version 1, 2 or 3? Your ball count and followers carry over.
+
+**Art pack:** `Twitch Bowl Art.zip` (separate from this folder) has ready-made balls, layered bowls and leaves. Its README says which file goes where. Just paste or import the new copy as in "Changing the bowl later".
 
 ## What I checked, and what I couldn't
 

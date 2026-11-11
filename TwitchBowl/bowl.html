@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Twitch Bowl</title>
 <!--
-  TWITCH BOWL, version 3: the whole overlay and its editor in one file.
+  TWITCH BOWL, version 4: the whole overlay and its editor in one file.
 
   - Inside Mix It Up or OBS, it shows only the overlay: a bowl that fills with balls.
   - Opened straight from your computer in Chrome (double-click), it shows the editor.
@@ -70,8 +70,10 @@
   #drop-arrow { fill: var(--accent); }
   #drop-ball { clip-path: circle(50%); }
   #pegs circle { stroke: var(--accent); stroke-width: 3; cursor: grab; }
-  #pegs.off { opacity: 0.4; }
-  #editor-stage.pegging #handles, #editor-stage.pegging #outline { pointer-events: none; opacity: 0.5; }
+  #pegs.off, #bounds.off { opacity: 0.4; }
+  #bounds line { stroke-linecap: round; cursor: pointer; }
+  #leaf { opacity: 0.9; }
+  #editor-stage.pegging #handles, #editor-stage.pegging #outline, #editor-stage.walling #handles, #editor-stage.walling #outline { pointer-events: none; opacity: 0.5; }
   .thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .thumbs button { position: relative; width: 48px; height: 48px; padding: 4px; }
   .thumbs img { width: 100%; height: 100%; object-fit: contain; }
@@ -157,6 +159,8 @@
       <image id="bowl"></image>
       <image id="bowl-depth"></image>
       <image id="bowl-front"></image>
+      <image id="leaf"></image>
+      <g id="bounds"></g>
       <g id="pegs"></g>
       <polyline id="outline"></polyline>
       <g id="handles"></g>
@@ -217,12 +221,22 @@
       <label class="check" style="margin-top: 10px"><input type="checkbox" data-bowl-check="depthInFront"> Depth goes in front of the balls</label>
       <p class="hint">Back goes behind the balls, Front in front of them, Depth is an extra layer. Choose 2 or 3 pictures at once with Back: names with "front", "back" or "depth" are sorted by themselves. Layers line up by themselves; pull them apart with Move picture.</p>
       <h2 style="margin-top: 14px">Ball pictures</h2>
+      <label class="setting">
+        <span>Pictures for</span>
+        <select id="ball-for" style="width: auto">
+          <option value="all">All balls</option>
+          <option value="f">Follows</option>
+          <option value="s">Subs</option>
+          <option value="b">Bits</option>
+          <option value="c">First chats</option>
+        </select>
+      </label>
       <label class="picture">
         <span>Add ball pictures (choose several at once)</span>
         <input id="ball-file" type="file" accept="image/*" multiple="">
       </label>
       <div id="ball-pictures" class="thumbs"></div>
-      <p class="hint">Each ball uses one of these. Click one to remove it.</p>
+      <p class="hint" id="ball-hint"></p>
     </section>
 
     <section id="tools">
@@ -231,11 +245,13 @@
         <button id="draw-mode" class="active">Draw outline</button>
         <button id="move-mode">Move picture</button>
         <button id="peg-mode">Place pegs</button>
+        <button id="wall-mode">Draw walls</button>
       </div>
       <select id="move-what" class="wide">
         <option value="all">Move the whole bowl</option>
         <option value="front">Move only the front picture</option>
         <option value="depth">Move only the depth picture</option>
+        <option value="leaf">Move only the leaf</option>
       </select>
       <p class="hint" id="hint"></p>
       <div class="row">
@@ -279,18 +295,34 @@
 
     <section>
       <h2>Gambling mode</h2>
-      <label class="check"><input type="checkbox" data-check="gambling"> Pegs on: balls bounce off them and may miss the bowl</label>
+      <label class="check"><input type="checkbox" data-check="gambling"> Pegs and walls on: balls bounce off them and may miss the bowl</label>
+      <div class="row colors">
+        <label>Follows<input type="checkbox" data-gamble="f"></label>
+        <label>Subs<input type="checkbox" data-gamble="s"></label>
+        <label>Bits<input type="checkbox" data-gamble="b"></label>
+        <label>1st chat<input type="checkbox" data-gamble="c"></label>
+        <label>Others<input type="checkbox" data-gamble="x"></label>
+      </div>
+      <p class="hint" style="margin-top: 4px">Which balls gamble. The others fall straight through the pegs and walls.</p>
       <div id="peg-sliders"></div>
       <label class="setting"><span>Peg colour</span><input type="color" data-color="pegColor" style="width: 60px; height: 28px; padding: 0"></label>
       <div class="row">
         <button id="peg-pattern">Peg pattern</button>
         <button id="clear-pegs">Clear pegs</button>
+        <button id="clear-walls">Clear walls</button>
       </div>
-      <p class="hint">Place pegs with the "Place pegs" tool. Balls that miss the bowl are lost.</p>
+      <p class="hint">Place pegs with "Place pegs" and draw bounds with "Draw walls" (under Bowl shape). Balls that miss the bowl are lost.</p>
     </section>
 
     <section>
       <h2>Fun</h2>
+      <label class="check"><input type="checkbox" data-check="leafMode"> Leaf mode: balls drip from a leaf as water droplets</label>
+      <div id="leaf-sliders"></div>
+      <label class="picture" style="margin-bottom: 10px">
+        <img id="leaf-preview" alt="The leaf picture">
+        <span>Change leaf</span>
+        <input id="leaf-file" type="file" accept="image/*">
+      </label>
       <label class="check"><input type="checkbox" data-check="grabBalls"> Let me grab balls with the mouse (in OBS: Interact)</label>
       <label class="check"><input type="checkbox" data-check="showNames"> Show who sent each ball</label>
       <label class="check"><input type="checkbox" data-check="colorByEvent"> Colour balls by event</label>
@@ -405,10 +437,18 @@
  "ballPictures": [
   "ball"
  ],
+ "followPictures": [],
+ "subPictures": [],
+ "bitsPictures": [],
+ "chatPictures": [],
+ "leafMode": false,
+ "leafPicture": "leaf",
+ "leafSize": 160,
  "gambling": false,
  "pegSize": 16,
  "pegBounce": 0.6,
  "pegColor": "#ffffff",
+ "gambleKinds": "fsbcx",
  "widgetEvents": true,
  "bowls": [
   {
@@ -438,7 +478,7 @@
     [696, 420]
    ],
    "dropX": 400,
-   "dropY": 30,
+   "dropY": 140,
    "dropWidth": 296,
    "breakMode": "count",
    "breakAt": null,
@@ -449,7 +489,10 @@
    "frontY": 0,
    "depthX": 0,
    "depthY": 0,
-   "pegs": []
+   "pegs": [],
+   "bounds": [],
+   "leafX": 0,
+   "leafY": 0
   }
  ],
  "pictures": {
@@ -493,6 +536,22 @@
    "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"
+  ],
+  "leaf": [
+   "data:image/webp;base64,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"
   ],
   "ball": [
    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAxUSURBVHhe7Z1dbFxHFcf72Dd4cHa9e++ubawkBaLwQqUK8YIigVQJqZWQipCohFSEhIRUJNQHFKmQxNn4Y+39cpxPJWmVFIJKCuEhggoqCooAlQIljT82u94PbzY2ruOmTZoPZ9F/Yds7/3vXu7b3487uOdLvxb47u3fOmZkzZ87MPPKIiIiISFdI6cIX+v9zbPDZ4uG+56uxeGTwudKvdz3GnxXRRG6e2P7NxSPBvbmY+XouZk6nRn0rsyFP6d19PRtmZshTSo/6VnMRM5WLGG8sHRvYBwPh7xRpoxSPDj61kAiez4T9hZmDnoesxGZw9UAPDGM5Fw1cKsaDYhCtlNIf+h4tJAKxdNifmQl51lg5bWF/z8P0qK+Yj5pnCon+Pv7NIg0QjM+ZiDk9fWDzrRxdembcqMlmh4wKMM6FeGCM30Fkg1KcHNidjZiXZ0Pe+1zJ6wElXp/sKy0eHSh9eHZn6d75z5dKr+3eMPd/sav8+eUTg6XFIwPlcmFE/H3VmB7yrGUmjCs3Ep/5Mr+byDoCxWcmjL9f3W+vVCegmIqyWYnN4M4rny0bRS5i1m0Q8+PGXC7S9yS/q4hFCpPm4+mwcaWW4lHpaOG3Xm6NwmsBg4ABzh3qtf1WJj3my12f7H+G372r5dpxjxddPVeWFXje+Vig9P5LO2wKcBO3zz5WNs5aPQMMAT0d10XXyUIi8NOZg9W9eThk6G4fvLrLVtluZ/X09lJq1Gd7pwpwaLNR8yLXSVcIHKPUaO8SV0oFdKfvnRwsPfylvWJ1A73WeoaQHPbe7qp4Qj4auFBtnEeLXzm13VaJnUAtQ8AwuHKq79NcXx0jCJKkx/wFfvEKmGp1QouvBY",
@@ -749,7 +808,7 @@ const PAGE_SOURCE = '<!doctype html>\n' + document.documentElement.outerHTML;
 // =====================================================================================
 // 1. SETTINGS THAT NEVER CHANGE
 // =====================================================================================
-const { Body, Bodies, Composite, Engine, Sleeping } = Matter;
+const { Body, Bodies, Composite, Engine, Events, Sleeping } = Matter;
 
 const SIZE = 800; // The stage is 800 x 800, like the OBS source
 const TICK = 1000 / 60; // Milliseconds per physics step (60 steps a second)
@@ -773,6 +832,11 @@ const MIX_IT_UP_API = 'http://localhost:8911/api/v2/commands';
 const NAME_TIME = 240; // Steps a sender's name shows above their ball (4 seconds)
 const SHAKE_TIME = 30; // Steps the bowl picture wobbles when shaken
 const BUBBLES = 35; // Bubbles that float up when a bowl breaks
+const BOUND = 16; // Thickness of gambling-mode walls
+const GAMBLE = 4; // The physics "category" of pegs and walls. Only gambling balls hit it.
+const LEAF_TIP = [384 / 400, 214 / 240]; // Where the built-in leaf's tip is, as a part of its width and height
+// Each kind can have its own ball pictures, kept in these settings.
+const KIND_PICTURES = { f: 'followPictures', s: 'subPictures', b: 'bitsPictures', c: 'chatPictures' };
 
 // Each kind of event has a letter, and a colour setting for its balls. 'x' is any other ball.
 const KIND_COLORS = { f: 'followColor', s: 'subColor', b: 'bitsColor', c: 'chatColor' };
@@ -781,7 +845,7 @@ const KIND_LETTERS = { follow: 'f', follower: 'f', sub: 's', subscription: 's', 
 
 // The starting values for anything missing from the settings block.
 const SHARED_DEFAULTS = {
-  version: 3,
+  version: 4,
   savedAt: 0,
   ballSize: 30,
   gravity: 1,
@@ -806,12 +870,21 @@ const SHARED_DEFAULTS = {
   showCounter: false,
   volume: 0.3, // 0 is silent, 1 is loudest
   grabBalls: true,
-  ballPictures: ['ball'], // Each ball uses one of these pictures
+  ballPictures: ['ball'], // Each ball uses one of these pictures...
+  followPictures: [], // ...unless its kind has pictures of its own
+  subPictures: [],
+  bitsPictures: [],
+  chatPictures: [],
+  // Leaf mode
+  leafMode: false,
+  leafPicture: 'leaf',
+  leafSize: 160,
   // Gambling mode
   gambling: false,
   pegSize: 16,
   pegBounce: 0.6,
   pegColor: '#ffffff',
+  gambleKinds: 'fsbcx', // The kinds of ball that gamble (one letter each)
 };
 const STARTER_OUTLINE = [
   [104, 420], [110, 486], [127, 549], [154, 607], [191, 658], [236, 699], [287, 730], [342, 750],
@@ -827,7 +900,7 @@ const BOWL_DEFAULTS = {
   width: 640,
   outline: STARTER_OUTLINE,
   dropX: 400,
-  dropY: 30,
+  dropY: 140,
   dropWidth: 296,
   breakMode: 'count', // 'count', 'auto' or 'off'
   breakAt: null, // Empty means "work it out from the outline"
@@ -840,6 +913,9 @@ const BOWL_DEFAULTS = {
   depthX: 0,
   depthY: 0,
   pegs: [], // Gambling mode pegs: [x, y] points
+  bounds: [], // Gambling mode walls: [[x1, y1], [x2, y2]] lines
+  leafX: 0, // How far the leaf has been moved from its place at the drop point
+  leafY: 0,
 };
 
 // =====================================================================================
@@ -896,6 +972,7 @@ function normalizeBowl(raw) {
   bowl.id = bowl.id || newId('bowl');
   bowl.outline = copyOf(bowl.outline); // Its own copy, so drawing never changes the defaults
   bowl.pegs = copyOf(bowl.pegs);
+  bowl.bounds = copyOf(bowl.bounds);
   return bowl;
 }
 
@@ -927,7 +1004,8 @@ function readFileSettings() {
 // A copy with only the pictures still in use, so deleted pictures don't take up space.
 function tidySettings(settings) {
   const tidy = copyOf(settings);
-  const inUse = new Set(['starter', ...tidy.ballPictures]);
+  const inUse = new Set(['starter', 'leaf', tidy.leafPicture, ...tidy.ballPictures]);
+  for (const key of Object.values(KIND_PICTURES)) tidy[key].forEach((id) => inUse.add(id));
   for (const bowl of tidy.bowls) [bowl.picture, bowl.front, bowl.depth].forEach((id) => inUse.add(id));
   tidy.pictures = {};
   for (const id of inUse) {
@@ -1230,6 +1308,7 @@ function playSound(kind, volume) {
         drop: [random(500, 900), 2, 0.12],
         shake: [220, 0.3, 0.4],
         pop: [random(700, 1100), 0.2, 0.06],
+        drip: [random(1200, 1600), 0.4, 0.09],
       };
       const [start, slide, length] = sounds[kind] || sounds.drop;
       const end = start * slide;
@@ -1274,10 +1353,19 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   engine.gravity.y = settings.gravity;
 
   const radius = settings.ballSize / 2;
-  const maxSpeed = 0.75 * (radius + WALL / 2);
-  // One set of coloured balls for each ball picture.
+  // Thin gambling walls need a lower speed limit than the bowl's thick walls.
+  const hasBounds = settings.bowls.some((bowl) => bowl.bounds.length);
+  const maxSpeed = 0.75 * (radius + (hasBounds ? BOUND : WALL) / 2);
+  // One set of coloured balls for each ball picture...
   const ballImages = await Promise.all(settings.ballPictures.map((id) => loadPicture(settings, id)));
   const looks = (ballImages.length ? ballImages : [null]).map((image) => makeBallSprites(image, settings));
+  // ...and plain balls for kinds with pictures of their own.
+  const ownLooks = {};
+  for (const [kind, key] of Object.entries(KIND_PICTURES)) {
+    const images = await Promise.all(settings[key].map((id) => loadPicture(settings, id)));
+    ownLooks[kind] = images.filter(Boolean).map((image) => makeBallSprite(image, settings.ballSize));
+  }
+  const leafPicture = await loadPicture(settings, settings.leafPicture);
 
   const balls = new Set(); // Balls in the bowl
   const debris = new Set(); // Balls falling away from a broken bowl
@@ -1293,7 +1381,11 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
   let stillFor = 0; // Steps in a row every ball in the bowl has been (almost) still
   let shakeUntil = 0; // The bowl picture wobbles until this step
   let bubbles = [];
-  let pegs = []; // Gambling mode pegs in the physics world
+  let pegs = []; // Gambling mode pegs and walls in the physics world
+  let gambling = state.gambling === true || (state.gambling !== false && settings.gambling); // Mix It Up can switch it
+  let droplet = null; // Leaf mode: the droplet growing at the leaf's tip
+  let leafSwing = 0; // Leaf mode: the step the leaf last let go of a droplet
+  let splashes = [];
   let held = null; // The ball being dragged with the mouse
   let pointer = null; // Where the mouse is, on the stage
   let stopped = false;
@@ -1336,15 +1428,26 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     stillFor = 0;
   }
 
-  // Gambling mode: a small round static body for each peg. Pegs belong to the bowl on stage.
+  // Gambling mode: a small round static body for each peg, and a thin one for each wall.
+  // They're in their own category, so only balls of a gambling kind bump into them.
   function setPegs() {
     Composite.remove(engine.world, pegs);
-    pegs = settings.gambling ? current.bowl.pegs.map(([x, y]) => Bodies.circle(x, y, settings.pegSize / 2, {
-      isStatic: true,
-      restitution: settings.pegBounce, // How hard balls bounce off
-      friction: 0,
-    })) : [];
+    pegs = [];
+    if (gambling) {
+      const options = { isStatic: true, restitution: settings.pegBounce, friction: 0, collisionFilter: { category: GAMBLE } };
+      for (const [x, y] of current.bowl.pegs) pegs.push(Bodies.circle(x, y, settings.pegSize / 2, options));
+      for (const [[x1, y1], [x2, y2]] of current.bowl.bounds) {
+        const length = Math.hypot(x2 - x1, y2 - y1) + BOUND; // A little longer, for round ends
+        pegs.push(Bodies.rectangle((x1 + x2) / 2, (y1 + y2) / 2, length, BOUND, { ...options, angle: Math.atan2(y2 - y1, x2 - x1) }));
+      }
+    }
     Composite.add(engine.world, pegs);
+  }
+
+  // Mix It Up can switch gambling on or off while live.
+  function setGambling(on) {
+    gambling = on;
+    setPegs();
   }
 
   function setPhase(next) {
@@ -1357,11 +1460,21 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     return Math.min(state.balls, current.limit);
   }
 
+  // Which picture a ball gets: its kind's own pictures if it has some, otherwise the
+  // shared ball pictures, coloured for its kind.
+  function spriteFor(slot) {
+    const kind = state.kinds[slot] || 'x';
+    const own = ownLooks[kind] || [];
+    if (own.length) return own[pickLook(slot, own.length)];
+    return looks[pickLook(slot, looks.length)][kind];
+  }
+
   // live is false while rebuilding the pile after a reload: no sound, no name.
-  function dropBall(live) {
+  // fromLeaf is true when a droplet lets go of the leaf: the ball starts at the tip, wet.
+  function dropBall(live, fromLeaf) {
     const { bowl } = current;
     // Always a little scatter, so balls don't land balanced on top of each other.
-    const scatter = bowl.dropWidth + radius;
+    const scatter = fromLeaf ? 4 : bowl.dropWidth + radius;
     let x = bowl.dropX + (Math.random() - 0.5) * scatter;
     if (!live && bowl.outline.length > 1) {
       // Rebuilding after a reload: straight down into the middle of the bowl, well away from
@@ -1371,7 +1484,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
       const width = Math.max(...sides) - left;
       x = left + width * random(0.2, 0.8);
     }
-    const ball = Bodies.circle(x, bowl.dropY, radius, {
+    const ball = Bodies.circle(x, fromLeaf ? bowl.dropY + radius : bowl.dropY, radius, {
       restitution: settings.bounciness,
       friction: settings.friction,
       frictionStatic: 0,
@@ -1380,12 +1493,15 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     // place in them is the number of balls dropped so far.
     ball.slot = dropped; // Its place in the line, used if it gets lost
     ball.kind = state.kinds[dropped] || 'x';
-    ball.look = looks[pickLook(dropped, looks.length)];
+    ball.sprite = spriteFor(dropped);
+    ball.wet = Boolean(fromLeaf); // Drawn as a water drop until it first hits something
+    // Balls that don't gamble skip the pegs and walls: their mask leaves out that category.
+    if (!settings.gambleKinds.includes(ball.kind)) ball.collisionFilter.mask = ~GAMBLE;
     if (live && settings.showNames && state.names[dropped]) {
       ball.sender = state.names[dropped]; // Not "label": Matter.js already uses that name
       ball.senderUntil = steps + NAME_TIME;
     }
-    if (live) playSound('drop', settings.volume);
+    if (live) playSound(fromLeaf ? 'drip' : 'drop', settings.volume);
     balls.add(ball);
     Composite.add(engine.world, ball);
     dropped++;
@@ -1476,9 +1592,49 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     }
   }
 
+  // Leaf mode: a droplet grows at the leaf's tip with the next ball inside, then drips.
+  // When lots of balls are waiting, droplets grow faster.
+  function growDroplet() {
+    if (!droplet) return;
+    // The bowl was emptied, or is breaking: the droplet dries up.
+    if ((phase !== 'filling' && phase !== 'returning') || dropped >= wanted()) {
+      droplet = null;
+      return;
+    }
+    droplet.age++;
+    const waiting = state.balls - dropped;
+    if (droplet.age >= (waiting > 10 ? 8 : 30)) {
+      droplet = null;
+      leafSwing = steps;
+      dropBall(true, true);
+    }
+  }
+
+  // A wet ball's first bump: it turns into a normal ball with a little splash.
+  function splash(ball) {
+    ball.wet = false;
+    for (let i = 0; i < 6; i++) {
+      splashes.push({ x: ball.position.x, y: ball.position.y + radius * 0.6, vx: random(-2.5, 2.5), vy: random(-3.5, -1), age: 0 });
+    }
+  }
+  Events.on(engine, 'collisionStart', (event) => {
+    for (const pair of event.pairs) {
+      if (pair.bodyA.wet) splash(pair.bodyA);
+      if (pair.bodyB.wet) splash(pair.bodyB);
+    }
+  });
+
   function update() {
     if (stopped) return;
     steps++;
+    growDroplet();
+    for (const drop of splashes) {
+      drop.vy += 0.25;
+      drop.x += drop.vx;
+      drop.y += drop.vy;
+      drop.age++;
+    }
+    splashes = splashes.filter((drop) => drop.age < 25);
     pullHeldBall();
     physicsStep();
     moveShards();
@@ -1614,9 +1770,54 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     context.save();
     context.translate(ball.position.x, ball.position.y);
     context.rotate(ball.angle);
-    const look = ball.look || looks[0];
-    context.drawImage(look[ball.kind] || look.x, -radius, -radius, settings.ballSize, settings.ballSize);
+    context.drawImage(ball.sprite, -radius, -radius, settings.ballSize, settings.ballSize);
     context.restore();
+    if (ball.wet) drawWater(ball.position.x, ball.position.y, radius, 1.25);
+  }
+
+  // A clear water drop around a ball: a pale see-through teardrop with a shine.
+  // stretch above 1 pulls its top up into a point, like a drop hanging or falling.
+  function drawWater(x, y, size, stretch) {
+    context.beginPath();
+    context.moveTo(x, y - size * stretch * 1.15);
+    context.bezierCurveTo(x + size * 0.5, y - size * stretch * 0.7, x + size * 1.08, y - size * 0.2, x + size * 1.08, y + size * 0.1);
+    context.arc(x, y + size * 0.1, size * 1.08, 0, Math.PI);
+    context.bezierCurveTo(x - size * 1.08, y - size * 0.2, x - size * 0.5, y - size * stretch * 0.7, x, y - size * stretch * 1.15);
+    context.fillStyle = 'rgba(170, 225, 255, 0.28)';
+    context.fill();
+    context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    context.lineWidth = 1.5;
+    context.stroke();
+    context.beginPath();
+    context.ellipse(x - size * 0.4, y - size * 0.25, size * 0.18, size * 0.3, 0.5, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    context.fill();
+  }
+
+  // Leaf mode: the leaf, springing back after each drip, and the droplet growing at its tip.
+  function drawLeaf() {
+    if (!settings.leafMode || !leafPicture) return;
+    const { bowl } = current;
+    const height = settings.leafSize * leafPicture.height / leafPicture.width;
+    const age = steps - leafSwing;
+    const swing = 0.12 * Math.cos(age * 0.35) * Math.exp(-age * 0.08); // A springy wobble that dies down
+    context.save();
+    context.translate(bowl.dropX, bowl.dropY); // Turn around the tip
+    context.rotate(swing);
+    // The tip of the leaf sits on the drop point, moved by however far you dragged the leaf.
+    const left = -LEAF_TIP[0] * settings.leafSize + bowl.leafX;
+    const top = -LEAF_TIP[1] * height + bowl.leafY;
+    context.drawImage(leafPicture, left, top, settings.leafSize, height);
+    context.restore();
+    if (droplet) {
+      const growth = Math.min(1, droplet.age / (state.balls - dropped > 10 ? 8 : 30));
+      const size = radius * (0.3 + 0.7 * growth);
+      const x = bowl.dropX;
+      const y = bowl.dropY + size; // Hangs below the tip
+      const sprite = spriteFor(droplet.slot);
+      context.drawImage(sprite, x - size, y - size, size * 2, size * 2); // The ball shows inside
+      drawWater(x, y, size, 1 + growth * 0.6);
+    }
   }
 
   // White text with a dark edge, readable over anything.
@@ -1689,11 +1890,22 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     if (phase === 'cracking' && current.cracked) {
       context.drawImage(current.cracked, current.flat.x + shakeX, current.flat.y + shakeY);
     }
-    context.fillStyle = settings.pegColor;
-    for (const peg of pegs) {
-      context.beginPath();
-      context.arc(peg.position.x, peg.position.y, settings.pegSize / 2, 0, Math.PI * 2);
-      context.fill();
+    if (gambling) {
+      context.fillStyle = settings.pegColor;
+      context.strokeStyle = settings.pegColor;
+      context.lineWidth = BOUND;
+      context.lineCap = 'round';
+      for (const [x, y] of current.bowl.pegs) {
+        context.beginPath();
+        context.arc(x, y, settings.pegSize / 2, 0, Math.PI * 2);
+        context.fill();
+      }
+      for (const [[x1, y1], [x2, y2]] of current.bowl.bounds) {
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+      }
     }
     for (const shard of shards) {
       context.save();
@@ -1711,6 +1923,13 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     // In front of the balls: the depth layer if ticked, then the front.
     if (current.bowl.depthInFront) drawLayer(current.depth);
     drawLayer(current.front);
+    drawLeaf();
+    context.fillStyle = 'rgba(190, 235, 255, 0.85)';
+    for (const drop of splashes) {
+      context.beginPath();
+      context.arc(drop.x, drop.y, 2.5, 0, Math.PI * 2);
+      context.fill();
+    }
     balls.forEach(drawSender);
     bubbles.forEach(drawBubble);
     if (settings.showCounter && current && phase !== 'broken') {
@@ -1750,7 +1969,9 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
 
   const dropTimer = setInterval(() => {
     const open = phase === 'filling' || phase === 'returning';
-    if (open && dropped < wanted()) dropBall(true);
+    if (!open || dropped >= wanted()) return;
+    if (!settings.leafMode) dropBall(true);
+    else if (!droplet) droplet = { slot: dropped, age: 0 }; // Starts a droplet growing at the leaf's tip
   }, DROP_EVERY);
   const stepTimer = setInterval(update, TICK);
   draw();
@@ -1759,6 +1980,7 @@ async function createGame({ canvas, settings, state, save, onBreak }) {
     breakNow,
     empty,
     shake,
+    setGambling,
     stop() {
       stopped = true;
       clearInterval(dropTimer);
@@ -1792,7 +2014,7 @@ let realGame = null;
 let breakWaiting = false; // breakBowl() was called before the game had loaded
 
 const realState = Object.assign(
-  { balls: 0, kinds: '', names: [], followers: [], bowlId: '', liveSeen: '', emptyToken: '', breaks: 0 },
+  { balls: 0, kinds: '', names: [], followers: [], bowlId: '', liveSeen: '', emptyToken: '', breaks: 0, gambling: null },
   readStorage(STORAGE.state),
 );
 realState.balls = Math.max(0, Math.floor(Number(realState.balls)) || 0);
@@ -1890,6 +2112,19 @@ function breakBowl() {
   else breakWaiting = true;
 }
 
+// Turns gambling mode on or off while live. Optional parameter: on = "on", "off" or "toggle"
+// ("toggle" if not given). Remembered until the next time it's called; the editor's setting
+// is used again after "Empty the real bowl".
+function setGambling(input) {
+  const word = String(pickValue(input, ['on', 'state', 'mode'])).trim().toLowerCase();
+  const now = realState.gambling === true || (realState.gambling !== false && activeSettings && activeSettings.gambling);
+  const on = ['on', 'true', 'yes', '1'].includes(word) ? true : ['off', 'false', 'no', '0'].includes(word) ? false : !now;
+  realState.gambling = on;
+  saveState();
+  note('Gambling mode ' + (on ? 'on' : 'off'));
+  if (realGame) realGame.setGambling(on);
+}
+
 // Bounces the pile. Optional parameter: strength, from 0.5 (a nudge) to 3 (chaos). 1.5 if not given.
 function shakeBowl(input) {
   const strength = Number(String(pickValue(input, ['strength', 'power'])).trim());
@@ -1936,7 +2171,7 @@ function ChatMessageReceived(data) {
 // the same names (Follow, Subscription...). That code runs after this file, so once the page
 // has loaded, these names are pointed back at the bowl's own functions.
 const MIX_IT_UP_FUNCTIONS = {
-  addBalls, addFollower, addBits, emptyBowl, breakBowl, shakeBowl,
+  addBalls, addFollower, addBits, emptyBowl, breakBowl, shakeBowl, setGambling,
   Follow, Subscription, SubscriptionGifted, MassSubscriptionGifted, TwitchBits, ChatMessageReceived,
 };
 document.addEventListener('DOMContentLoaded', () => Object.assign(window, MIX_IT_UP_FUNCTIONS));
@@ -1973,6 +2208,8 @@ async function startOverlay() {
   if (settings.emptyToken && settings.emptyToken !== realState.emptyToken) {
     realState.emptyToken = settings.emptyToken;
     realState.balls = 0;
+    realState.gambling = null;
+    lineUp(realState);
     note('This copy was made to empty the bowl, so it starts empty');
   }
   // A different live bowl chosen in the editor wins. Otherwise keep the bowl from last time.
@@ -2002,6 +2239,7 @@ const HINTS = {
   draw: 'Click to add points, or hold and draw. Drag a point to move it, click the line to add one, right-click a point to remove it. Drag the ball to set the drop point.',
   move: 'Drag to place the pictures. Choose below whether all layers move, or just one. Bowl size resizes them.',
   pegs: 'Click to add a peg, drag one to move it, right-click one to remove it. Turn pegs on in Gambling mode.',
+  walls: 'Press and drag to draw a wall, for example along the sides. Right-click a wall to remove it. Walls are part of Gambling mode.',
 };
 // [setting, label, lowest, highest, step]
 const BOWL_SLIDERS = [
@@ -2021,6 +2259,9 @@ const BREAK_SLIDERS = [
 const PEG_SLIDERS = [
   ['pegSize', 'Peg size', 6, 50, 1],
   ['pegBounce', 'Peg bounce', 0, 1.2, 0.05],
+];
+const LEAF_SLIDERS = [
+  ['leafSize', 'Leaf size', 60, 400, 1],
 ];
 const FUN_SLIDERS = [
   ['volume', 'Sound volume (0 = off)', 0, 1, 0.05],
@@ -2064,6 +2305,7 @@ async function measurePictures() {
     if (element.getAttribute(attribute) !== source) element.setAttribute(attribute, source || '');
   };
   setSource(byId('drop-ball'), 'href', activeSettings.pictures[activeSettings.ballPictures[0]]);
+  setSource(byId('leaf-preview'), 'src', activeSettings.pictures[activeSettings.leafPicture]);
 }
 
 // Puts a picture layer on the editing layer, at its place, or hides it.
@@ -2078,16 +2320,29 @@ function renderLayer(element, preview, id, dx, dy) {
   element.setAttribute('height', source ? bowl.width * (pictureShapes.get(id) || 1) : 0);
 }
 
-// The ball pictures as small buttons. Clicking one removes it (one always stays).
+// Which list of ball pictures the "Pictures for" choice is showing.
+function chosenBallList() {
+  const kind = byId('ball-for').value;
+  return kind === 'all' ? activeSettings.ballPictures : activeSettings[KIND_PICTURES[kind]];
+}
+
+// The ball pictures as small buttons. Clicking one removes it (one shared picture always stays).
 function renderBallPictures() {
-  byId('ball-pictures').replaceChildren(...activeSettings.ballPictures.map((id, index) => {
+  const list = chosenBallList();
+  const shared = list === activeSettings.ballPictures;
+  byId('ball-hint').textContent = shared
+    ? 'Balls use one of these, coloured by event, unless their event has pictures of its own. Click one to remove it.'
+    : list.length
+      ? 'These balls use only these pictures, not coloured. Click one to remove it.'
+      : 'None yet, so these balls use the "All balls" pictures, coloured by event.';
+  byId('ball-pictures').replaceChildren(...list.map((id, index) => {
     const button = document.createElement('button');
     button.title = 'Remove this ball picture';
     button.innerHTML = '<img alt=""><span>×</span>';
     button.querySelector('img').src = activeSettings.pictures[id] || '';
     button.addEventListener('click', () => {
-      if (activeSettings.ballPictures.length < 2) return setStatus('Keep at least one ball picture');
-      activeSettings.ballPictures.splice(index, 1);
+      if (shared && list.length < 2) return setStatus('Keep at least one ball picture');
+      list.splice(index, 1);
       measurePictures().then(refreshControls);
       saveNow();
     });
@@ -2103,6 +2358,22 @@ function render() {
   renderLayer(byId('bowl-front'), byId('front-preview'), bowl.front, bowl.frontX, bowl.frontY);
 
   byId('pegs').classList.toggle('off', !activeSettings.gambling);
+  byId('bounds').classList.toggle('off', !activeSettings.gambling);
+  byId('bounds').replaceChildren(...bowl.bounds.map(([[x1, y1], [x2, y2]], index) => {
+    const wall = document.createElementNS(SVG_NS, 'line');
+    Object.entries({ x1, y1, x2, y2, 'stroke-width': BOUND, stroke: activeSettings.pegColor }).forEach(([k, v]) => wall.setAttribute(k, v));
+    wall.dataset.wall = index;
+    return wall;
+  }));
+  // The leaf, with its tip on the drop point (shown only in leaf mode)
+  const leaf = byId('leaf');
+  const leafSource = activeSettings.leafMode ? activeSettings.pictures[activeSettings.leafPicture] || '' : '';
+  if (leaf.getAttribute('href') !== leafSource) leaf.setAttribute('href', leafSource);
+  const leafHeight = activeSettings.leafSize * (pictureShapes.get(activeSettings.leafPicture) || 0.6);
+  leaf.setAttribute('x', bowl.dropX - LEAF_TIP[0] * activeSettings.leafSize + bowl.leafX);
+  leaf.setAttribute('y', bowl.dropY - LEAF_TIP[1] * leafHeight + bowl.leafY);
+  leaf.setAttribute('width', activeSettings.leafSize);
+  leaf.setAttribute('height', leafSource ? leafHeight : 0);
   byId('pegs').replaceChildren(...bowl.pegs.map(([x, y], index) => {
     const peg = document.createElementNS(SVG_NS, 'circle');
     peg.setAttribute('cx', x);
@@ -2171,6 +2442,7 @@ function refreshControls() {
   for (const box of document.querySelectorAll('[data-check]')) box.checked = activeSettings[box.dataset.check];
   for (const picker of document.querySelectorAll('[data-color]')) picker.value = activeSettings[picker.dataset.color];
   for (const box of document.querySelectorAll('[data-bowl-check]')) box.checked = bowl[box.dataset.bowlCheck];
+  for (const box of document.querySelectorAll('[data-gamble]')) box.checked = activeSettings.gambleKinds.includes(box.dataset.gamble);
   renderBallPictures();
   byId('break-command').value = activeSettings.breakCommandId;
   renderBowlList();
@@ -2225,8 +2497,8 @@ function saveNow() {
 
 // ---- Drawing the outline and moving things ----
 function remember() {
-  const { outline, pegs } = currentBowl();
-  history.push(JSON.stringify({ outline, pegs }));
+  const { outline, pegs, bounds } = currentBowl();
+  history.push(JSON.stringify({ outline, pegs, bounds }));
 }
 
 // Where a new point belongs: the stretch of line it adds the least length to.
@@ -2254,8 +2526,8 @@ function startDrag(event) {
   } else if (mode === 'move') {
     // Moves the whole bowl, or pulls just one layer away (its offset from the back picture).
     const what = byId('move-what').value;
-    const keyX = { all: 'x', front: 'frontX', depth: 'depthX' }[what];
-    const keyY = { all: 'y', front: 'frontY', depth: 'depthY' }[what];
+    const keyX = { all: 'x', front: 'frontX', depth: 'depthX', leaf: 'leafX' }[what];
+    const keyY = { all: 'y', front: 'frontY', depth: 'depthY', leaf: 'leafY' }[what];
     const offsetX = point[0] - bowl[keyX];
     const offsetY = point[1] - bowl[keyY];
     drag = ([x, y]) => {
@@ -2271,6 +2543,13 @@ function startDrag(event) {
     }
     drag = (position) => {
       bowl.pegs[index] = position;
+    };
+  } else if (mode === 'walls') {
+    remember();
+    bowl.bounds.push([point, point]); // A wall from where you pressed to where you let go
+    const wall = bowl.bounds.at(-1);
+    drag = (position) => {
+      wall[1] = position;
     };
   } else if (target.dataset.index !== undefined) {
     remember();
@@ -2297,6 +2576,13 @@ function startDrag(event) {
 
 function removePoint(event) {
   event.preventDefault();
+  if (mode === 'walls' && event.target.dataset.wall !== undefined) {
+    remember();
+    currentBowl().bounds.splice(Number(event.target.dataset.wall), 1);
+    render();
+    saveSoon();
+    return;
+  }
   if (mode === 'pegs' && event.target.dataset.peg !== undefined) {
     remember();
     currentBowl().pegs.splice(Number(event.target.dataset.peg), 1);
@@ -2315,6 +2601,8 @@ function setMode(next) {
   mode = next;
   byId('editor-stage').classList.toggle('moving', mode === 'move');
   byId('editor-stage').classList.toggle('pegging', mode === 'pegs');
+  byId('editor-stage').classList.toggle('walling', mode === 'walls');
+  byId('wall-mode').classList.toggle('active', mode === 'walls');
   byId('draw-mode').classList.toggle('active', mode === 'draw');
   byId('move-mode').classList.toggle('active', mode === 'move');
   byId('peg-mode').classList.toggle('active', mode === 'pegs');
@@ -2372,8 +2660,9 @@ async function uploadBowlPictures(layer, files) {
 
 async function uploadBallPictures(files) {
   setStatus('Saving…');
+  const list = chosenBallList();
   try {
-    for (const file of files) activeSettings.ballPictures.push(await addPicture(file, MAX_BALL_PICTURE));
+    for (const file of files) list.push(await addPicture(file, MAX_BALL_PICTURE));
   } catch {
     setStatus("That file isn't a picture");
     return;
@@ -2390,11 +2679,11 @@ function lineUpLayers(bowl) {
 
 // A Plinko-style triangle of pegs between the drop point and the rim.
 function pegPattern(bowl) {
-  const rows = 5;
   const gap = Math.max(50, activeSettings.ballSize * 2.2); // Room for a ball between pegs
-  const top = bowl.dropY + 80;
-  const bottom = rimHeight(bowl.outline) - 60;
-  const step = Math.max(gap * 0.8, (bottom - top) / (rows - 1));
+  const top = bowl.dropY + 60;
+  const bottom = rimHeight(bowl.outline) - 50;
+  const rows = Math.max(2, Math.min(6, Math.floor((bottom - top) / (gap * 0.8)) + 1)); // As many as fit
+  const step = (bottom - top) / (rows - 1);
   bowl.pegs = [];
   for (let row = 0; row < rows; row++) {
     for (let i = 0; i <= row + 1; i++) {
@@ -2662,6 +2951,7 @@ async function startEditor() {
   buildSliders('break-sliders', BREAK_SLIDERS, 'shared');
   buildSliders('fun-sliders', FUN_SLIDERS, 'shared');
   buildSliders('peg-sliders', PEG_SLIDERS, 'shared');
+  buildSliders('leaf-sliders', LEAF_SLIDERS, 'shared');
   setMode('draw');
   refreshControls();
   setStatus(storedIsNewer ? 'Loaded your edits from this browser' : 'Ready');
@@ -2677,11 +2967,15 @@ async function startEditor() {
   window.addEventListener('pointerup', () => {
     if (!drag) return;
     drag = null;
+    // A click without dragging in "Draw walls" would make a dot, not a wall: drop it.
+    currentBowl().bounds = currentBowl().bounds.filter(([a, b]) => distance(a, b) >= 10);
     saveSoon();
   });
   byId('draw-mode').addEventListener('click', () => setMode('draw'));
   byId('move-mode').addEventListener('click', () => setMode('move'));
   byId('peg-mode').addEventListener('click', () => setMode('pegs'));
+  byId('wall-mode').addEventListener('click', () => setMode('walls'));
+  byId('ball-for').addEventListener('change', renderBallPictures);
   byId('undo').addEventListener('click', () => {
     if (!history.length) return;
     Object.assign(currentBowl(), JSON.parse(history.pop())); // Outline and pegs as they were
@@ -2744,6 +3038,28 @@ async function startEditor() {
     remember();
     pegPattern(currentBowl());
     render();
+    saveNow();
+  });
+  byId('clear-walls').addEventListener('click', () => {
+    remember();
+    currentBowl().bounds = [];
+    render();
+    saveNow();
+  });
+  for (const box of document.querySelectorAll('[data-gamble]')) {
+    box.addEventListener('change', () => {
+      const kinds = [...document.querySelectorAll('[data-gamble]')].filter((b) => b.checked).map((b) => b.dataset.gamble);
+      activeSettings.gambleKinds = kinds.join('');
+      saveSoon();
+    });
+  }
+  byId('leaf-file').addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    activeSettings.leafPicture = await addPicture(file, 800);
+    await measurePictures();
+    refreshControls();
     saveNow();
   });
   byId('clear-pegs').addEventListener('click', () => {
