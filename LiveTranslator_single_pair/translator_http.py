@@ -9,6 +9,7 @@ Run:   python translator_http.py      (or use the Live Translator shortcut)
 
 Speech is turned into subtitles while it's spoken: drafts first, with words fixed as more context
 arrives, then a careful pass locks each line in after a pause.
+The speech model is picked by itself, or with the Small / Medium / Large buttons on the control page.
 One pair is loaded at a time (Swedish -> English by default). Pick another pair on the control page and
 press "Load this pair": the speech model and the translation model that fit it best are loaded instead.
 
@@ -25,9 +26,10 @@ from collections import OrderedDict, deque
 
 # ============================== SETTINGS ==================================
 CONFIG = {
-    "model_size": "auto",         # auto (the speech model that fits the language setting and your graphics card, see
-                                  # auto_speech_model below) / or always one model: small / medium / large-v2 /
-                                  # large-v3-turbo / distil-large-v3 ...
+    "model_size": "auto",         # auto (the speech model is picked with the "Speech model" buttons on the control
+                                  # page: Auto / Small / Medium / Large, see SPEECH_SIZES) / or always one model, and
+                                  # the buttons are switched off: small / medium / large-v2 / large-v3-turbo /
+                                  # distil-large-v3 ...
     "device": "auto",             # auto (NVIDIA GPU if there is one) / cpu (keeps the GPU free for games and streaming)
     "engine": "auto",             # auto (faster-whisper: ~4x lighter on the GPU, falls back to openai-whisper) /
                                   # faster-whisper / openai-whisper
@@ -72,6 +74,20 @@ LANGUAGE_MODELS = {"sv": "KBLab/kb-whisper-small"}
                                   # recordings it got 8.3 % of the Swedish words wrong where large-v3-turbo got 9.9 %,
                                   # with 0.4 GB of video memory instead of 1.0. {} = always the general models;
                                   # "KBLab/kb-whisper-medium" = 7.5 % wrong, but each pass takes twice as long
+SPEECH_SIZES = {                  # the "Speech model" buttons on the control page. Auto (the default) picks by itself
+                                  # (see auto_speech_model and LANGUAGE_MODELS); the other three always use one size:
+                                  #   write     writes the words down in the spoken language (they're translated as
+                                  #             text afterwards when the subtitles are in another language)
+                                  #   translate Whisper turns the speech into English by itself (see ENGLISH_BY;
+                                  #             turbo models can't do that, so Large uses the full large-v3 there)
+                                  #   "sv" ...  a model made for just that language, used when it's the only
+                                  #             language spoken and its words are written down (KB-Whisper for
+                                  #             Swedish; for English the English-only models, a little more
+                                  #             accurate at the same speed)
+    "small":  {"write": "small",          "translate": "small",    "sv": "KBLab/kb-whisper-small",  "en": "small.en"},
+    "medium": {"write": "medium",         "translate": "medium",   "sv": "KBLab/kb-whisper-medium", "en": "medium.en"},
+    "large":  {"write": "large-v3-turbo", "translate": "large-v3", "sv": "KBLab/kb-whisper-large"},
+}
 GPU_LIMIT = 35                    # % of GPU time the translator may use (lower = smoother game, slower subtitles).
 GPU_SLIDER = False                # True = a "Max GPU use" slider on the control page (its value is remembered)
 HOST, PORT = "127.0.0.1", 5050   # keep 127.0.0.1: "0.0.0.0" would let other devices on your network connect
@@ -279,6 +295,11 @@ def clean_languages(data, base=DEFAULT_LANGUAGES):
 def ways(langs):
     """The (spoken, shown) directions this language setting has."""
     return [(langs["a"], langs["b"])]
+
+
+def clean_speech_size(value, base="auto"):
+    """The "Speech model" choice: "auto" or one of SPEECH_SIZES (small / medium / large)."""
+    return value if isinstance(value, str) and (value == "auto" or value in SPEECH_SIZES) else base
 
 
 ENGINE = {
@@ -675,7 +696,8 @@ class Hub:
             self.settings.update(style=self.style, style_version=4)
             save_settings(self.settings)
         self.languages = clean_languages(self.settings.get("languages"))
-        self.lang_version = 0                 # +1 whenever the language dial changes
+        self.speech_size = clean_speech_size(self.settings.get("speech_size"))   # the "Speech model" buttons
+        self.lang_version = 0                 # +1 whenever the language dial or the speech model size changes
         self.ui = clean_ui(self.settings.get("ui"))
         self.lock = threading.Lock()
         self.status_lock = threading.Lock()
@@ -697,7 +719,8 @@ class Hub:
         self.remote_key = key
         self.status = {"mic": None, "listening": False, "model": "loading...", "updates_per_sec": 0.0, "error": None,
                        "notice": None, "mt": "off", "gpu_limit": self.gpu_limit, "languages": self.languages,
-                       "paused": False, "speed": None, "mt_model": None}
+                       "speech_size": self.speech_size, "speech_problem": None, "paused": False, "speed": None,
+                       "mt_model": None}
         self.set_state("loading")
 
         # Only pages served by this PC may connect: the Host check blocks DNS-rebinding tricks, and changes need
@@ -787,6 +810,8 @@ class Hub:
                 pair_models=sorted(dst for (src, dst) in OPUS_MODELS if src == "en") if str(PAIR_MODELS).lower() != "off" else [],
                 text_to_english=sorted(code for code in LANGUAGES if code != "en" and english_by(code) == "text"),
                 tuned_speech=sorted(code for code in LANGUAGE_MODELS if code in LANGUAGES) if CONFIG["model_size"] == "auto" else [],
+                speech_sizes=[k for k in SPEECH_SIZES if isinstance(SPEECH_SIZES[k], dict)],
+                speech_fixed=None if CONFIG["model_size"] == "auto" else str(CONFIG["model_size"]),
                 app_window=APP_WINDOW and dock is None)
 
         app.add_url_rule("/control", "control", page)
@@ -860,6 +885,11 @@ class Hub:
         def on_languages(data):
             self.set_languages(data)
             return {"ok": True}
+
+        @action("speech_size")
+        def on_speech_size(data):
+            self.set_speech_size(data.get("value") if isinstance(data, dict) else None)
+            return {"ok": True, "value": self.speech_size}
 
     @property
     def overlay_url(self):
@@ -1022,6 +1052,18 @@ class Hub:
             self.lang_version += 1
             self._save(languages=new)
         self.set_status(languages=self.languages)
+
+    def set_speech_size(self, value, reload=True):
+        """Auto / Small / Medium / Large: the translator loads the speech model of that size within a few seconds.
+        reload=False: only remember it (the translator went back to the size that's loaded)."""
+        new = clean_speech_size(value, self.speech_size)
+        if new != self.speech_size:
+            log(f"Speech model size: {new}.")
+            self.speech_size = new
+            if reload:
+                self.lang_version += 1        # the translator loop switches the model, as for a new language setting
+            self._save(speech_size=new)
+        self.set_status(speech_size=self.speech_size)
 
     # ---- status (updated from several threads, so always sent as a copy) ----
     def status_copy(self):
@@ -1364,6 +1406,7 @@ class Whisper:
         self._draft, self._word_starts = None, {}   # see _kept: what the last draft wrote, and what the next can keep
         self._shown = 0                        # samples of audio in the last draft that was handed out (see first_draft_sure)
         self.text_silence = False              # this model writes silence as text (see short_line_sure)
+        self.size = "auto"                     # the "Speech model" buttons: auto or one of SPEECH_SIZES
 
     def model_for(self, langs, device=None, general=False):
         """The model name to use for this language setting. general: only OpenAI's own models, and Whisper's own
@@ -1375,7 +1418,16 @@ class Whisper:
         pairs = ways(langs)
         spoken = {src for src, _ in pairs}
         to_english = any(dst == "en" != src and (general or english_by(src) == "whisper") for src, dst in pairs)
-        tuned = LANGUAGE_MODELS.get(next(iter(spoken))) if len(spoken) == 1 and not general else None
+        one = next(iter(spoken)) if len(spoken) == 1 and not general else None
+        size = SPEECH_SIZES.get(self.size) if self.size != "auto" and not self.cpu_only else None
+        if isinstance(size, dict):             # Small / Medium / Large picked on the control page (after the GPU
+                                               # kept failing, the CPU gets Auto's light model instead)
+            if one in size and not to_english:
+                return size[one]               # one language spoken, and there's a speech model of this size for it
+            picked = size.get("translate" if to_english else "write")
+            if picked:
+                return picked
+        tuned = LANGUAGE_MODELS.get(one)
         if tuned and not to_english:
             return tuned                       # one language spoken, and there's a speech model trained for it
         return auto_speech_model(device, to_english, langs["a"])
@@ -1386,6 +1438,8 @@ class Whisper:
         can't.)"""
         name = os.path.basename(str(self.name or "")).lower()
         tuned = {os.path.basename(str(n)).lower() for n in LANGUAGE_MODELS.values()}
+        tuned |= {os.path.basename(str(n)).lower() for size in SPEECH_SIZES.values() if isinstance(size, dict)
+                  for k, n in size.items() if k not in ("write", "translate")}
         return not ("turbo" in name or "distil" in name or name.endswith(".en") or name in tuned or "kb-whisper" in name)
 
     def writes_english(self, src):
@@ -2555,13 +2609,24 @@ def reconnect_mic(mic, hub):
 def translate_forever(mic, hub, cfg, stopping=None):
     stopping = stopping or threading.Event()
     engine = Whisper(cfg)
-    try:
-        hub.set_status(model=engine.load(hub))
-    except Exception as err:
-        log(f"Could not load Whisper model: {err}", error=True)
-        hub.set_status(model="failed", error=f"Could not load Whisper model: {err}")
-        hub.set_state("error")
-        return
+    engine.size = hub.speech_size
+    while True:
+        try:
+            hub.set_status(model=engine.load(hub))
+            break
+        except Exception as err:
+            log(f"Could not load Whisper model: {err}", error=True)
+            if engine.size == "auto":
+                hub.set_status(model="failed", error=f"Could not load Whisper model: {err}")
+                hub.set_state("error")
+                return
+            # the size picked on the control page didn't load (too big for the GPU? no internet for the first
+            # download?): start with Auto instead, so there are subtitles at all
+            name = engine.model_for(hub.languages)
+            hub.set_status(speech_problem=f"Could not load the {engine.size} speech model '{name}' ({str(err)[:200]}),"
+                                          " so Auto is used.")
+            engine.size = "auto"
+            hub.set_speech_size("auto", reload=False)
     # the translation model runs where the speech model does (CTranslate2 on the GPU), otherwise on the CPU
     translator = TextTranslator(hub, "cuda" if engine.kind == "faster" and engine.device == "cuda" else "cpu")
     pipeline = Pipeline(engine, translator, hub, cfg)
@@ -2580,13 +2645,16 @@ def translate_forever(mic, hub, cfg, stopping=None):
                 hub.set_partial(text, *stage)
 
     def switch_model():
-        """The language setting changed: load the speech model that fits it, if that's another one."""
+        """The language setting or the speech model size changed: load the speech model that fits it, if that's
+        another one."""
         nonlocal proc, gen
+        size_before, engine.size = engine.size, hub.speech_size
         want = engine.model_for(hub.languages)
         if want == engine.name:
+            hub.set_status(speech_problem=None)
             return True
-        before = engine.name
-        log(f"The language setting changed: switching the speech model from '{before}' to '{want}'.")
+        before, problem = engine.name, None
+        log(f"The language setting or the speech model size changed: switching the speech model from '{before}' to '{want}'.")
         hub.set_state("loading")
         for name in (want, before):
             try:
@@ -2595,10 +2663,17 @@ def translate_forever(mic, hub, cfg, stopping=None):
             except Exception as err:
                 log(f"Could not load the speech model '{name}': {err}", error=True)
                 hub.set_status(error=f"Could not load the speech model '{name}': {err}")
+                problem = problem or f"Could not load '{name}' ({str(err)[:200]})"
         else:
             hub.set_status(model="failed")
             hub.set_state("error")
             return False
+        if name == want:
+            hub.set_status(speech_problem=None)
+        else:                                         # the new size didn't load: the buttons show what's running
+            engine.size = size_before
+            hub.set_speech_size(size_before, reload=False)
+            hub.set_status(speech_problem=f"{problem}, so '{before}' is still used.")
         mic.read()                                    # what was said while it loaded is dropped
         proc = Sentences(pipeline, cfg)
         gen = None
@@ -3425,7 +3500,7 @@ CONTROL_HTML = r"""<!DOCTYPE html>
   .meter { height:8px; background:var(--field); border-radius:4px; overflow:hidden; margin-top:10px; }
   .meter div { height:100%; width:0; background:linear-gradient(90deg,#22c55e,#eab308,#ef4444); transition:width .1s; }
   .stats { font-size:12px; color:var(--muted); margin-top:8px; }
-  .stats .err { color:#f87171; display:block; margin-top:4px; }
+  .stats .err, .note .err { color:#f87171; display:block; margin-top:4px; }
   .mtstate { margin-top: 8px; font-size: 13px; padding: 7px 10px; border-radius: 8px; background: #2a2412; color: #ffd27a; }
   .mtstate.ok { background: #12261c; color: #6ee7a8; }
   .mtstate.bad { background: #2c1518; color: #ff9aa5; }
@@ -3503,6 +3578,12 @@ CONTROL_HTML = r"""<!DOCTYPE html>
       <div class="power"><button type="button" id="lang_load" title="Loads the speech and translation models made for this pair">Load this pair</button></div>
       <div class="note" id="lang_note"></div>
       <div class="mtstate" id="lang_mt" hidden></div>
+      <label>Speech model</label>
+      <div class="seg" id="speech_size" role="group" aria-label="Speech model size">
+        <button type="button" data-v="auto" title="Picks the model that fits the languages and your graphics card">Auto</button>
+        {% for k in speech_sizes %}<button type="button" data-v="{{ k }}">{{ k|capitalize }}</button>{% endfor %}
+      </div>
+      <div class="note" id="speech_note"></div>
     </section>
     <section data-mod="subtitles">
       <label style="margin-top:0">Text size <span class="val" id="font_size_v"></span></label>
@@ -3742,6 +3823,41 @@ $('lang_load').onclick = () => { picking = false; live = {...langs}; showLangs()
 $('lang_a').onchange = () => { langs.a = $('lang_a').value; sendLangs(); };
 $('lang_b').onchange = () => { langs.b = $('lang_b').value; sendLangs(); };
 $('lang_swap').onclick = () => { [langs.a, langs.b] = [langs.b, langs.a]; sendLangs(); };
+
+// ---- speech model size: Auto / Small / Medium / Large (SPEECH_SIZES in translator_http.py) ----
+const SIZE_FIXED = {{ speech_fixed|tojson }};      // model_size set by hand in translator_http.py: the buttons are off
+const SIZE_HINTS = {
+  auto: 'Auto picks the model that fits the languages and your graphics card.',
+  small: 'Small: the quickest and lightest (about 0.5 GB of video memory), but the most mistakes. For a heavy game or a PC without a graphics card.',
+  medium: 'Medium: fewer mistakes than Small, but every pass takes about twice as long (about 1 GB of video memory).',
+  large: 'Large: the fewest mistakes. Where Whisper turns the speech into English by itself, and for Swedish on its own, it is a full large model, the slowest and heaviest (2 \u2013 3.5 GB of video memory); otherwise the quick large-v3-turbo (about 1 GB).',
+};
+let speechSize = 'auto', sizeSent = 0;            // sizeSent: clicks the translator hasn't answered yet
+function showSpeechSize(s) {
+  document.querySelectorAll('#speech_size button').forEach(b => {
+    b.setAttribute('aria-pressed', String(!SIZE_FIXED && b.dataset.v === speechSize));
+    b.disabled = !!SIZE_FIXED;
+  });
+  let html = SIZE_FIXED ? `Set by hand in translator_http.py (<b>model_size = "${esc(SIZE_FIXED)}"</b>); set it to "auto" to use these buttons.`
+                        : esc(SIZE_HINTS[speechSize] || '');
+  const now = /^(.+) on (cuda|cpu)$/.exec(s.model || '');
+  if (now) html += ` Now: <b>${esc(now[1])}</b> on the ${now[2] === 'cpu' ? 'CPU' : 'graphics card'}.`;
+  else if (s.model && s.model !== 'failed') html += ` Now: ${esc(s.model)}`;
+  if (now && now[2] === 'cpu' && !SIZE_FIXED && !['auto', 'small'].includes(speechSize))
+    html += ' Without a graphics card a bigger model is slow: the subtitles lag behind.';
+  if (!SIZE_FIXED) html += ' Switching takes a few seconds; the first time, the model is downloaded (0.5 \u2013 3 GB) and the subtitles wait for it.';
+  if (s.speech_problem) html += `<span class="err">${esc(s.speech_problem)}</span>`;
+  $('speech_note').innerHTML = html;
+}
+document.querySelectorAll('#speech_size button').forEach(b => b.onclick = () => {
+  if (SIZE_FIXED || b.dataset.v === speechSize) return;
+  speechSize = b.dataset.v; sizeSent++;
+  showSpeechSize(status);
+  api('speech_size', {value: speechSize}).then(d => {
+    sizeSent--;
+    if (d && d.value && !sizeSent) { speechSize = d.value; showSpeechSize(status); }
+  });
+});
 on('level', v => { const db = 20 * Math.log10(Math.max(v, 1e-5)); $('lvl').style.width = Math.max(0, Math.min(100, (db + 60) / 60 * 100)) + '%'; });
 function setIndicator(s) {
   $('indicator').className = 'indicator ' + (s.state || '');
@@ -3765,6 +3881,8 @@ on('status', update => {
     showLangs();
   }
   showModelState(s);
+  if (s.speech_size && !sizeSent) speechSize = s.speech_size;   // (until the translator answers a click, the click stands)
+  showSpeechSize(s);
   if (s.notice) html += `<span class="notice">${esc(s.notice)}</span>`;
   if (s.error) html += `<span class="err">${esc(s.error)}</span>`;
   $('stats').innerHTML = html;

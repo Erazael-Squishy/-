@@ -61,6 +61,27 @@ next to the program; that takes a minute or two). **Until it is ready the subtit
 language they were spoken in &mdash; the Microphone module says what is being prepared. Do the first start before a
 stream, not during it.
 
+## Speech model: Auto, Small, Medium or Large
+
+Under **Speech model** in the Languages module you pick how big the model that listens is: a bigger one makes fewer
+mistakes, but needs more of the graphics card. The choice is remembered and switches straight away (a few seconds;
+the first time, the model is downloaded: 0.5 &ndash; 3 GB, so try a new size before a stream, not during it).
+
+| Button | Speech model | Video memory | |
+|---|---|---|---|
+| **Auto** (the default) | picked by itself for the languages and your graphics card, as described above | | |
+| **Small** | `small` | about 0.5 GB | the quickest, but the most mistakes: for a heavy game or a PC without a graphics card |
+| **Medium** | `medium` | about 1 &ndash; 1.6 GB | fewer mistakes, every pass takes about twice as long |
+| **Large** | `large-v3-turbo`; `large-v3` when Whisper turns one of the two languages into English by itself (e.g. Polish &harr; English) | 1 &ndash; 3.5 GB | the fewest mistakes; the full `large-v3` is the slowest |
+
+The model that is running is shown under the buttons. If a size doesn't fit on the graphics card (or can't be
+downloaded), the translator keeps the model it had (at start: Auto) and says why under the buttons. Without a graphics
+card Medium and Large are slow, and the subtitles lag behind. If the GPU keeps failing and the translator moves to the
+CPU, it uses Auto's small model there until the next start.
+
+Which model each button uses is set in `SPEECH_SIZES` at the top of `translator_http.py`. Setting `"model_size"` to
+one model by hand switches the buttons off.
+
 ## Swedish &rarr; English: how it is done, and how good it is
 
 Whisper can translate speech to English by itself, and that is what this program used to do for Swedish (with the
@@ -171,7 +192,8 @@ going. Restart it to use the GPU again.
 |---|---|
 | `GPU_LIMIT = 35` | Share of GPU time the translator may use. Lower = smoother game, fewer updates. |
 | `"responsiveness"` | `snappy` (default), `balanced`, `light` (heavy games). |
-| `"model_size"` | `auto`, or one speech model for everything (`small`, `medium`, `large-v3-turbo` …). |
+| `"model_size"` | `auto` (the **Speech model** buttons decide), or one speech model for everything (`small`, `medium`, `large-v3-turbo` …; the buttons are switched off then). |
+| `SPEECH_SIZES` | The models behind the Small / Medium / Large buttons: for writing the words down, for Whisper's own translation to English, and per language (`"sv"`, `"en"`). |
 | `TRANSLATION_MODEL` | `auto`, `m2m100-418m` (small), `m2m100-1.2b` (accurate), `nllb-600m` / `nllb-1.3b` (most accurate, but licensed for **non-commercial** use only). |
 | `PAIR_MODELS` | `auto` (default: a model made for the pair writes everything), `drafts`, `all`, `off`. |
 | `ENGLISH_BY` | `auto` (default: Swedish is written down and translated as text, other languages are translated by Whisper itself), `whisper`, `text`. |
